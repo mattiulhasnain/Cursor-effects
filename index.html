@@ -3120,5 +3120,198 @@ body::after {
             animateDivineRays();
         });
     </script>
+
+    <!-- Contact Section -->
+    <div class="contact-section">
+        <div class="container">
+            <h2 class="section-title">Contact Information</h2>
+            <div class="contact-container">
+                <div class="contact-card">
+                    <h3>📌 Accounts:</h3>
+                    <ul class="contact-list">
+                        <li><span class="contact-label">GitHub:</span> <a href="https://github.com/mattiulhasnain/" target="_blank">mattiulhasnain</a></li>
+                        <li><span class="contact-label">Instagram:</span> <a href="https://www.instagram.com/m.mattiulhasnain/" target="_blank">m.mattiulhasnain</a></li>
+                        <li><span class="contact-label">Personal Email:</span> <a href="mailto:m.mattiulhasnain@gmail.com">m.mattiulhasnain@gmail.com</a></li>
+                        <li><span class="contact-label">Student Email:</span> <a href="mailto:bc240412496mmu@vu.edu.pk">bc240412496mmu@vu.edu.pk</a></li>
+                    </ul>
+                </div>
+                <div class="contact-card">
+                    <h3>📌 Contacts:</h3>
+                    <ul class="contact-list">
+                        <li><span class="contact-label">Phone Number:</span> <a href="tel:+923434455432">+923434455432</a></li>
+                    </ul>
+                </div>
+            </div>
+            <p class="contact-note">This is your updated list! Let me know if you want any changes. 🚀🔥</p>
+        </div>
+    </div>
+
+    <style>
+        .contact-section {
+            margin-top: 80px;
+            padding: 60px 0;
+            background: rgba(10, 25, 47, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(93, 187, 99, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 30% 50%, rgba(141, 228, 175, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(102, 178, 255, 0.15) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #ffffff, var(--primary-light) 30%, var(--secondary-light) 70%, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--gradient-light);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(141, 228, 175, 0.5);
+        }
+
+        .contact-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+
+        .contact-card {
+            background: rgba(28, 42, 57, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15), 0 0 15px rgba(93, 187, 99, 0.05);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .contact-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.3), 0 0 30px rgba(93, 187, 99, 0.2);
+            border-color: rgba(93, 187, 99, 0.3);
+        }
+
+        .contact-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary-light);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .contact-card h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: var(--gradient-light);
+            border-radius: 10px;
+        }
+
+        .contact-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .contact-list li {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .contact-label {
+            font-weight: 600;
+            margin-right: 10px;
+            color: var(--secondary-light);
+            min-width: 130px;
+        }
+
+        .contact-list a {
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .contact-list a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-light);
+            transition: width 0.3s ease;
+        }
+
+        .contact-list a:hover {
+            color: var(--primary-light);
+        }
+
+        .contact-list a:hover::after {
+            width: 100%;
+        }
+
+        .contact-note {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .contact-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .contact-card {
+                width: 90%;
+            }
+
+            .contact-list li {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .contact-label {
+                margin-bottom: 5px;
+            }
+        }
+    </style>
 </body>
 </html> 
