@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Pieces Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #f5f5f5;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #555;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+        }
+        
+        select {
+            width: 120px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #3367d6;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #4285f4;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(66, 133, 244, 0.5);
+        }
+        
+        .puzzle-piece {
+            position: absolute;
+            pointer-events: none;
+            transform-origin: center;
+            transition: filter 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Puzzle Pieces</h1>
+        <p>Move your cursor to create assembling and disassembling puzzle pieces. Click to scatter pieces randomly.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="piece-count">Piece Count</label>
+                <input type="range" id="piece-count" min="4" max="12" step="1" value="6">
+            </div>
+            
+            <div class="control-group">
+                <label for="piece-size">Piece Size</label>
+                <input type="range" id="piece-size" min="30" max="60" step="5" value="40">
+            </div>
+            
+            <div class="control-group">
+                <label for="animation-speed">Animation Speed</label>
+                <input type="range" id="animation-speed" min="0.5" max="3" step="0.1" value="1">
+            </div>
+            
+            <div class="control-group">
+                <label for="piece-style">Piece Style</label>
+                <select id="piece-style">
+                    <option value="classic">Classic</option>
+                    <option value="rounded">Rounded</option>
+                    <option value="geometric">Geometric</option>
+                    <option value="colorful">Colorful</option>
+                </select>
+            </div>
+            
+            <button id="scatter-btn">Scatter Pieces</button>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elements
+            const cursor = document.getElementById('cursor');
+            
+            // Controls
+            const pieceCountSlider = document.getElementById('piece-count');
+            const pieceSizeSlider = document.getElementById('piece-size');
+            const animationSpeedSlider = document.getElementById('animation-speed');
+            const pieceStyleSelect = document.getElementById('piece-style');
+            const scatterBtn = document.getElementById('scatter-btn');
+            
+            // Config variables
+            let pieceCount = parseInt(pieceCountSlider.value);
+            let pieceSize = parseInt(pieceSizeSlider.value);
+            let animationSpeed = parseFloat(animationSpeedSlider.value);
+            let pieceStyle = pieceStyleSelect.value;
+            
+            // Mouse position
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            
+            // Puzzle pieces array
+            let puzzlePieces = [];
+            
+            // Puzzle piece colors for 'colorful' style
+            const pieceColors = [
+                '#4285F4', // Google Blue
+                '#EA4335', // Google Red
+                '#FBBC05', // Google Yellow
+                '#34A853', // Google Green
+                '#8F00FF', // Violet
+                '#FF6D01', // Orange
+                '#00BFFF', // Deep Sky Blue
+                '#FF69B4'  // Hot Pink
+            ];
+            
+            // Create SVG paths for different piece styles
+            function getPiecePath(style, size) {
+                const halfSize = size / 2;
+                const quarterSize = size / 4;
+                const tabSize = size / 6;
+                
+                switch (style) {
+                    case 'classic':
+                        // Classic puzzle piece with tabs
+                        return `
+                            M${halfSize},0 
+                            L${size - quarterSize},0 
+                            Q${size},0 ${size},${quarterSize} 
+                            L${size},${halfSize - tabSize}
+                            Q${size},${halfSize} ${size + tabSize},${halfSize}
+                            Q${size},${halfSize} ${size},${halfSize + tabSize}
+                            L${size},${size - quarterSize} 
+                            Q${size},${size} ${size - quarterSize},${size} 
+                            L${halfSize + tabSize},${size}
+                            Q${halfSize},${size} ${halfSize},${size + tabSize}
+                            Q${halfSize},${size} ${halfSize - tabSize},${size}
+                            L${quarterSize},${size} 
+                            Q0,${size} 0,${size - quarterSize} 
+                            L0,${halfSize + tabSize}
+                            Q0,${halfSize} ${-tabSize},${halfSize}
+                            Q0,${halfSize} 0,${halfSize - tabSize}
+                            L0,${quarterSize} 
+                            Q0,0 ${quarterSize},0 
+                            Z
+                        `;
+                    case 'rounded':
+                        // Rounded puzzle piece
+                        return `
+                            M${quarterSize},0
+                            A${quarterSize},${quarterSize} 0 0 1 ${halfSize + quarterSize},0
+                            A${quarterSize},${quarterSize} 0 0 1 ${size},${quarterSize}
+                            L${size},${halfSize - quarterSize}
+                            A${quarterSize},${quarterSize} 0 0 0 ${size + quarterSize},${halfSize}
+                            A${quarterSize},${quarterSize} 0 0 0 ${size},${halfSize + quarterSize}
+                            L${size},${size - quarterSize}
+                            A${quarterSize},${quarterSize} 0 0 1 ${size - quarterSize},${size}
+                            L${halfSize + quarterSize},${size}
+                            A${quarterSize},${quarterSize} 0 0 0 ${halfSize},${size + quarterSize}
+                            A${quarterSize},${quarterSize} 0 0 0 ${halfSize - quarterSize},${size}
+                            L${quarterSize},${size}
+                            A${quarterSize},${quarterSize} 0 0 1 0,${size - quarterSize}
+                            L0,${halfSize + quarterSize}
+                            A${quarterSize},${quarterSize} 0 0 0 ${-quarterSize},${halfSize}
+                            A${quarterSize},${quarterSize} 0 0 0 0,${halfSize - quarterSize}
+                            L0,${quarterSize}
+                            A${quarterSize},${quarterSize} 0 0 1 ${quarterSize},0
+                            Z
+                        `;
+                    case 'geometric':
+                        // Geometric puzzle piece with straight lines
+                        return `
+                            M0,0
+                            L${size},0
+                            L${size},${halfSize - tabSize}
+                            L${size + tabSize},${halfSize}
+                            L${size},${halfSize + tabSize}
+                            L${size},${size}
+                            L${halfSize + tabSize},${size}
+                            L${halfSize},${size + tabSize}
+                            L${halfSize - tabSize},${size}
+                            L0,${size}
+                            L0,${halfSize + tabSize}
+                            L${-tabSize},${halfSize}
+                            L0,${halfSize - tabSize}
+                            Z
+                        `;
+                    case 'colorful':
+                        // Same as classic but will be colored differently
+                        return `
+                            M${halfSize},0 
+                            L${size - quarterSize},0 
+                            Q${size},0 ${size},${quarterSize} 
+                            L${size},${halfSize - tabSize}
+                            Q${size},${halfSize} ${size + tabSize},${halfSize}
+                            Q${size},${halfSize} ${size},${halfSize + tabSize}
+                            L${size},${size - quarterSize} 
+                            Q${size},${size} ${size - quarterSize},${size} 
+                            L${halfSize + tabSize},${size}
+                            Q${halfSize},${size} ${halfSize},${size + tabSize}
+                            Q${halfSize},${size} ${halfSize - tabSize},${size}
+                            L${quarterSize},${size} 
+                            Q0,${size} 0,${size - quarterSize} 
+                            L0,${halfSize + tabSize}
+                            Q0,${halfSize} ${-tabSize},${halfSize}
+                            Q0,${halfSize} 0,${halfSize - tabSize}
+                            L0,${quarterSize} 
+                            Q0,0 ${quarterSize},0 
+                            Z
+                        `;
+                    default:
+                        return `M0,0 H${size} V${size} H0 Z`; // Simple square fallback
+                }
+            }
+            
+            // Create a puzzle piece element
+            function createPuzzlePiece() {
+                const piece = document.createElement('div');
+                piece.className = 'puzzle-piece';
+                
+                // Create SVG
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('width', pieceSize * 1.5);  // Add extra space for tabs
+                svg.setAttribute('height', pieceSize * 1.5);
+                svg.setAttribute('viewBox', `${-pieceSize/6} ${-pieceSize/6} ${pieceSize * 1.5} ${pieceSize * 1.5}`);
+                
+                // Create path for the piece
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', getPiecePath(pieceStyle, pieceSize));
+                
+                // Set fill and stroke based on style
+                if (pieceStyle === 'colorful') {
+                    const colorIndex = Math.floor(Math.random() * pieceColors.length);
+                    path.setAttribute('fill', pieceColors[colorIndex]);
+                    path.setAttribute('stroke', '#333');
+                } else {
+                    path.setAttribute('fill', '#fff');
+                    path.setAttribute('stroke', '#333');
+                }
+                
+                path.setAttribute('stroke-width', '2');
+                
+                // Add a subtle pattern or texture
+                if (pieceStyle !== 'colorful') {
+                    // Add some subtle pattern with a filter
+                    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                    
+                    // Create a noise filter
+                    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+                    filter.setAttribute('id', `noise-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+                    
+                    const turbulence = document.createElementNS('http://www.w3.org/2000/svg', 'feTurbulence');
+                    turbulence.setAttribute('type', 'fractalNoise');
+                    turbulence.setAttribute('baseFrequency', '0.8');
+                    turbulence.setAttribute('numOctaves', '3');
+                    turbulence.setAttribute('seed', Math.random() * 100);
+                    turbulence.setAttribute('result', 'noise');
+                    
+                    const displacementMap = document.createElementNS('http://www.w3.org/2000/svg', 'feDisplacementMap');
+                    displacementMap.setAttribute('in', 'SourceGraphic');
+                    displacementMap.setAttribute('in2', 'noise');
+                    displacementMap.setAttribute('scale', '3');
+                    
+                    filter.appendChild(turbulence);
+                    filter.appendChild(displacementMap);
+                    defs.appendChild(filter);
+                    
+                    svg.appendChild(defs);
+                    path.setAttribute('filter', `url(#${filter.getAttribute('id')})`);
+                }
+                
+                svg.appendChild(path);
+                piece.appendChild(svg);
+                
+                // Add a subtle shadow
+                piece.style.filter = 'drop-shadow(2px 2px 2px rgba(0,0,0,0.2))';
+                
+                // Append to body
+                document.body.appendChild(piece);
+                
+                return {
+                    element: piece,
+                    x: 0,
+                    y: 0,
+                    targetX: 0,
+                    targetY: 0,
+                    angle: 0,
+                    targetAngle: 0,
+                    scale: 1,
+                    targetScale: 1,
+                    opacity: 1,
+                    targetOpacity: 1,
+                    speed: animationSpeed * (0.8 + Math.random() * 0.4),
+                    orbit: {
+                        radius: 20 + Math.random() * 80,
+                        speed: 0.01 + Math.random() * 0.01,
+                        angle: Math.random() * Math.PI * 2,
+                        centerX: 0,
+                        centerY: 0
+                    }
+                };
+            }
+            
+            // Initialize puzzle pieces
+            function initPuzzlePieces() {
+                // Clear existing pieces
+                puzzlePieces.forEach(piece => {
+                    piece.element.remove();
+                });
+                puzzlePieces = [];
+                
+                // Create new pieces
+                for (let i = 0; i < pieceCount; i++) {
+                    puzzlePieces.push(createPuzzlePiece());
+                }
+            }
+            
+            // Update piece positions
+            function updatePieces(time) {
+                for (let i = 0; i < puzzlePieces.length; i++) {
+                    const piece = puzzlePieces[i];
+                    
+                    // Calculate orbit position
+                    piece.orbit.angle += piece.orbit.speed * animationSpeed;
+                    piece.orbit.centerX = mouseX;
+                    piece.orbit.centerY = mouseY;
+                    
+                    // Calculate target position
+                    const angleOffset = (i / puzzlePieces.length) * Math.PI * 2;
+                    const orbitX = Math.cos(piece.orbit.angle + angleOffset) * piece.orbit.radius;
+                    const orbitY = Math.sin(piece.orbit.angle + angleOffset) * piece.orbit.radius;
+                    
+                    piece.targetX = piece.orbit.centerX + orbitX;
+                    piece.targetY = piece.orbit.centerY + orbitY;
+                    
+                    // Calculate target angle
+                    piece.targetAngle = Math.atan2(orbitY, orbitX) + Math.PI / 4;
+                    
+                    // Update actual values with smooth transitions
+                    piece.x += (piece.targetX - piece.x) * 0.1 * piece.speed;
+                    piece.y += (piece.targetY - piece.y) * 0.1 * piece.speed;
+                    piece.angle += (piece.targetAngle - piece.angle) * 0.05 * piece.speed;
+                    piece.scale += (piece.targetScale - piece.scale) * 0.1 * piece.speed;
+                    piece.opacity += (piece.targetOpacity - piece.opacity) * 0.1 * piece.speed;
+                    
+                    // Apply transformations
+                    piece.element.style.transform = `translate(${piece.x - pieceSize/2}px, ${piece.y - pieceSize/2}px) rotate(${piece.angle}rad) scale(${piece.scale})`;
+                    piece.element.style.opacity = piece.opacity;
+                }
+            }
+            
+            // Scatter pieces randomly
+            function scatterPieces() {
+                for (const piece of puzzlePieces) {
+                    // Random target positions away from the cursor
+                    const distance = 100 + Math.random() * 200;
+                    const angle = Math.random() * Math.PI * 2;
+                    
+                    piece.targetX = mouseX + Math.cos(angle) * distance;
+                    piece.targetY = mouseY + Math.sin(angle) * distance;
+                    
+                    // Random rotation
+                    piece.targetAngle = Math.random() * Math.PI * 4 - Math.PI * 2;
+                    
+                    // Random scale
+                    piece.targetScale = 0.5 + Math.random() * 1.5;
+                    
+                    // Reset orbit
+                    piece.orbit.radius = 60 + Math.random() * 120;
+                    piece.orbit.speed = 0.01 + Math.random() * 0.02;
+                    piece.orbit.angle = Math.random() * Math.PI * 2;
+                }
+            }
+            
+            // Assemble pieces around the cursor
+            function assemblePieces() {
+                for (let i = 0; i < puzzlePieces.length; i++) {
+                    const piece = puzzlePieces[i];
+                    
+                    // Reset orbit to be around cursor
+                    piece.orbit.radius = 20 + Math.random() * 60;
+                    piece.orbit.centerX = mouseX;
+                    piece.orbit.centerY = mouseY;
+                    
+                    // Reset scale and opacity
+                    piece.targetScale = 1;
+                    piece.targetOpacity = 1;
+                }
+            }
+            
+            // Initialize pieces
+            initPuzzlePieces();
+            
+            // Event listeners for controls
+            pieceCountSlider.addEventListener('input', () => {
+                pieceCount = parseInt(pieceCountSlider.value);
+                initPuzzlePieces();
+            });
+            
+            pieceSizeSlider.addEventListener('input', () => {
+                pieceSize = parseInt(pieceSizeSlider.value);
+                initPuzzlePieces();
+            });
+            
+            animationSpeedSlider.addEventListener('input', () => {
+                animationSpeed = parseFloat(animationSpeedSlider.value);
+            });
+            
+            pieceStyleSelect.addEventListener('change', () => {
+                pieceStyle = pieceStyleSelect.value;
+                initPuzzlePieces();
+            });
+            
+            scatterBtn.addEventListener('click', scatterPieces);
+            
+            // Handle mouse movement
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Handle mouse click
+            document.addEventListener('click', scatterPieces);
+            
+            // Handle mouse up
+            document.addEventListener('mouseup', () => {
+                setTimeout(assemblePieces, 1000);
+            });
+            
+            // Animation loop
+            function animate(time) {
+                updatePieces(time);
+                requestAnimationFrame(animate);
+            }
+            
+            // Start animation
+            animate(0);
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Re-center pieces on window resize
+                mouseX = window.innerWidth / 2;
+                mouseY = window.innerHeight / 2;
+            });
+        });
+    </script>
+</body>
+</html> 

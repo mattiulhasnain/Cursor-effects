@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Field Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0a0b1e;
+            font-family: 'Arial', sans-serif;
+            color: #ffffff;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #f0f4ff;
+            text-shadow: 0 0 10px rgba(100, 149, 255, 0.7);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #c0d0ff;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(40, 44, 80, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 149, 255, 0.3);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #c0d0ff;
+        }
+        
+        input[type="range"], select {
+            width: 120px;
+            cursor: pointer;
+            background-color: rgba(20, 22, 40, 0.6);
+            border: 1px solid rgba(100, 149, 255, 0.3);
+            color: #c0d0ff;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: rgba(60, 80, 170, 0.8);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            box-shadow: 0 0 10px rgba(100, 149, 255, 0.5);
+        }
+        
+        button:hover {
+            background-color: rgba(80, 100, 200, 0.9);
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: transparent;
+            border: 2px solid rgba(230, 240, 255, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(100, 149, 255, 0.7), 
+                        0 0 20px rgba(100, 149, 255, 0.5),
+                        0 0 30px rgba(100, 149, 255, 0.3);
+        }
+        
+        .cursor::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            background-color: rgba(230, 240, 255, 0.9);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(230, 240, 255, 0.8);
+        }
+        
+        .stats {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: rgba(230, 240, 255, 0.7);
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Energy Field</h1>
+        <p>Move your cursor to create energy disturbances in the particle field. Click to release a powerful energy burst!</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="particle-count">Particle Density</label>
+                <input type="range" id="particle-count" min="50" max="500" step="50" value="200">
+            </div>
+            
+            <div class="control-group">
+                <label for="force-strength">Force Strength</label>
+                <input type="range" id="force-strength" min="1" max="10" step="1" value="5">
+            </div>
+            
+            <div class="control-group">
+                <label for="field-type">Field Type</label>
+                <select id="field-type">
+                    <option value="attract">Attractive</option>
+                    <option value="repel">Repulsive</option>
+                    <option value="orbit">Orbital</option>
+                    <option value="vortex">Vortex</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="color-scheme">Color Scheme</label>
+                <select id="color-scheme">
+                    <option value="blue">Electric Blue</option>
+                    <option value="purple">Cosmic Purple</option>
+                    <option value="green">Toxic Green</option>
+                    <option value="rainbow">Rainbow</option>
+                </select>
+            </div>
+            
+            <button id="reset-btn">Reset Field</button>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    <div class="stats" id="stats">FPS: 0 | Particles: 0</div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Custom cursor element
+            const cursor = document.getElementById('cursor');
+            const stats = document.getElementById('stats');
+            
+            // Controls
+            const particleCountSlider = document.getElementById('particle-count');
+            const forceStrengthSlider = document.getElementById('force-strength');
+            const fieldTypeSelect = document.getElementById('field-type');
+            const colorSchemeSelect = document.getElementById('color-scheme');
+            const resetBtn = document.getElementById('reset-btn');
+            
+            // Config variables
+            let particleCount = parseInt(particleCountSlider.value);
+            let forceStrength = parseInt(forceStrengthSlider.value);
+            let fieldType = fieldTypeSelect.value;
+            let colorScheme = colorSchemeSelect.value;
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let lastX = mouseX;
+            let lastY = mouseY;
+            let mouseVelocity = 0;
+            let isClicking = false;
+            let particles = [];
+            let lastFrameTime = 0;
+            let fps = 0;
+            
+            // Color schemes
+            const colorSchemes = {
+                blue: {
+                    primary: '#4F84FF',
+                    secondary: '#30DFFF',
+                    accent: '#FFFFFF',
+                    background: '#0a0b1e'
+                },
+                purple: {
+                    primary: '#9D50FF',
+                    secondary: '#6033FF',
+                    accent: '#FFB6FF',
+                    background: '#15081e'
+                },
+                green: {
+                    primary: '#00FF66',
+                    secondary: '#88FF00',
+                    accent: '#CCFF66',
+                    background: '#081a12'
+                },
+                rainbow: {
+                    primary: 'rainbow',
+                    secondary: 'rainbow',
+                    accent: '#FFFFFF',
+                    background: '#0a0a0a'
+                }
+            };
+            
+            // Apply initial background color
+            document.body.style.backgroundColor = colorSchemes[colorScheme].background;
+            
+            // Event listeners for controls
+            particleCountSlider.addEventListener('input', () => {
+                const newParticleCount = parseInt(particleCountSlider.value);
+                
+                // Add or remove particles as needed
+                if (newParticleCount > particleCount) {
+                    // Add more particles
+                    for (let i = 0; i < newParticleCount - particleCount; i++) {
+                        particles.push(createParticle());
+                    }
+                } else if (newParticleCount < particleCount) {
+                    // Remove excess particles
+                    particles = particles.slice(0, newParticleCount);
+                }
+                
+                particleCount = newParticleCount;
+            });
+            
+            forceStrengthSlider.addEventListener('input', () => {
+                forceStrength = parseInt(forceStrengthSlider.value);
+            });
+            
+            fieldTypeSelect.addEventListener('change', () => {
+                fieldType = fieldTypeSelect.value;
+                
+                // Update cursor appearance based on field type
+                updateCursorAppearance();
+            });
+            
+            colorSchemeSelect.addEventListener('change', () => {
+                colorScheme = colorSchemeSelect.value;
+                
+                // Update background color
+                document.body.style.backgroundColor = colorSchemes[colorScheme].background;
+            });
+            
+            resetBtn.addEventListener('click', () => {
+                // Reset all particles to random positions
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(createParticle());
+                }
+            });
+            
+            // Update cursor appearance based on field type
+            function updateCursorAppearance() {
+                // Reset cursor styles
+                cursor.style.boxShadow = '';
+                cursor.style.borderColor = '';
+                
+                switch (fieldType) {
+                    case 'attract':
+                        cursor.style.borderColor = 'rgba(230, 240, 255, 0.8)';
+                        cursor.style.boxShadow = `
+                            0 0 10px rgba(100, 149, 255, 0.7), 
+                            0 0 20px rgba(100, 149, 255, 0.5),
+                            0 0 30px rgba(100, 149, 255, 0.3)
+                        `;
+                        break;
+                    case 'repel':
+                        cursor.style.borderColor = 'rgba(255, 230, 230, 0.8)';
+                        cursor.style.boxShadow = `
+                            0 0 10px rgba(255, 100, 100, 0.7), 
+                            0 0 20px rgba(255, 100, 100, 0.5),
+                            0 0 30px rgba(255, 100, 100, 0.3)
+                        `;
+                        break;
+                    case 'orbit':
+                        cursor.style.borderColor = 'rgba(230, 255, 230, 0.8)';
+                        cursor.style.boxShadow = `
+                            0 0 10px rgba(100, 255, 149, 0.7), 
+                            0 0 20px rgba(100, 255, 149, 0.5),
+                            0 0 30px rgba(100, 255, 149, 0.3)
+                        `;
+                        break;
+                    case 'vortex':
+                        cursor.style.borderColor = 'rgba(255, 230, 255, 0.8)';
+                        cursor.style.boxShadow = `
+                            0 0 10px rgba(255, 100, 255, 0.7), 
+                            0 0 20px rgba(255, 100, 255, 0.5),
+                            0 0 30px rgba(255, 100, 255, 0.3)
+                        `;
+                        break;
+                }
+            }
+            
+            // Initialize cursor appearance
+            updateCursorAppearance();
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                lastX = mouseX;
+                lastY = mouseY;
+                
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Calculate velocity
+                const dx = mouseX - lastX;
+                const dy = mouseY - lastY;
+                mouseVelocity = Math.sqrt(dx * dx + dy * dy);
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Make cursor size responsive to velocity
+                if (mouseVelocity > 5) {
+                    const scale = 1 + (mouseVelocity * 0.01);
+                    cursor.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                } else {
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                }
+            });
+            
+            // Handle mouse clicks
+            document.addEventListener('mousedown', () => {
+                isClicking = true;
+                
+                // Create an energy burst
+                createEnergyBurst();
+                
+                // Pulse the cursor
+                cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                setTimeout(() => {
+                    if (!isClicking) {
+                        cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                    }
+                }, 200);
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isClicking = false;
+                
+                // Reset cursor scale (if not moving fast)
+                if (mouseVelocity <= 5) {
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                }
+            });
+            
+            // Create a particle
+            function createParticle() {
+                return {
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 3 + 1,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    color: getRandomColor(),
+                    age: 0,
+                    lifespan: Math.random() * 100 + 100,
+                    energyLevel: Math.random()
+                };
+            }
+            
+            // Get random color based on color scheme
+            function getRandomColor() {
+                const scheme = colorSchemes[colorScheme];
+                
+                if (scheme.primary === 'rainbow') {
+                    return `hsl(${Math.random() * 360}, 80%, 60%)`;
+                }
+                
+                // Randomly choose between primary and secondary colors
+                return Math.random() > 0.5 ? scheme.primary : scheme.secondary;
+            }
+            
+            // Create an energy burst when clicking
+            function createEnergyBurst() {
+                // Affect all particles within a radius
+                const burstRadius = 200 * (forceStrength / 5);
+                
+                particles.forEach(particle => {
+                    const dx = particle.x - mouseX;
+                    const dy = particle.y - mouseY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < burstRadius) {
+                        // Calculate force based on distance (stronger when closer)
+                        const force = (burstRadius - distance) / burstRadius * forceStrength * 2;
+                        
+                        if (fieldType === 'attract') {
+                            // Pull towards cursor
+                            particle.vx -= dx / distance * force;
+                            particle.vy -= dy / distance * force;
+                        } else if (fieldType === 'repel') {
+                            // Push away from cursor
+                            particle.vx += dx / distance * force;
+                            particle.vy += dy / distance * force;
+                        } else if (fieldType === 'orbit') {
+                            // Create orbital motion
+                            particle.vx += dy / distance * force;
+                            particle.vy -= dx / distance * force;
+                        } else if (fieldType === 'vortex') {
+                            // Create spiral motion
+                            const angle = Math.atan2(dy, dx);
+                            const spiralForce = force * (1 - distance / burstRadius);
+                            
+                            particle.vx += (Math.cos(angle + Math.PI/2) * spiralForce) - (dx / distance * spiralForce);
+                            particle.vy += (Math.sin(angle + Math.PI/2) * spiralForce) - (dy / distance * spiralForce);
+                        }
+                        
+                        // Increase energy level
+                        particle.energyLevel = Math.min(1, particle.energyLevel + 0.3);
+                        
+                        // Increase size temporarily
+                        particle.size *= 1.5;
+                    }
+                });
+                
+                // Add some new particles at the burst location
+                for (let i = 0; i < 20; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 5 + 2;
+                    const distance = Math.random() * 30;
+                    
+                    const particle = {
+                        x: mouseX + Math.cos(angle) * distance,
+                        y: mouseY + Math.sin(angle) * distance,
+                        size: Math.random() * 4 + 2,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        color: colorSchemes[colorScheme].accent,
+                        age: 0,
+                        lifespan: 50,
+                        energyLevel: 1
+                    };
+                    
+                    particles.push(particle);
+                }
+            }
+            
+            // Animation loop
+            function animate(timestamp) {
+                // Calculate FPS
+                if (lastFrameTime) {
+                    fps = Math.round(1000 / (timestamp - lastFrameTime));
+                }
+                lastFrameTime = timestamp;
+                
+                // Update stats display
+                stats.textContent = `FPS: ${fps} | Particles: ${particles.length}`;
+                
+                // Clear canvas with slight transparency for trailing effect
+                ctx.fillStyle = `rgba(${hexToRgb(colorSchemes[colorScheme].background)}, 0.1)`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const particle = particles[i];
+                    
+                    // Apply forces based on cursor position and field type
+                    if (!isClicking) { // Don't apply regular forces during click bursts
+                        const dx = particle.x - mouseX;
+                        const dy = particle.y - mouseY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const maxDistance = 150;
+                        
+                        if (distance < maxDistance) {
+                            // Calculate force based on distance (stronger when closer)
+                            const force = (maxDistance - distance) / maxDistance * (forceStrength * 0.2);
+                            
+                            if (fieldType === 'attract') {
+                                // Pull towards cursor
+                                particle.vx -= dx / distance * force;
+                                particle.vy -= dy / distance * force;
+                            } else if (fieldType === 'repel') {
+                                // Push away from cursor
+                                particle.vx += dx / distance * force;
+                                particle.vy += dy / distance * force;
+                            } else if (fieldType === 'orbit') {
+                                // Create orbital motion
+                                particle.vx += dy / distance * force;
+                                particle.vy -= dx / distance * force;
+                            } else if (fieldType === 'vortex') {
+                                // Create spiral motion
+                                const angle = Math.atan2(dy, dx);
+                                const spiralForce = force * (1 - distance / maxDistance);
+                                
+                                particle.vx += (Math.cos(angle + Math.PI/2) * spiralForce) - (dx / distance * spiralForce * 0.5);
+                                particle.vy += (Math.sin(angle + Math.PI/2) * spiralForce) - (dy / distance * spiralForce * 0.5);
+                            }
+                            
+                            // Increase energy level based on proximity
+                            particle.energyLevel = Math.min(1, particle.energyLevel + 0.01);
+                        } else {
+                            // Gradually decrease energy level
+                            particle.energyLevel = Math.max(0, particle.energyLevel - 0.005);
+                        }
+                    }
+                    
+                    // Apply friction
+                    particle.vx *= 0.98;
+                    particle.vy *= 0.98;
+                    
+                    // Update position
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    
+                    // Handle boundary conditions (wrap around edges)
+                    if (particle.x < 0) particle.x = canvas.width;
+                    if (particle.x > canvas.width) particle.x = 0;
+                    if (particle.y < 0) particle.y = canvas.height;
+                    if (particle.y > canvas.height) particle.y = 0;
+                    
+                    // Update age
+                    particle.age++;
+                    
+                    // Apply sizing based on energy
+                    const displaySize = particle.size * (1 + particle.energyLevel);
+                    
+                    // Draw particle with glow effect
+                    const glow = 10 * particle.energyLevel;
+                    
+                    ctx.shadowBlur = glow;
+                    ctx.shadowColor = particle.color;
+                    
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, displaySize, 0, Math.PI * 2);
+                    
+                    // Color based on energy level
+                    if (colorScheme === 'rainbow') {
+                        // For rainbow, shift the hue based on energy
+                        const hue = parseInt(particle.color.slice(4)) + (particle.energyLevel * 40);
+                        ctx.fillStyle = `hsl(${hue}, 80%, 60%)`;
+                    } else {
+                        ctx.fillStyle = particle.color;
+                    }
+                    
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    
+                    // If age exceeds lifespan, reset the particle
+                    if (particle.age > particle.lifespan) {
+                        particles[i] = createParticle();
+                    }
+                    
+                    // If particle size is very small, gradually reduce it
+                    if (displaySize < 0.5) {
+                        particle.size *= 0.9;
+                    }
+                    
+                    // If particle size becomes too small, remove it
+                    if (particle.size < 0.1) {
+                        particles.splice(i, 1);
+                    }
+                }
+                
+                // Draw connections between energized particles
+                if (fieldType === 'orbit' || fieldType === 'vortex') {
+                    ctx.strokeStyle = colorSchemes[colorScheme].accent;
+                    ctx.lineWidth = 0.3;
+                    
+                    for (let i = 0; i < particles.length; i++) {
+                        const p1 = particles[i];
+                        
+                        if (p1.energyLevel > 0.5) {
+                            for (let j = i + 1; j < particles.length; j++) {
+                                const p2 = particles[j];
+                                
+                                if (p2.energyLevel > 0.5) {
+                                    const dx = p1.x - p2.x;
+                                    const dy = p1.y - p2.y;
+                                    const distance = Math.sqrt(dx * dx + dy * dy);
+                                    
+                                    if (distance < 80) {
+                                        // Draw connection with opacity based on distance
+                                        ctx.globalAlpha = (1 - distance / 80) * 0.2;
+                                        ctx.beginPath();
+                                        ctx.moveTo(p1.x, p1.y);
+                                        ctx.lineTo(p2.x, p2.y);
+                                        ctx.stroke();
+                                        ctx.globalAlpha = 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Request next frame
+                requestAnimationFrame(animate);
+            }
+            
+            // Helper function to convert hex to RGB
+            function hexToRgb(hex) {
+                // Remove # if present
+                hex = hex.replace('#', '');
+                
+                // Parse hex values
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                
+                return `${r}, ${g}, ${b}`;
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Initialize particles
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(createParticle());
+            }
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

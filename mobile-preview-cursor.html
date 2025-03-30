@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Preview Cursor Effect - Interactive Device Preview</title>
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --background: #0a192f;
+            --card-bg: rgba(28, 42, 57, 0.7);
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            cursor: none;
+        }
+
+        .content {
+            position: relative;
+            padding: 20px;
+            max-width: 800px;
+            margin: 50px auto;
+            text-align: center;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+        }
+
+        .return-link {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 10px 20px;
+            background: rgba(93, 187, 99, 0.2);
+            border-radius: 30px;
+            z-index: 10;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+        }
+
+        .return-link:hover {
+            background: rgba(93, 187, 99, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(93, 187, 99, 0.7);
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 20px rgba(93, 187, 99, 0.7);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .phone-frame {
+            position: fixed;
+            width: 300px;
+            height: 600px;
+            border-radius: 36px;
+            background: #111;
+            z-index: 100;
+            transform: translate(-50%, -50%) scale(0.5);
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5),
+                        0 2px 8px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 36px;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 16px 16px;
+            z-index: 2;
+        }
+
+        .phone-screen {
+            flex: 1;
+            background: white;
+            margin: 10px;
+            border-radius: 26px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            transform-origin: 0 0;
+            background: white;
+        }
+
+        .phone-button {
+            position: absolute;
+            right: -5px;
+            top: 120px;
+            width: 5px;
+            height: 30px;
+            background: #222;
+            border-radius: 3px 0 0 3px;
+        }
+
+        .phone-button.volume-up {
+            top: 120px;
+        }
+
+        .phone-button.volume-down {
+            top: 160px;
+        }
+
+        .phone-button.power {
+            right: -5px;
+            top: 80px;
+        }
+
+        .device-controls {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .device-btn {
+            background: rgba(93, 187, 99, 0.2);
+            color: var(--text);
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .device-btn:hover {
+            background: rgba(93, 187, 99, 0.4);
+        }
+
+        .device-btn.active {
+            background: rgba(93, 187, 99, 0.6);
+        }
+
+        .demo-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            padding: 20px;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            display: none;
+        }
+
+        .demo-content h2 {
+            margin-bottom: 15px;
+            color: #5dbb63;
+        }
+
+        .demo-content p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .demo-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .demo-content.active {
+            display: block;
+        }
+
+        .debug-info {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 10;
+            font-size: 0.9rem;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+        }
+
+        .canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .canvas-trail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .loading-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            z-index: 1;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(93, 187, 99, 0.2);
+            border-top-color: #5dbb63;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .demo-sample {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            margin: 10px 0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-weight: 500;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="content">
+        <h1>Mobile Preview Cursor</h1>
+        <p>Shows how content will appear on mobile devices with a cursor-attached phone frame that displays live previews.</p>
+    </div>
+    
+    <div class="device-controls">
+        <button class="device-btn active" data-device="phone">Phone</button>
+        <button class="device-btn" data-device="tablet">Tablet</button>
+        <button class="device-btn" data-theme="light">Light Theme</button>
+        <button class="device-btn" data-theme="dark">Dark Theme</button>
+    </div>
+    
+    <div class="canvas-container">
+        <canvas class="canvas-trail"></canvas>
+    </div>
+    
+    <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-button volume-up"></div>
+        <div class="phone-button volume-down"></div>
+        <div class="phone-button power"></div>
+        <div class="phone-screen">
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+            </div>
+            <!-- Demo content that will be shown inside the phone -->
+            <div class="demo-content active" data-content="1">
+                <h2>Mobile App UI</h2>
+                <p>This is how your website would appear on a mobile device. The layout adapts to provide the best user experience on smaller screens.</p>
+                <div class="demo-sample">Hero Section</div>
+                <p>Mobile-optimized interfaces focus on simplicity, touch-friendly elements, and reduced content density for better readability.</p>
+                <div class="demo-sample">Features Section</div>
+                <p>Navigation is typically streamlined with hamburger menus, bottom tabs, or other mobile-friendly patterns.</p>
+            </div>
+            <div class="demo-content" data-content="2">
+                <h2>Responsive Design</h2>
+                <p>Responsive websites automatically adjust their layout based on the screen size of the device being used to view them.</p>
+                <div class="demo-sample">Mobile Layout</div>
+                <p>Key principles of good mobile design include:</p>
+                <ul>
+                    <li>Touch-friendly interface elements</li>
+                    <li>Simplified navigation</li>
+                    <li>Prioritized content</li>
+                    <li>Optimized images and media</li>
+                </ul>
+                <div class="demo-sample">Mobile Components</div>
+            </div>
+            <div class="demo-content" data-content="3">
+                <h2>Mobile Performance</h2>
+                <p>Performance is crucial for mobile experiences. Users expect fast-loading pages even on slower connections.</p>
+                <div class="demo-sample">Loading Metrics</div>
+                <p>Key mobile performance considerations:</p>
+                <ul>
+                    <li>Minimal page weight</li>
+                    <li>Optimized assets</li>
+                    <li>Reduced network requests</li>
+                    <li>Efficient JavaScript</li>
+                </ul>
+                <p>A well-optimized mobile site can significantly improve user engagement and conversion rates.</p>
+            </div>
+        </div>
+    </div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cursor = document.querySelector('.cursor');
+            const phoneFrame = document.querySelector('.phone-frame');
+            const canvas = document.querySelector('.canvas-trail');
+            const ctx = canvas.getContext('2d');
+            const deviceBtns = document.querySelectorAll('.device-btn');
+            const demoContents = document.querySelectorAll('.demo-content');
+            const loadingIndicator = document.querySelector('.loading-indicator');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Mouse tracking
+            let mouseX = 0;
+            let mouseY = 0;
+            let targetX = 0;
+            let targetY = 0;
+            let isMouseMoving = false;
+            let lastMouseMoveTime = 0;
+            let currentContentIndex = 0;
+            
+            // Phone frame settings
+            let deviceType = 'phone'; // 'phone' or 'tablet'
+            let theme = 'light'; // 'light' or 'dark'
+            
+            // Trail effect
+            const trail = [];
+            const maxTrailLength = 20;
+            
+            // Show loading indicator for a brief moment
+            setTimeout(() => {
+                loadingIndicator.style.opacity = '0';
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'none';
+                }, 500);
+            }, 1500);
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Hide default cursor and show custom cursor
+                cursor.style.opacity = '1';
+                
+                // Update phone frame position with a slight delay
+                targetX = mouseX;
+                targetY = mouseY;
+                
+                // Create trail point
+                addTrailPoint(mouseX, mouseY);
+                
+                // Set mouse as moving
+                isMouseMoving = true;
+                lastMouseMoveTime = Date.now();
+            });
+            
+            // Handle device control buttons
+            deviceBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (btn.dataset.device) {
+                        deviceType = btn.dataset.device;
+                        
+                        // Remove active class from device buttons
+                        deviceBtns.forEach(b => {
+                            if (b.dataset.device) b.classList.remove('active');
+                        });
+                        
+                        // Add active class to clicked button
+                        btn.classList.add('active');
+                        
+                        // Update phone frame appearance
+                        updateDeviceAppearance();
+                    }
+                    
+                    if (btn.dataset.theme) {
+                        theme = btn.dataset.theme;
+                        
+                        // Remove active class from theme buttons
+                        deviceBtns.forEach(b => {
+                            if (b.dataset.theme) b.classList.remove('active');
+                        });
+                        
+                        // Add active class to clicked button
+                        btn.classList.add('active');
+                        
+                        // Update theme
+                        updateTheme();
+                    }
+                });
+            });
+            
+            // Cycle through demo content
+            document.addEventListener('click', () => {
+                // Only change content if phone is visible (mouse is moving)
+                if (isMouseMoving) {
+                    // Hide current content
+                    demoContents[currentContentIndex].classList.remove('active');
+                    
+                    // Move to next content
+                    currentContentIndex = (currentContentIndex + 1) % demoContents.length;
+                    
+                    // Show next content
+                    demoContents[currentContentIndex].classList.add('active');
+                    
+                    // Show brief loading indicator
+                    loadingIndicator.style.display = 'flex';
+                    loadingIndicator.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        loadingIndicator.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingIndicator.style.display = 'none';
+                        }, 300);
+                    }, 500);
+                }
+            });
+            
+            // Update device appearance based on selected type
+            function updateDeviceAppearance() {
+                if (deviceType === 'phone') {
+                    phoneFrame.style.width = '300px';
+                    phoneFrame.style.height = '600px';
+                    phoneFrame.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                } else if (deviceType === 'tablet') {
+                    phoneFrame.style.width = '500px';
+                    phoneFrame.style.height = '700px';
+                    phoneFrame.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                }
+            }
+            
+            // Update theme colors
+            function updateTheme() {
+                const phoneScreen = document.querySelector('.phone-screen');
+                
+                if (theme === 'light') {
+                    phoneScreen.style.background = 'white';
+                    
+                    // Update content styles
+                    document.querySelectorAll('.demo-content h2').forEach(el => {
+                        el.style.color = '#5dbb63';
+                    });
+                    
+                    document.querySelectorAll('.demo-content p, .demo-content li').forEach(el => {
+                        el.style.color = '#333';
+                    });
+                    
+                    document.querySelectorAll('.demo-sample').forEach(el => {
+                        el.style.background = 'linear-gradient(135deg, #f5f7fa, #c3cfe2)';
+                        el.style.color = '#333';
+                    });
+                    
+                } else if (theme === 'dark') {
+                    phoneScreen.style.background = '#121212';
+                    
+                    // Update content styles
+                    document.querySelectorAll('.demo-content h2').forEach(el => {
+                        el.style.color = '#8de4af';
+                    });
+                    
+                    document.querySelectorAll('.demo-content p, .demo-content li').forEach(el => {
+                        el.style.color = '#e0e0e0';
+                    });
+                    
+                    document.querySelectorAll('.demo-sample').forEach(el => {
+                        el.style.background = 'linear-gradient(135deg, #2d3436, #000000)';
+                        el.style.color = '#f0f0f0';
+                    });
+                }
+            }
+            
+            // Add a point to the trail
+            function addTrailPoint(x, y) {
+                trail.push({ x, y, age: 0 });
+                
+                if (trail.length > maxTrailLength) {
+                    trail.shift();
+                }
+            }
+            
+            // Draw the trail
+            function drawTrail() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                for (let i = 0; i < trail.length - 1; i++) {
+                    const point = trail[i];
+                    const nextPoint = trail[i + 1];
+                    
+                    const alpha = 1 - point.age / 20;
+                    
+                    if (alpha <= 0) continue;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(point.x, point.y);
+                    ctx.lineTo(nextPoint.x, nextPoint.y);
+                    ctx.strokeStyle = `rgba(93, 187, 99, ${alpha * 0.3})`;
+                    ctx.lineWidth = 8 * (1 - point.age / 20);
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+                
+                // Age the trail points
+                for (let i = 0; i < trail.length; i++) {
+                    trail[i].age += 0.3;
+                }
+                
+                // Remove old points
+                while (trail.length > 0 && trail[0].age >= 20) {
+                    trail.shift();
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                // Update custom cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Add slight lag to phone movement for smooth following
+                const phoneX = targetX * 0.05 + phoneFrame.offsetLeft * 0.95;
+                const phoneY = targetY * 0.05 + phoneFrame.offsetTop * 0.95;
+                
+                phoneFrame.style.left = `${mouseX}px`;
+                phoneFrame.style.top = `${mouseY}px`;
+                
+                // Check if mouse hasn't moved recently
+                if (isMouseMoving && Date.now() - lastMouseMoveTime > 2000) {
+                    isMouseMoving = false;
+                }
+                
+                // Draw trail effect
+                drawTrail();
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Initial device appearance
+            updateDeviceAppearance();
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

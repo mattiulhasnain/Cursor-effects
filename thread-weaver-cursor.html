@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Thread Weaver Cursor Effect - Create intricate thread patterns that follow your cursor movement">
+    <title>Thread Weaver Cursor Effect - Interactive Cursor Animation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #9c89b8;
+            --primary-light: #b8a9d1;
+            --primary-dark: #7962a0;
+            --secondary: #f0a6ca;
+            --secondary-light: #ffcce6;
+            --accent: #ffb9df;
+            --background: #0a192f;
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+            --thread-color-1: #9c89b8;
+            --thread-color-2: #f0a6ca;
+            --thread-color-3: #efc3e6;
+            --thread-color-4: #fdfdcb;
+            --thread-color-5: #b6e5e5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            cursor: none; /* Hide default cursor */
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zm20.97 0l9.315 9.314-1.414 1.414L34.828 0h2.83zM22.344 0L13.03 9.314l1.414 1.414L25.172 0h-2.83zM32 0l12.142 12.142-1.414 1.414L30 2.828 17.272 15.556l-1.414-1.414L28 0h4zM.284 0l28 28-1.414 1.414L0 2.544V0h.284zM0 5.373l25.456 25.455-1.414 1.415L0 8.2V5.374zm0 5.656l22.627 22.627-1.414 1.414L0 13.86v-2.83zm0 5.656l19.8 19.8-1.415 1.413L0 19.514v-2.83zm0 5.657l16.97 16.97-1.414 1.415L0 25.172v-2.83zM0 28l14.142 14.142-1.414 1.414L0 30.828V28zm0 5.657L11.314 44.97 9.9 46.386l-9.9-9.9v-2.828zm0 5.657L8.485 47.8 7.07 49.214 0 42.143v-2.83zm0 5.657l5.657 5.657-1.414 1.415L0 47.8v-2.83zm0 5.657l2.828 2.83-1.414 1.413L0 53.456v-2.83zM54.627 60L30 35.373 5.373 60H8.2L30 38.2 51.8 60h2.827zm-5.656 0L30 41.03 11.03 60h2.828L30 43.858 46.142 60h2.83zm-5.656 0L30 46.686 16.686 60h2.83L30 49.515 40.485 60h2.83zm-5.657 0L30 52.343 22.344 60h2.83L30 55.172 34.828 60h2.83zM32 60l-2-2-2 2h4zM59.716 0l-28 28 1.414 1.414L60 2.544V0h-.284zM60 5.373L34.544 30.828l1.414 1.415L60 8.2V5.374zm0 5.656L37.373 33.656l1.414 1.414L60 13.86v-2.83zm0 5.656l-19.8 19.8 1.415 1.413L60 19.514v-2.83zm0 5.657l-16.97 16.97 1.414 1.415L60 25.172v-2.83zM60 28L45.858 42.142l1.414 1.414L60 30.828V28zm0 5.657L48.686 44.97l1.415 1.415 9.9-9.9v-2.828zm0 5.657L51.515 47.8l1.414 1.414L60 42.143v-2.83zm0 5.657l-5.657 5.657 1.414 1.415L60 47.8v-2.83zm0 5.657l-2.828 2.83 1.414 1.413L60 53.456v-2.83zM39.9 16.385l1.414-1.414L30 3.658 18.686 14.97l1.415 1.415 9.9-9.9 9.9 9.9zm-2.83 2.828l1.415-1.414L30 9.313 21.515 17.8l1.414 1.413L30 11.8l7.07 7.414v-.002zm-2.827 2.83l1.414-1.416L30 14.97l-5.657 5.657 1.414 1.415L30 17.8l4.243 4.242zm-2.83 2.827l1.415-1.414L30 20.626l-2.828 2.83 1.414 1.414L30 23.456l1.414 1.414zM56.87 59.414L58.284 58 30 29.716 1.716 58l1.414 1.414L30 32.544l26.87 26.87z' fill='rgba(240, 166, 202, 0.05)' fill-rule='evenodd'/%3E%3C/svg%3E"),
+                radial-gradient(circle at 30% 10%, rgba(156, 137, 184, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 70% 90%, rgba(240, 166, 202, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .description {
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--background);
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .back-button:hover::before {
+            opacity: 1;
+        }
+
+        .content-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .content-area {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .content-box {
+            background: rgba(28, 42, 57, 0.7);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .content-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .content-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-light);
+        }
+
+        .content-box p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .controls {
+            background: rgba(28, 42, 57, 0.7);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .controls h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-light);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .control-item {
+            background: rgba(10, 25, 47, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(156, 137, 184, 0.1);
+        }
+
+        .control-item h4 {
+            margin-bottom: 0.5rem;
+            color: var(--secondary-light);
+        }
+
+        .control-item p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Thread weaver canvas */
+        .thread-weaver-workspace {
+            background: rgba(20, 30, 50, 0.8);
+            border-radius: 12px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .thread-weaver-workspace h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-light);
+        }
+
+        .thread-canvas {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background: rgba(10, 20, 40, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Thread pins */
+        .pin {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            z-index: 5;
+        }
+
+        /* Thread web lines */
+        .thread {
+            position: absolute;
+            height: 1px;
+            background: var(--thread-color-1);
+            transform-origin: left center;
+            z-index: 4;
+            opacity: 0.7;
+        }
+
+        /* Custom cursor */
+        .thread-cursor {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid var(--primary);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: width 0.2s, height 0.2s;
+        }
+
+        .thread-cursor::before {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .thread-cursor.weaving {
+            background-color: rgba(240, 166, 202, 0.2);
+            border-color: var(--secondary);
+            width: 30px;
+            height: 30px;
+        }
+
+        .thread-controls {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(20, 30, 50, 0.6);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .thread-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .thread-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .thread-color:hover {
+            transform: scale(1.2);
+        }
+
+        .thread-color.active {
+            border: 2px solid #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .thread-color-1 { background: var(--thread-color-1); }
+        .thread-color-2 { background: var(--thread-color-2); }
+        .thread-color-3 { background: var(--thread-color-3); }
+        .thread-color-4 { background: var(--thread-color-4); }
+        .thread-color-5 { background: var(--thread-color-5); }
+
+        .density-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .density-control input {
+            accent-color: var(--primary);
+        }
+
+        .clear-button {
+            margin-left: auto;
+            padding: 0.5rem 1rem;
+            background: rgba(10, 25, 47, 0.5);
+            color: var(--text);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .clear-button:hover {
+            background: var(--primary);
+            color: var(--background);
+        }
+
+        .weaving-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 20, 40, 0.8);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            max-width: 250px;
+        }
+
+        .weaving-info h4 {
+            color: var(--primary-light);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Thread Weaver Cursor</h1>
+            <p class="description">
+                Create intricate thread art patterns as you move your cursor around the workspace. Each click forms a new anchor point for threads, creating mesmerizing string art patterns that evolve with your movement.
+            </p>
+            <a href="index.html" class="back-button">← Back to All Effects</a>
+        </header>
+
+        <div class="content-area">
+            <div class="content-box">
+                <h3>Interactive Thread Art</h3>
+                <p>
+                    This cursor effect transforms your mouse into a thread weaving tool. Add anchor points by clicking, then watch as colorful threads dynamically connect between these points and your cursor.
+                </p>
+                <p>
+                    Every movement creates new patterns, allowing you to create beautiful geometric string art with just a few clicks and cursor movements.
+                </p>
+            </div>
+            <div class="content-box">
+                <h3>Creative Potential</h3>
+                <p>
+                    Choose from multiple thread colors and adjust thread density to create your own unique thread art compositions. The possibilities are endless!
+                </p>
+                <p>
+                    Create star patterns, spirals, geometric designs or abstract forms - perfect for relaxation, creative expression, or generating unique digital art.
+                </p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <h3>User Controls</h3>
+            <div class="controls-grid">
+                <div class="control-item">
+                    <h4>Click Canvas</h4>
+                    <p>Click anywhere on the canvas to add an anchor pin for your threads.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Mouse Movement</h4>
+                    <p>Move your cursor to dynamically create thread connections between pins and your cursor position.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Change Color</h4>
+                    <p>Select different thread colors from the palette to change the appearance of your thread art.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Double Click</h4>
+                    <p>Double-click anywhere on the canvas to create a symmetrical pattern of pins.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="thread-weaver-workspace">
+            <h3>Thread Art Canvas</h3>
+            <div class="thread-controls">
+                <div class="thread-control">
+                    <span>Thread Color:</span>
+                    <div class="thread-color thread-color-1 active" data-color="var(--thread-color-1)"></div>
+                    <div class="thread-color thread-color-2" data-color="var(--thread-color-2)"></div>
+                    <div class="thread-color thread-color-3" data-color="var(--thread-color-3)"></div>
+                    <div class="thread-color thread-color-4" data-color="var(--thread-color-4)"></div>
+                    <div class="thread-color thread-color-5" data-color="var(--thread-color-5)"></div>
+                </div>
+                <div class="density-control">
+                    <span>Thread Density:</span>
+                    <input type="range" min="1" max="10" value="5" id="thread-density">
+                </div>
+                <button class="clear-button">Clear Canvas</button>
+            </div>
+            
+            <div class="thread-canvas">
+                <!-- Pins and threads will be added here dynamically -->
+            </div>
+            
+            <div class="weaving-info">
+                <h4>Start Weaving</h4>
+                <p>Click anywhere on the canvas to place pins. Threads will automatically connect between pins and your cursor position.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom cursor element -->
+    <div class="thread-cursor"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Thread weaver elements
+            const threadCanvas = document.querySelector('.thread-canvas');
+            const threadControls = document.querySelector('.thread-controls');
+            const weavingInfo = document.querySelector('.weaving-info');
+            const cursor = document.querySelector('.thread-cursor');
+            const clearButton = document.querySelector('.clear-button');
+            const densitySlider = document.getElementById('thread-density');
+            const colorButtons = document.querySelectorAll('.thread-color');
+            
+            // State variables
+            let pins = [];
+            let threads = [];
+            let isWeaving = false;
+            let currentColor = getComputedStyle(document.documentElement).getPropertyValue('--thread-color-1').trim();
+            let threadDensity = parseInt(densitySlider.value);
+            let mousePosition = { x: 0, y: 0 };
+            
+            // Initialize custom cursor
+            function updateCursor(e) {
+                mousePosition.x = e.clientX;
+                mousePosition.y = e.clientY;
+                cursor.style.left = `${e.clientX}px`;
+                cursor.style.top = `${e.clientY}px`;
+                
+                // Update cursor appearance if we're actively weaving
+                if (pins.length > 0) {
+                    cursor.classList.add('weaving');
+                    
+                    // Update thread connections
+                    updateThreads();
+                } else {
+                    cursor.classList.remove('weaving');
+                }
+            }
+            
+            // Handle clicks on the canvas to add pins
+            function handleCanvasClick(e) {
+                const canvasRect = threadCanvas.getBoundingClientRect();
+                const x = e.clientX - canvasRect.left;
+                const y = e.clientY - canvasRect.top;
+                
+                addPin(x, y);
+                
+                // Update weaving state
+                isWeaving = pins.length > 0;
+                
+                // Update info text
+                if (pins.length === 1) {
+                    weavingInfo.innerHTML = `<h4>Weaving Started</h4><p>Move your cursor to see threads form between pins. Add more pins to create complex patterns.</p>`;
+                } else if (pins.length > 1) {
+                    weavingInfo.innerHTML = `<h4>Thread Pattern Growing</h4><p>You have ${pins.length} pins placed. Continue to add more or try different thread colors.</p>`;
+                }
+            }
+            
+            // Handle double-click to create symmetrical patterns
+            function handleCanvasDoubleClick(e) {
+                const canvasRect = threadCanvas.getBoundingClientRect();
+                const centerX = canvasRect.width / 2;
+                const centerY = canvasRect.height / 2;
+                
+                // Create a circular pattern of pins
+                const radius = Math.min(centerX, centerY) * 0.8;
+                const numPins = 8; // Number of pins in the pattern
+                
+                for (let i = 0; i < numPins; i++) {
+                    const angle = (Math.PI * 2 * i) / numPins;
+                    const x = centerX + radius * Math.cos(angle);
+                    const y = centerY + radius * Math.sin(angle);
+                    
+                    addPin(x, y);
+                }
+                
+                // Update weaving state
+                isWeaving = true;
+                
+                // Update info text
+                weavingInfo.innerHTML = `<h4>Symmetrical Pattern Created</h4><p>A circular pattern with ${numPins} pins has been created. Move your cursor to see the effects.</p>`;
+            }
+            
+            // Add a pin at the specified position
+            function addPin(x, y) {
+                const pin = document.createElement('div');
+                pin.className = 'pin';
+                pin.style.left = `${x}px`;
+                pin.style.top = `${y}px`;
+                
+                threadCanvas.appendChild(pin);
+                pins.push({ element: pin, x, y });
+                
+                updateThreads();
+            }
+            
+            // Update threads based on mouse position and pins
+            function updateThreads() {
+                // Remove existing temporary threads
+                document.querySelectorAll('.thread.temp').forEach(thread => thread.remove());
+                
+                if (pins.length === 0) return;
+                
+                const canvasRect = threadCanvas.getBoundingClientRect();
+                const cursorX = mousePosition.x - canvasRect.left;
+                const cursorY = mousePosition.y - canvasRect.top;
+                
+                // Skip if cursor is outside canvas
+                if (cursorX < 0 || cursorX > canvasRect.width || cursorY < 0 || cursorY > canvasRect.height) {
+                    return;
+                }
+                
+                // Create threads between cursor and pins
+                pins.forEach((pin, index) => {
+                    // Create threads with varying density
+                    for (let i = 0; i < threadDensity; i++) {
+                        const thread = document.createElement('div');
+                        thread.className = 'thread temp';
+                        
+                        const opacity = 0.7 - (i * (0.5 / threadDensity));
+                        thread.style.opacity = opacity;
+                        
+                        // Position at pin
+                        thread.style.left = `${pin.x}px`;
+                        thread.style.top = `${pin.y}px`;
+                        
+                        // Calculate thread length and angle
+                        const dx = cursorX - pin.x;
+                        const dy = cursorY - pin.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        
+                        // Apply an offset for variation in dense threads
+                        const offsetX = i * (dx / (threadDensity * 10));
+                        const offsetY = i * (dy / (threadDensity * 10));
+                        
+                        const adjustedLength = length - (i * (length / (threadDensity * 5)));
+                        
+                        // Set thread style
+                        thread.style.width = `${adjustedLength}px`;
+                        thread.style.transform = `rotate(${angle}deg)`;
+                        thread.style.background = currentColor;
+                        
+                        threadCanvas.appendChild(thread);
+                        threads.push(thread);
+                    }
+                });
+                
+                // Create threads between pins if more than one pin exists
+                if (pins.length > 1) {
+                    for (let i = 0; i < pins.length; i++) {
+                        for (let j = i + 1; j < pins.length; j++) {
+                            // Only create threads between some pins for aesthetic reasons
+                            if ((i + j) % 2 === 0) {
+                                const pin1 = pins[i];
+                                const pin2 = pins[j];
+                                
+                                const thread = document.createElement('div');
+                                thread.className = 'thread temp';
+                                
+                                // Position at first pin
+                                thread.style.left = `${pin1.x}px`;
+                                thread.style.top = `${pin1.y}px`;
+                                
+                                // Calculate thread length and angle
+                                const dx = pin2.x - pin1.x;
+                                const dy = pin2.y - pin1.y;
+                                const length = Math.sqrt(dx * dx + dy * dy);
+                                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                                
+                                // Set thread style
+                                thread.style.width = `${length}px`;
+                                thread.style.transform = `rotate(${angle}deg)`;
+                                thread.style.background = currentColor;
+                                thread.style.opacity = '0.4';
+                                
+                                threadCanvas.appendChild(thread);
+                                threads.push(thread);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Handle thread color selection
+            function handleColorSelect(e) {
+                const colorButton = e.target.closest('.thread-color');
+                if (!colorButton) return;
+                
+                // Update active state
+                colorButtons.forEach(btn => btn.classList.remove('active'));
+                colorButton.classList.add('active');
+                
+                // Set current color
+                currentColor = getComputedStyle(document.documentElement).getPropertyValue(
+                    colorButton.dataset.color
+                ).trim();
+                
+                // Update existing threads
+                updateThreads();
+            }
+            
+            // Handle density slider changes
+            function handleDensityChange() {
+                threadDensity = parseInt(densitySlider.value);
+                updateThreads();
+            }
+            
+            // Clear the canvas
+            function clearCanvas() {
+                // Remove all pins and threads
+                pins.forEach(pin => pin.element.remove());
+                pins = [];
+                
+                threads.forEach(thread => thread.remove());
+                threads = [];
+                
+                isWeaving = false;
+                
+                // Reset info text
+                weavingInfo.innerHTML = `<h4>Start Weaving</h4><p>Click anywhere on the canvas to place pins. Threads will automatically connect between pins and your cursor position.</p>`;
+                
+                // Update cursor state
+                cursor.classList.remove('weaving');
+            }
+            
+            // Event listeners
+            document.addEventListener('mousemove', updateCursor);
+            threadCanvas.addEventListener('click', handleCanvasClick);
+            threadCanvas.addEventListener('dblclick', handleCanvasDoubleClick);
+            threadControls.addEventListener('click', handleColorSelect);
+            densitySlider.addEventListener('input', handleDensityChange);
+            clearButton.addEventListener('click', clearCanvas);
+            
+            // Hide cursor when leaving the window
+            document.addEventListener('mouseleave', () => {
+                cursor.style.display = 'none';
+            });
+            
+            document.addEventListener('mouseenter', () => {
+                cursor.style.display = 'block';
+            });
+            
+            // Create a simple starting pattern after a short delay
+            setTimeout(() => {
+                const canvasRect = threadCanvas.getBoundingClientRect();
+                const centerX = canvasRect.width / 2;
+                const centerY = canvasRect.height / 2;
+                
+                // Add a few pins around the edges for a starter example
+                addPin(50, 50);
+                addPin(canvasRect.width - 50, 50);
+                addPin(canvasRect.width - 50, canvasRect.height - 50);
+                addPin(50, canvasRect.height - 50);
+                
+                isWeaving = true;
+                weavingInfo.innerHTML = `<h4>Example Pattern Created</h4><p>Four pins have been placed at the corners. Move your cursor to see the threads form. Click to add more pins!</p>`;
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

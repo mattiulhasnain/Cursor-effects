@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnetic Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0a192f;
+            color: #f0f8ff;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        h1 {
+            text-align: center;
+            padding-top: 30px;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #5dbb63;
+        }
+        
+        .description {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+            color: rgba(240, 248, 255, 0.7);
+        }
+        
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 50px;
+        }
+        
+        .element {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #66b2ff;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(102, 178, 255, 0.7);
+        }
+        
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #5dbb63;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 10px rgba(93, 187, 99, 0.7);
+        }
+        
+        .cursor-ring {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #5dbb63;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9998;
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            color: #5dbb63;
+            text-decoration: none;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+        
+        .return-link:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Magnetic Cursor Effect</h1>
+    <p class="description">Move your cursor around the screen and watch as the elements are attracted to it like a magnet.</p>
+    
+    <div class="container" id="container"></div>
+    
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('container');
+            const cursor = document.getElementById('cursor');
+            const cursorRing = document.getElementById('cursorRing');
+            
+            // Create magnetic elements
+            const numElements = 80;
+            const elements = [];
+            
+            for (let i = 0; i < numElements; i++) {
+                const element = document.createElement('div');
+                element.className = 'element';
+                
+                // Random colors with a blue theme
+                const hue = 210 + Math.random() * 30;
+                const saturation = 70 + Math.random() * 30;
+                const lightness = 50 + Math.random() * 20;
+                element.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                
+                // Random size
+                const size = 10 + Math.random() * 30;
+                element.style.width = `${size}px`;
+                element.style.height = `${size}px`;
+                
+                // Random position
+                const posX = Math.random() * window.innerWidth;
+                const posY = Math.random() * window.innerHeight;
+                element.style.left = `${posX}px`;
+                element.style.top = `${posY}px`;
+                
+                // Store original position
+                element.originalX = posX;
+                element.originalY = posY;
+                element.currentX = posX;
+                element.currentY = posY;
+                
+                container.appendChild(element);
+                elements.push(element);
+            }
+            
+            // Mouse movement
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                cursorRing.style.left = `${mouseX}px`;
+                cursorRing.style.top = `${mouseY}px`;
+            });
+            
+            // Animation loop
+            function animate() {
+                elements.forEach(element => {
+                    // Calculate distance between cursor and element
+                    const dx = mouseX - element.currentX;
+                    const dy = mouseY - element.currentY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Magnetic radius
+                    const magneticRadius = 200;
+                    
+                    if (distance < magneticRadius) {
+                        // Attraction strength based on distance
+                        const attractionStrength = 1 - distance / magneticRadius;
+                        
+                        // Calculate new position with attraction
+                        element.currentX += dx * 0.05 * attractionStrength;
+                        element.currentY += dy * 0.05 * attractionStrength;
+                    } else {
+                        // Return to original position when out of magnetic radius
+                        const returnX = element.originalX - element.currentX;
+                        const returnY = element.originalY - element.currentY;
+                        
+                        element.currentX += returnX * 0.02;
+                        element.currentY += returnY * 0.02;
+                    }
+                    
+                    // Update element position
+                    element.style.left = `${element.currentX}px`;
+                    element.style.top = `${element.currentY}px`;
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+        });
+    </script>
+</body>
+</html> 

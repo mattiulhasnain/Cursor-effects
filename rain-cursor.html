@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rain Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #1a1a2e;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #e0e0e0;
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .raindrop {
+            position: absolute;
+            background-color: rgba(100, 150, 255, 0.5);
+            width: 2px;
+            pointer-events: none;
+            border-radius: 0 0 5px 5px;
+            z-index: 5;
+        }
+        
+        .splash {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid rgba(100, 150, 255, 0.4);
+            transform: translate(-50%, -50%);
+            animation: splash 0.5s linear forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes splash {
+            0% {
+                width: 0px;
+                height: 0px;
+                opacity: 0.7;
+            }
+            100% {
+                width: 25px;
+                height: 25px;
+                opacity: 0;
+            }
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 2px solid rgba(100, 150, 255, 0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(100, 150, 255, 0.4);
+        }
+        
+        .cloud {
+            position: fixed;
+            background-color: rgba(180, 180, 180, 0.5);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            box-shadow: 
+                15px 0px 0 0 rgba(180, 180, 180, 0.5),
+                30px 0px 0 0 rgba(180, 180, 180, 0.5),
+                10px -10px 0 0 rgba(180, 180, 180, 0.5),
+                25px -5px 0 0 rgba(180, 180, 180, 0.5);
+            opacity: 0.6;
+            z-index: 1;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .return-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Rain Cursor Effect</h1>
+        <p>Move your cursor to create raindrops that fall naturally from your cursor's position. Watch as they splash on surfaces, creating a realistic rain simulation effect.</p>
+    </div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const cursor = document.querySelector('.cursor');
+            
+            // Create background clouds
+            for (let i = 0; i < 6; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.left = `${Math.random() * window.innerWidth}px`;
+                cloud.style.top = `${Math.random() * 200}px`;
+                cloud.style.transform = `scale(${0.8 + Math.random() * 1.5})`;
+                body.appendChild(cloud);
+            }
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            
+            // Settings
+            const rainInterval = 50; // ms between rain drops
+            const dropSpeed = 5;
+            const gravity = 0.2;
+            
+            let lastRainTime = 0;
+            let raindrops = [];
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Create raindrop
+            function createRaindrop(x, y) {
+                const drop = document.createElement('div');
+                drop.className = 'raindrop';
+                drop.style.left = `${x}px`;
+                drop.style.top = `${y}px`;
+                drop.style.height = `${5 + Math.random() * 15}px`;
+                drop.style.opacity = 0.2 + Math.random() * 0.6;
+                body.appendChild(drop);
+                
+                return {
+                    element: drop,
+                    x: x,
+                    y: y,
+                    speed: dropSpeed + Math.random() * 3,
+                    removed: false
+                };
+            }
+            
+            // Create splash
+            function createSplash(x, y) {
+                const splash = document.createElement('div');
+                splash.className = 'splash';
+                splash.style.left = `${x}px`;
+                splash.style.top = `${y}px`;
+                body.appendChild(splash);
+                
+                // Remove splash after animation
+                setTimeout(() => {
+                    if (splash && splash.parentNode) {
+                        splash.parentNode.removeChild(splash);
+                    }
+                }, 500);
+            }
+            
+            function update() {
+                const currentTime = Date.now();
+                
+                // Create new raindrops at intervals when mouse moves
+                if (currentTime - lastRainTime > rainInterval) {
+                    const movementDistance = Math.sqrt(
+                        Math.pow(mouseX - prevMouseX, 2) + 
+                        Math.pow(mouseY - prevMouseY, 2)
+                    );
+                    
+                    if (movementDistance > 5) {
+                        const offsetX = (Math.random() - 0.5) * 30;
+                        raindrops.push(createRaindrop(mouseX + offsetX, mouseY));
+                        lastRainTime = currentTime;
+                    }
+                }
+                
+                // Update raindrops
+                for (let i = 0; i < raindrops.length; i++) {
+                    const drop = raindrops[i];
+                    if (drop.removed) continue;
+                    
+                    drop.speed += gravity;
+                    drop.y += drop.speed;
+                    drop.element.style.top = `${drop.y}px`;
+                    
+                    // Remove if off-screen
+                    if (drop.y > window.innerHeight) {
+                        createSplash(drop.x, window.innerHeight);
+                        drop.element.remove();
+                        drop.removed = true;
+                    }
+                }
+                
+                // Clean up removed raindrops
+                raindrops = raindrops.filter(drop => !drop.removed);
+                
+                requestAnimationFrame(update);
+            }
+            
+            update();
+        });
+    </script>
+</body>
+</html> 

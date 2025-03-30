@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autumn Wind Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, #2E1A47, #854D27);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #e0e0e0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+        }
+        
+        .cursor::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2), transparent 70%);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.5); opacity: 0.1; }
+        }
+        
+        .leaf {
+            position: absolute;
+            pointer-events: none;
+            z-index: 5;
+            transform-origin: center;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+        }
+        
+        .tree {
+            position: fixed;
+            bottom: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .ground {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: radial-gradient(ellipse at top, #402c11, #2d1e0b);
+            z-index: 2;
+        }
+        
+        .wind-path {
+            position: absolute;
+            pointer-events: none;
+            z-index: 3;
+            opacity: 0;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .return-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Autumn Wind Cursor Effect</h1>
+        <p>Move your cursor to create gusts of wind that blow autumn leaves across the screen. Watch as the leaves swirl and dance in the wind's path.</p>
+    </div>
+    
+    <div class="ground"></div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const cursor = document.querySelector('.cursor');
+            
+            // Create trees
+            const treeColors = ['#4E3B2D', '#3E2C21', '#543F2F'];
+            const numTrees = 5;
+            
+            for (let i = 0; i < numTrees; i++) {
+                const tree = document.createElement('div');
+                tree.className = 'tree';
+                
+                // Create tree using SVG
+                const height = 300 + Math.random() * 200;
+                const width = height * 0.4;
+                
+                tree.innerHTML = `
+                    <svg width="${width}" height="${height}" viewBox="0 0 100 250" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50,250 L50,100 L50,250 Z" fill="${treeColors[Math.floor(Math.random() * treeColors.length)]}" />
+                        <path d="M50,100 C20,100 10,60 30,50 C10,40 20,10 50,20 C80,10 90,40 70,50 C90,60 80,100 50,100 Z" fill="#543F2F" />
+                    </svg>
+                `;
+                
+                tree.style.left = `${i * (window.innerWidth / numTrees) + Math.random() * 100 - 50}px`;
+                tree.style.bottom = '0px';
+                tree.style.opacity = 0.7 + Math.random() * 0.3;
+                tree.style.transform = `scale(${0.7 + Math.random() * 0.6})`;
+                
+                body.appendChild(tree);
+            }
+            
+            // Leaf shapes and colors
+            const leafShapes = [
+                `<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path d="M15,0 C20,10 30,15 15,30 C0,15 10,10 15,0 Z" /></svg>`, // Simple leaf
+                `<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path d="M15,2 C25,10 25,20 15,28 C5,20 5,10 15,2 M15,2 C18,10 18,20 15,28 M15,2 C12,10 12,20 15,28" stroke-width="1" stroke="rgba(0,0,0,0.3)" fill="none" /></svg>`, // Maple leaf structure
+                `<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path d="M15,0 C22,8 22,22 15,30 C8,22 8,8 15,0 Z" /></svg>`, // Oval leaf
+                `<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path d="M15,3 C20,3 25,8 25,15 C25,20 15,27 15,27 C15,27 5,20 5,15 C5,8 10,3 15,3 Z" /></svg>` // Heart leaf
+            ];
+            
+            const leafColors = [
+                '#E6594F', // Red
+                '#E67E30', // Orange
+                '#C1A530', // Yellow
+                '#855723', // Brown
+                '#8D6A45', // Dark brown
+                '#BA704F'  // Auburn
+            ];
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            
+            // Track mouse movement path for wind effect
+            const mousePath = [];
+            const maxPathPoints = 10;
+            
+            // Settings
+            const maxLeaves = 100;
+            const leaves = [];
+            const windPaths = [];
+            
+            // Create initial static leaves
+            for (let i = 0; i < maxLeaves / 2; i++) {
+                createLeaf(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
+            }
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Track mouse path for wind creation
+                mousePath.push({ x: mouseX, y: mouseY, time: Date.now() });
+                if (mousePath.length > maxPathPoints) {
+                    mousePath.shift();
+                }
+                
+                // Create wind effect based on mouse movement
+                const movementDistance = Math.sqrt(
+                    Math.pow(mouseX - prevMouseX, 2) + 
+                    Math.pow(mouseY - prevMouseY, 2)
+                );
+                
+                if (movementDistance > 20) {
+                    createWindPath(prevMouseX, prevMouseY, mouseX, mouseY);
+                }
+                
+                // Create leaves occasionally during movement
+                if (Math.random() < 0.1 && leaves.length < maxLeaves) {
+                    createLeaf(mouseX, mouseY);
+                }
+            });
+            
+            // Create a leaf
+            function createLeaf(x, y) {
+                if (leaves.length >= maxLeaves) {
+                    // Replace an old leaf if at max capacity
+                    const oldestLeaf = leaves.shift();
+                    if (oldestLeaf.element && oldestLeaf.element.parentNode) {
+                        oldestLeaf.element.parentNode.removeChild(oldestLeaf.element);
+                    }
+                }
+                
+                const leafElement = document.createElement('div');
+                leafElement.className = 'leaf';
+                
+                // Choose random leaf shape and color
+                const shapeIndex = Math.floor(Math.random() * leafShapes.length);
+                const colorIndex = Math.floor(Math.random() * leafColors.length);
+                
+                let leafSvg = leafShapes[shapeIndex];
+                leafSvg = leafSvg.replace('</svg>', `<style>path{fill:${leafColors[colorIndex]}}</style></svg>`);
+                
+                leafElement.innerHTML = leafSvg;
+                
+                // Set initial position and size
+                const size = 15 + Math.random() * 20;
+                leafElement.style.width = `${size}px`;
+                leafElement.style.height = `${size}px`;
+                leafElement.style.left = `${x}px`;
+                leafElement.style.top = `${y}px`;
+                
+                body.appendChild(leafElement);
+                
+                // Create leaf object with physics properties
+                const leaf = {
+                    element: leafElement,
+                    x: x,
+                    y: y,
+                    size: size,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() * 2 - 1) * 5,
+                    vx: Math.random() * 2 - 1,
+                    vy: Math.random() * 2 - 1,
+                    mass: size / 20, // Larger leaves have more mass
+                    influenced: false,
+                    influencedTime: 0,
+                    swingPhase: Math.random() * Math.PI * 2,
+                    swingSpeed: 0.03 + Math.random() * 0.02
+                };
+                
+                leaves.push(leaf);
+                return leaf;
+            }
+            
+            // Create wind path effect
+            function createWindPath(x1, y1, x2, y2) {
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                
+                // Create wind path visualization
+                const windPathElement = document.createElement('div');
+                windPathElement.className = 'wind-path';
+                
+                // Draw wind path with SVG
+                const width = distance;
+                const height = 100;
+                
+                windPathElement.innerHTML = `
+                    <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0,50 Q${width/4},20 ${width/2},50 Q${3*width/4},80 ${width},50" stroke="rgba(255,255,255,0.3)" stroke-width="3" fill="none" />
+                    </svg>
+                `;
+                
+                windPathElement.style.left = `${x1}px`;
+                windPathElement.style.top = `${y1 - height/2}px`;
+                windPathElement.style.transform = `rotate(${angle * 180 / Math.PI}deg)`;
+                windPathElement.style.transformOrigin = '0 50%';
+                
+                body.appendChild(windPathElement);
+                
+                // Animate wind path
+                const windPath = {
+                    element: windPathElement,
+                    x1: x1,
+                    y1: y1,
+                    x2: x2,
+                    y2: y2,
+                    dx: dx,
+                    dy: dy,
+                    distance: distance,
+                    angle: angle,
+                    force: Math.min(distance / 10, 20), // Stronger wind for faster mouse movement
+                    age: 0,
+                    lifespan: 1000 // ms
+                };
+                
+                // Fade in
+                windPathElement.style.opacity = '0';
+                setTimeout(() => {
+                    windPathElement.style.opacity = '0.7';
+                    windPathElement.style.transition = 'opacity 0.2s ease';
+                }, 10);
+                
+                windPaths.push(windPath);
+                return windPath;
+            }
+            
+            function update() {
+                const currentTime = Date.now();
+                
+                // Update wind paths
+                for (let i = 0; i < windPaths.length; i++) {
+                    const wind = windPaths[i];
+                    wind.age += 16; // Approximate for 60fps
+                    
+                    if (wind.age >= wind.lifespan) {
+                        wind.element.style.opacity = '0';
+                        setTimeout(() => {
+                            if (wind.element && wind.element.parentNode) {
+                                wind.element.parentNode.removeChild(wind.element);
+                            }
+                        }, 200);
+                        
+                        windPaths.splice(i, 1);
+                        i--;
+                    } else {
+                        // Fade out as it ages
+                        const lifeProgress = wind.age / wind.lifespan;
+                        if (lifeProgress > 0.5) {
+                            wind.element.style.opacity = 0.7 * (1 - (lifeProgress - 0.5) / 0.5);
+                        }
+                    }
+                }
+                
+                // Update leaves
+                for (let i = 0; i < leaves.length; i++) {
+                    const leaf = leaves[i];
+                    
+                    // Apply gravity
+                    leaf.vy += 0.05 * leaf.mass;
+                    
+                    // Apply natural swinging motion
+                    leaf.swingPhase += leaf.swingSpeed;
+                    const swingX = Math.sin(leaf.swingPhase) * 0.5;
+                    leaf.vx += swingX;
+                    
+                    // Check for wind influence
+                    for (const wind of windPaths) {
+                        // Check if leaf is within wind's influence
+                        const dx = leaf.x - wind.x1;
+                        const dy = leaf.y - wind.y1;
+                        
+                        // Project point onto line
+                        const t = Math.max(0, Math.min(1, (dx * wind.dx + dy * wind.dy) / (wind.distance * wind.distance)));
+                        const projX = wind.x1 + t * wind.dx;
+                        const projY = wind.y1 + t * wind.dy;
+                        
+                        // Calculate distance from leaf to wind path
+                        const distX = leaf.x - projX;
+                        const distY = leaf.y - projY;
+                        const dist = Math.sqrt(distX * distX + distY * distY);
+                        
+                        if (dist < 100 && t > 0 && t < 1) {
+                            leaf.influenced = true;
+                            leaf.influencedTime = currentTime;
+                            
+                            // Apply wind force
+                            const windForce = (wind.force / dist) * 2;
+                            leaf.vx += Math.cos(wind.angle) * windForce / leaf.mass;
+                            leaf.vy += Math.sin(wind.angle) * windForce / leaf.mass;
+                            leaf.rotationSpeed += (Math.random() * 2 - 1) * 10;
+                        }
+                    }
+                    
+                    // Update leaf position
+                    leaf.x += leaf.vx;
+                    leaf.y += leaf.vy;
+                    
+                    // Apply damping
+                    leaf.vx *= 0.98;
+                    leaf.vy *= 0.98;
+                    
+                    // Update leaf rotation
+                    leaf.rotation += leaf.rotationSpeed;
+                    leaf.rotationSpeed *= 0.98;
+                    
+                    // Keep leaves on screen with bounce
+                    if (leaf.x < -50) {
+                        leaf.x = -50;
+                        leaf.vx *= -0.5;
+                    } else if (leaf.x > window.innerWidth + 50) {
+                        leaf.x = window.innerWidth + 50;
+                        leaf.vx *= -0.5;
+                    }
+                    
+                    if (leaf.y < -50) {
+                        leaf.y = -50;
+                        leaf.vy *= -0.5;
+                    } else if (leaf.y > window.innerHeight - 50) {
+                        leaf.y = window.innerHeight - 50;
+                        leaf.vy *= -0.8;
+                    }
+                    
+                    // Update leaf element
+                    leaf.element.style.left = `${leaf.x - leaf.size / 2}px`;
+                    leaf.element.style.top = `${leaf.y - leaf.size / 2}px`;
+                    leaf.element.style.transform = `rotate(${leaf.rotation}deg) scale(${leaf.influenced ? 1.1 : 1})`;
+                    
+                    // Reset influence after a short time
+                    if (leaf.influenced && currentTime - leaf.influencedTime > 500) {
+                        leaf.influenced = false;
+                    }
+                }
+                
+                requestAnimationFrame(update);
+            }
+            
+            update();
+        });
+    </script>
+</body>
+</html> 

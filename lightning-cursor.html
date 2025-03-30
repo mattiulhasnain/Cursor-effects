@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lightning Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0c0c1e;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+            color: white;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(100, 200, 255, 0.7);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #aacbff;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #40a6ff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 15px #40a6ff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Lightning Cursor Effect</h1>
+        <p>Move your cursor around to see electric arcs form across the screen. Lightning bolts will connect to your cursor, creating an electric field wherever you go.</p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Set canvas size
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Generate lightning source points around the edges
+            const lightningSourceCount = 5;
+            const sources = [];
+            
+            function createSources() {
+                sources.length = 0;
+                for (let i = 0; i < lightningSourceCount; i++) {
+                    // Position source randomly on the canvas edge
+                    let x, y;
+                    const side = Math.floor(Math.random() * 4);
+                    
+                    switch (side) {
+                        case 0: // Top
+                            x = Math.random() * canvas.width;
+                            y = 0;
+                            break;
+                        case 1: // Right
+                            x = canvas.width;
+                            y = Math.random() * canvas.height;
+                            break;
+                        case 2: // Bottom
+                            x = Math.random() * canvas.width;
+                            y = canvas.height;
+                            break;
+                        case 3: // Left
+                            x = 0;
+                            y = Math.random() * canvas.height;
+                            break;
+                    }
+                    
+                    sources.push({
+                        x: x,
+                        y: y,
+                        lastBolt: 0,
+                        frequency: Math.random() * 1000 + 1000 // Time between bolts
+                    });
+                }
+            }
+            
+            // Create lightning bolt
+            function createLightningBolt(startX, startY, endX, endY) {
+                const segments = [];
+                const boltRoughness = 0.6; // Higher value = more jagged
+                const numberOfSegments = 10 + Math.floor(
+                    Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2) / 10
+                );
+                
+                // Create a jagged path from start to end
+                let x = startX;
+                let y = startY;
+                const dx = (endX - startX) / numberOfSegments;
+                const dy = (endY - startY) / numberOfSegments;
+                
+                segments.push({ x: x, y: y });
+                
+                for (let i = 1; i < numberOfSegments; i++) {
+                    // Calculate position along the straight line
+                    const lineX = startX + dx * i;
+                    const lineY = startY + dy * i;
+                    
+                    // Add randomness to the position
+                    const offsetAmount = (numberOfSegments - i) * boltRoughness;
+                    const offsetX = (Math.random() - 0.5) * offsetAmount * 2;
+                    const offsetY = (Math.random() - 0.5) * offsetAmount * 2;
+                    
+                    x = lineX + offsetX;
+                    y = lineY + offsetY;
+                    
+                    segments.push({ x: x, y: y });
+                }
+                
+                segments.push({ x: endX, y: endY });
+                
+                return segments;
+            }
+            
+            // Draw lightning bolt with glow effect
+            function drawLightningBolt(bolt, alpha) {
+                if (bolt.length < 2) return;
+                
+                // Main bright bolt
+                ctx.beginPath();
+                ctx.moveTo(bolt[0].x, bolt[0].y);
+                
+                for (let i = 1; i < bolt.length; i++) {
+                    ctx.lineTo(bolt[i].x, bolt[i].y);
+                }
+                
+                ctx.strokeStyle = `rgba(100, 200, 255, ${alpha})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Inner core
+                ctx.beginPath();
+                ctx.moveTo(bolt[0].x, bolt[0].y);
+                
+                for (let i = 1; i < bolt.length; i++) {
+                    ctx.lineTo(bolt[i].x, bolt[i].y);
+                }
+                
+                ctx.strokeStyle = `rgba(200, 230, 255, ${alpha * 0.8})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                // Outer glow
+                ctx.beginPath();
+                ctx.moveTo(bolt[0].x, bolt[0].y);
+                
+                for (let i = 1; i < bolt.length; i++) {
+                    ctx.lineTo(bolt[i].x, bolt[i].y);
+                }
+                
+                ctx.strokeStyle = `rgba(40, 150, 255, ${alpha * 0.3})`;
+                ctx.lineWidth = 6;
+                ctx.stroke();
+            }
+            
+            // Active bolts of lightning
+            const activeBolts = [];
+            
+            // Animate lightning
+            function animate() {
+                // Clear canvas with semi-transparency for trail effect
+                ctx.fillStyle = 'rgba(12, 12, 30, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const currentTime = Date.now();
+                
+                // Create new bolts from sources
+                sources.forEach(source => {
+                    if (currentTime - source.lastBolt > source.frequency) {
+                        // Time to create a new bolt
+                        const bolt = createLightningBolt(source.x, source.y, mouseX, mouseY);
+                        activeBolts.push({
+                            segments: bolt,
+                            creationTime: currentTime,
+                            duration: 500 + Math.random() * 500 // Duration in ms
+                        });
+                        
+                        source.lastBolt = currentTime;
+                        source.frequency = Math.random() * 1000 + 1000; // Randomize next bolt time
+                    }
+                });
+                
+                // Draw active bolts and remove expired ones
+                for (let i = activeBolts.length - 1; i >= 0; i--) {
+                    const bolt = activeBolts[i];
+                    const age = currentTime - bolt.creationTime;
+                    
+                    if (age > bolt.duration) {
+                        // Remove expired bolt
+                        activeBolts.splice(i, 1);
+                    } else {
+                        // Draw bolt with fading effect
+                        const alpha = 1 - (age / bolt.duration);
+                        drawLightningBolt(bolt.segments, alpha);
+                    }
+                }
+                
+                // Create random bolts occasionally for ambient effect
+                if (Math.random() < 0.05) {
+                    const startX = Math.random() * canvas.width;
+                    const startY = Math.random() * canvas.height;
+                    const endX = startX + (Math.random() - 0.5) * 200;
+                    const endY = startY + (Math.random() - 0.5) * 200;
+                    
+                    const ambientBolt = createLightningBolt(startX, startY, endX, endY);
+                    activeBolts.push({
+                        segments: ambientBolt,
+                        creationTime: currentTime,
+                        duration: 300 + Math.random() * 300
+                    });
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                createSources(); // Reposition sources
+            });
+            
+            // Handle clicks - create multiple bolts
+            document.addEventListener('click', () => {
+                const currentTime = Date.now();
+                
+                // Create bolts from all sources simultaneously
+                sources.forEach(source => {
+                    const bolt = createLightningBolt(source.x, source.y, mouseX, mouseY);
+                    activeBolts.push({
+                        segments: bolt,
+                        creationTime: currentTime,
+                        duration: 800 + Math.random() * 500
+                    });
+                    
+                    source.lastBolt = currentTime;
+                });
+                
+                // Create additional bolt circles
+                const boltCount = 8;
+                for (let i = 0; i < boltCount; i++) {
+                    const angle = (i / boltCount) * Math.PI * 2;
+                    const distance = 100 + Math.random() * 100;
+                    const endX = mouseX + Math.cos(angle) * distance;
+                    const endY = mouseY + Math.sin(angle) * distance;
+                    
+                    const bolt = createLightningBolt(mouseX, mouseY, endX, endY);
+                    activeBolts.push({
+                        segments: bolt,
+                        creationTime: currentTime,
+                        duration: 600 + Math.random() * 300
+                    });
+                }
+            });
+            
+            // Initialize
+            createSources();
+            animate();
+        });
+    </script>
+</body>
+</html> 

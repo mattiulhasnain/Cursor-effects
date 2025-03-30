@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Distortion Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #121212;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+            color: #e6e6e6;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #e6e6e6;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+            animation: timePulse 4s infinite alternate;
+        }
+        
+        @keyframes timePulse {
+            0% { text-shadow: 0 0 10px rgba(0, 255, 255, 0.7); }
+            50% { text-shadow: 0 0 20px rgba(0, 255, 255, 1); }
+            100% { text-shadow: 0 0 10px rgba(0, 255, 255, 0.7); }
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #cccccc;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 12px 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 255, 255, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .control-group:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.5);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #e6e6e6;
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(0, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00ffff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        select {
+            width: 120px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            background-color: #333;
+            color: #e6e6e6;
+            border: 1px solid #00ffff;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        select:hover, select:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        button {
+            background-color: #00ffff;
+            color: #121212;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.5s;
+        }
+        
+        button:hover {
+            background-color: #00cccc;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        button:hover:after {
+            left: 100%;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.8) 0%, rgba(0, 255, 255, 0) 70%);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+            transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease;
+        }
+        
+        .time-ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            opacity: 0.8;
+            z-index: 999;
+            mix-blend-mode: screen;
+        }
+        
+        .time-anomaly-info {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #00ffff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            transform: translateY(10px);
+            z-index: 2000;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+        
+        /* Type indicators */
+        .type-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #00ffff;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            z-index: 100;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            transform: translateX(20px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .type-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .singularity-icon {
+            background: radial-gradient(circle, #00ffff 0%, transparent 70%);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+        }
+        
+        .wormhole-icon {
+            background: radial-gradient(circle, #ff00ff 0%, transparent 70%);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.7);
+        }
+        
+        .timeDilation-icon {
+            background: radial-gradient(circle, #00ff00 0%, transparent 70%);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+        }
+        
+        .quantumFluctuation-icon {
+            background: radial-gradient(circle, #ffff00 0%, transparent 70%);
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <canvas id="grid-canvas"></canvas>
+    <canvas id="distortion-canvas"></canvas>
+    
+    <div class="content">
+        <h1>Time Distortion</h1>
+        <p>Move your cursor to warp the fabric of space-time. Click to create temporal anomalies. Press 'T' to toggle distortion types.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="distortion-strength">Distortion Strength</label>
+                <input type="range" id="distortion-strength" min="1" max="20" step="1" value="10">
+            </div>
+            
+            <div class="control-group">
+                <label for="distortion-radius">Distortion Radius</label>
+                <input type="range" id="distortion-radius" min="50" max="300" step="10" value="150">
+            </div>
+            
+            <div class="control-group">
+                <label for="anomaly-count">Anomaly Count</label>
+                <input type="range" id="anomaly-count" min="0" max="5" step="1" value="2">
+            </div>
+            
+            <div class="control-group">
+                <label for="distortion-type">Distortion Type</label>
+                <select id="distortion-type">
+                    <option value="singularity">Singularity</option>
+                    <option value="wormhole">Wormhole</option>
+                    <option value="timeDilation">Time Dilation</option>
+                    <option value="quantumFluctuation">Quantum Fluctuation</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="grid-style">Grid Style</label>
+                <select id="grid-style">
+                    <option value="lines">Lines</option>
+                    <option value="dots">Dots</option>
+                    <option value="triangles">Triangles</option>
+                    <option value="circuit">Circuit</option>
+                </select>
+            </div>
+            
+            <button id="reset-btn">Reset Anomalies</button>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    <div class="type-indicator" id="type-indicator">
+        <span class="type-icon" id="type-icon"></span>
+        <span id="type-text">Singularity</span>
+    </div>
+    <div class="time-anomaly-info" id="anomaly-info"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const gridCanvas = document.getElementById('grid-canvas');
+            const gridCtx = gridCanvas.getContext('2d');
+            
+            const distortionCanvas = document.getElementById('distortion-canvas');
+            const distortionCtx = distortionCanvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gridCanvas.width = window.innerWidth;
+            gridCanvas.height = window.innerHeight;
+            distortionCanvas.width = window.innerWidth;
+            distortionCanvas.height = window.innerHeight;
+            
+            // Elements
+            const cursor = document.getElementById('cursor');
+            const typeIndicator = document.getElementById('type-indicator');
+            const typeIcon = document.getElementById('type-icon');
+            const typeText = document.getElementById('type-text');
+            const anomalyInfo = document.getElementById('anomaly-info');
+            
+            // Controls
+            const distortionStrengthSlider = document.getElementById('distortion-strength');
+            const distortionRadiusSlider = document.getElementById('distortion-radius');
+            const anomalyCountSlider = document.getElementById('anomaly-count');
+            const distortionTypeSelect = document.getElementById('distortion-type');
+            const resetBtn = document.getElementById('reset-btn');
+            const gridStyleSelect = document.getElementById('grid-style');
+            
+            // Config variables
+            let distortionStrength = parseInt(distortionStrengthSlider.value);
+            let distortionRadius = parseInt(distortionRadiusSlider.value);
+            let anomalyCount = parseInt(anomalyCountSlider.value);
+            let distortionType = distortionTypeSelect.value;
+            let gridStyle = gridStyleSelect.value;
+            
+            // Animation timing
+            let time = 0;
+            let lastTime = 0;
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            
+            // Background stars
+            let stars = [];
+            
+            // Grid properties
+            const gridSize = 30;
+            const gridPoints = [];
+            
+            // Time anomalies (fixed distortions)
+            let anomalies = [];
+            
+            // Time ripples
+            let timeRipples = [];
+            
+            // Keep track of selected anomaly
+            let selectedAnomaly = null;
+            
+            // Animation settings
+            const animationSettings = {
+                starSpeed: 0.5,
+                rippleGrowSpeed: 3,
+                gridAnimationSpeed: 1
+            };
+            
+            // Initialize grid points
+            function initGrid() {
+                gridPoints.length = 0;
+                const density = gridStyle === 'dots' ? 2 : 1;
+                const effectiveGridSize = gridSize / density;
+                
+                for (let x = 0; x <= canvas.width; x += effectiveGridSize) {
+                    for (let y = 0; y <= canvas.height; y += effectiveGridSize) {
+                        gridPoints.push({
+                            originalX: x,
+                            originalY: y,
+                            x: x,
+                            y: y,
+                            color: 'rgba(0, 255, 255, 0.2)',
+                            size: gridStyle === 'dots' ? 2 : 1,
+                            pulseFactor: Math.random()
+                        });
+                    }
+                }
+            }
+            
+            // Create stars for background
+            function createStars() {
+                stars = [];
+                const starCount = 200;
+                
+                for (let i = 0; i < starCount; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: 0.2 + Math.random() * 1.5,
+                        opacity: 0.1 + Math.random() * 0.9,
+                        speed: 0.05 + Math.random() * 0.1,
+                        angle: Math.random() * Math.PI * 2,
+                        twinkleSpeed: 1 + Math.random() * 3,
+                        twinkleOffset: Math.random() * 100
+                    });
+                }
+            }
+            
+            // Initialize stars and grid
+            createStars();
+            initGrid();
+            
+            // Create an anomaly at a specific position
+            function createAnomaly(x, y) {
+                // Don't add if we already have maximum anomalies
+                if (anomalies.length >= anomalyCount) return;
+                
+                const newAnomaly = {
+                    x: x,
+                    y: y,
+                    radius: distortionRadius * (0.5 + Math.random() * 0.5),
+                    strength: distortionStrength * (0.8 + Math.random() * 0.4),
+                    type: distortionType,
+                    pulsePhase: 0,
+                    rotationSpeed: 0.01 + Math.random() * 0.02,
+                    rotationAngle: 0,
+                    birthTime: time,
+                    uniqueId: Date.now() + Math.random(),
+                    name: generateAnomalyName()
+                };
+                
+                anomalies.push(newAnomaly);
+                
+                // Create initial visual effect for the anomaly
+                createTimeRipple(x, y, 0);
+                
+                // Show the type indicator
+                showTypeIndicator();
+                
+                return newAnomaly;
+            }
+            
+            // Generate a random sci-fi sounding name for the anomaly
+            function generateAnomalyName() {
+                const prefixes = ['Temporal', 'Quantum', 'Relativistic', 'Chrono', 'Spacetime', 'Entropic', 'Causal', 'Paradoxical'];
+                const types = ['Vortex', 'Eddy', 'Nexus', 'Fracture', 'Anomaly', 'Distortion', 'Rupture', 'Pocket'];
+                const suffixes = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Omega', 'Prime', 'Zero'];
+                
+                const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+                const type = types[Math.floor(Math.random() * types.length)];
+                const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+                
+                return `${prefix} ${type} ${suffix}`;
+            }
+            
+            // Show type indicator with animation
+            function showTypeIndicator() {
+                typeText.textContent = getTypeDisplayName(distortionType);
+                typeIcon.className = 'type-icon ' + distortionType + '-icon';
+                
+                typeIndicator.style.opacity = '1';
+                typeIndicator.style.transform = 'translateX(0)';
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    typeIndicator.style.opacity = '0';
+                    typeIndicator.style.transform = 'translateX(20px)';
+                }, 3000);
+            }
+            
+            // Get a display-friendly name for the distortion type
+            function getTypeDisplayName(type) {
+                switch(type) {
+                    case 'singularity': return 'Singularity';
+                    case 'wormhole': return 'Wormhole';
+                    case 'timeDilation': return 'Time Dilation';
+                    case 'quantumFluctuation': return 'Quantum Fluctuation';
+                    default: return type;
+                }
+            }
+            
+            // Create a time ripple visual effect
+            function createTimeRipple(x, y, maxSize = 300) {
+                const ripple = document.createElement('div');
+                ripple.className = 'time-ripple';
+                document.body.appendChild(ripple);
+                
+                // Set initial position and size
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                ripple.style.width = '0px';
+                ripple.style.height = '0px';
+                
+                // Determine the color based on distortion type
+                let rippleColor;
+                switch (distortionType) {
+                    case 'singularity':
+                        rippleColor = 'rgba(0, 255, 255, 0.5)';
+                        break;
+                    case 'wormhole':
+                        rippleColor = 'rgba(255, 0, 255, 0.5)';
+                        break;
+                    case 'timeDilation':
+                        rippleColor = 'rgba(0, 255, 0, 0.5)';
+                        break;
+                    case 'quantumFluctuation':
+                        rippleColor = 'rgba(255, 255, 0, 0.5)';
+                        break;
+                    default:
+                        rippleColor = 'rgba(0, 255, 255, 0.5)';
+                }
+                
+                ripple.style.borderColor = rippleColor;
+                
+                // Add to ripples array
+                timeRipples.push({
+                    element: ripple,
+                    x: x,
+                    y: y,
+                    size: 0,
+                    maxSize: maxSize === 0 ? distortionRadius * 2 : maxSize,
+                    growSpeed: animationSettings.rippleGrowSpeed + Math.random() * 2,
+                    opacity: 1
+                });
+            }
+            
+            // Show anomaly info tooltip
+            function showAnomalyInfo(anomaly, x, y) {
+                if (!anomaly) {
+                    anomalyInfo.style.opacity = '0';
+                    return;
+                }
+                
+                // Calculate age
+                const anomalyAge = ((time - anomaly.birthTime) / 60).toFixed(1);
+                
+                // Set tooltip content
+                anomalyInfo.innerHTML = `
+                    <strong>${anomaly.name}</strong><br>
+                    Type: ${getTypeDisplayName(anomaly.type)}<br>
+                    Age: ${anomalyAge}s<br>
+                    Strength: ${anomaly.strength.toFixed(1)}<br>
+                    Radius: ${anomaly.radius.toFixed(0)}
+                `;
+                
+                // Position tooltip
+                anomalyInfo.style.left = `${x + 20}px`;
+                anomalyInfo.style.top = `${y}px`;
+                
+                // Show tooltip
+                anomalyInfo.style.opacity = '1';
+                anomalyInfo.style.transform = 'translateY(0)';
+            }
+            
+            // Hide anomaly info tooltip
+            function hideAnomalyInfo() {
+                anomalyInfo.style.opacity = '0';
+                anomalyInfo.style.transform = 'translateY(10px)';
+            }
+            
+            // Find closest anomaly to a point
+            function findClosestAnomaly(x, y, maxDistance = 50) {
+                let closest = null;
+                let closestDistance = maxDistance;
+                
+                for (const anomaly of anomalies) {
+                    const dx = x - anomaly.x;
+                    const dy = y - anomaly.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closest = anomaly;
+                    }
+                }
+                
+                return closest;
+            }
+            
+            // Event listeners for controls
+            distortionStrengthSlider.addEventListener('input', () => {
+                distortionStrength = parseInt(distortionStrengthSlider.value);
+            });
+            
+            distortionRadiusSlider.addEventListener('input', () => {
+                distortionRadius = parseInt(distortionRadiusSlider.value);
+            });
+            
+            anomalyCountSlider.addEventListener('input', () => {
+                anomalyCount = parseInt(anomalyCountSlider.value);
+                
+                // Remove excess anomalies if count decreased
+                while (anomalies.length > anomalyCount) {
+                    anomalies.pop();
+                }
+            });
+            
+            distortionTypeSelect.addEventListener('change', () => {
+                distortionType = distortionTypeSelect.value;
+                
+                // Update cursor color based on distortion type
+                updateCursorColor();
+                
+                // Show the type indicator
+                showTypeIndicator();
+            });
+            
+            gridStyleSelect.addEventListener('change', () => {
+                gridStyle = gridStyleSelect.value;
+                initGrid(); // Reinitialize grid with new style
+            });
+            
+            resetBtn.addEventListener('click', () => {
+                // Remove all anomalies
+                anomalies = [];
+                
+                // Remove all time ripples
+                for (const ripple of timeRipples) {
+                    ripple.element.remove();
+                }
+                timeRipples = [];
+                
+                // Hide any open tooltips
+                hideAnomalyInfo();
+            });
+            
+            // Update cursor color based on distortion type
+            function updateCursorColor() {
+                let colorStart, colorEnd;
+                
+                switch (distortionType) {
+                    case 'singularity':
+                        colorStart = 'rgba(0, 255, 255, 0.8)';
+                        colorEnd = 'rgba(0, 255, 255, 0)';
+                        break;
+                    case 'wormhole':
+                        colorStart = 'rgba(255, 0, 255, 0.8)';
+                        colorEnd = 'rgba(255, 0, 255, 0)';
+                        break;
+                    case 'timeDilation':
+                        colorStart = 'rgba(0, 255, 0, 0.8)';
+                        colorEnd = 'rgba(0, 255, 0, 0)';
+                        break;
+                    case 'quantumFluctuation':
+                        colorStart = 'rgba(255, 255, 0, 0.8)';
+                        colorEnd = 'rgba(255, 255, 0, 0)';
+                        break;
+                    default:
+                        colorStart = 'rgba(0, 255, 255, 0.8)';
+                        colorEnd = 'rgba(0, 255, 255, 0)';
+                }
+                
+                cursor.style.background = `radial-gradient(circle, ${colorStart} 0%, ${colorEnd} 70%)`;
+                cursor.style.boxShadow = `0 0 15px ${colorStart}`;
+            }
+            
+            // Keyboard controls
+            document.addEventListener('keydown', (e) => {
+                // Toggle through distortion types with 'T' key
+                if (e.key.toLowerCase() === 't') {
+                    const types = ['singularity', 'wormhole', 'timeDilation', 'quantumFluctuation'];
+                    const currentIndex = types.indexOf(distortionType);
+                    const nextIndex = (currentIndex + 1) % types.length;
+                    
+                    distortionType = types[nextIndex];
+                    distortionTypeSelect.value = distortionType;
+                    updateCursorColor();
+                    showTypeIndicator();
+                }
+            });
+            
+            // Initial cursor color
+            updateCursorColor();
+            
+            // Handle mouse movement
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Check for anomalies under cursor
+                const hoveredAnomaly = findClosestAnomaly(mouseX, mouseY);
+                
+                if (hoveredAnomaly) {
+                    // Show info about hovered anomaly
+                    showAnomalyInfo(hoveredAnomaly, mouseX, mouseY);
+                    
+                    // Enlarge cursor slightly when over an anomaly
+                    cursor.style.width = '25px';
+                    cursor.style.height = '25px';
+                } else {
+                    // Hide info if not hovering over an anomaly
+                    hideAnomalyInfo();
+                    
+                    // Reset cursor size
+                    cursor.style.width = '20px';
+                    cursor.style.height = '20px';
+                }
+            });
+            
+            // Handle mouse click
+            document.addEventListener('click', (e) => {
+                // Check if we clicked on an existing anomaly
+                const clickedAnomaly = findClosestAnomaly(e.clientX, e.clientY);
+                
+                if (clickedAnomaly) {
+                    // Select the anomaly
+                    selectedAnomaly = clickedAnomaly;
+                    showAnomalyInfo(selectedAnomaly, e.clientX, e.clientY);
+                    
+                    // Create ripple effect centered on the anomaly
+                    createTimeRipple(clickedAnomaly.x, clickedAnomaly.y);
+                } else {
+                    // Create a new anomaly at click position
+                if (anomalies.length < anomalyCount) {
+                        const newAnomaly = createAnomaly(e.clientX, e.clientY);
+                        selectedAnomaly = newAnomaly;
+                        if (newAnomaly) {
+                            showAnomalyInfo(newAnomaly, e.clientX, e.clientY);
+                        }
+                } else {
+                    // Just create a ripple effect
+                    createTimeRipple(e.clientX, e.clientY);
+                    }
+                }
+            });
+            
+            // Calculate the distortion effect
+            function calculateDistortion(pointX, pointY, centerX, centerY, radius, strength, type) {
+                const dx = pointX - centerX;
+                const dy = pointY - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // No effect if too far
+                if (distance >= radius) return { x: pointX, y: pointY };
+                
+                // Calculate distortion factor based on distance
+                let factor = 1 - (distance / radius);
+                factor = Math.pow(factor, 2); // Square for more natural falloff
+                
+                // Apply different distortion based on type
+                switch (type) {
+                    case 'singularity':
+                        // Pull points toward center
+                        return {
+                            x: pointX - dx * factor * strength / 10,
+                            y: pointY - dy * factor * strength / 10
+                        };
+                    
+                    case 'wormhole':
+                        // Rotate points around center
+                        const angle = Math.atan2(dy, dx);
+                        const rotationAngle = angle + factor * strength / 5;
+                        return {
+                            x: centerX + Math.cos(rotationAngle) * distance,
+                            y: centerY + Math.sin(rotationAngle) * distance
+                        };
+                    
+                    case 'timeDilation':
+                        // Push points away from center
+                        return {
+                            x: pointX + dx * factor * strength / 10,
+                            y: pointY + dy * factor * strength / 10
+                        };
+                    
+                    case 'quantumFluctuation':
+                        // Random displacement
+                        const randomAngle = Math.random() * Math.PI * 2;
+                        const randomStrength = Math.random() * strength * factor / 5;
+                        return {
+                            x: pointX + Math.cos(randomAngle) * randomStrength,
+                            y: pointY + Math.sin(randomAngle) * randomStrength
+                        };
+                    
+                    default:
+                        return { x: pointX, y: pointY };
+                }
+            }
+            
+            // Update time ripples
+            function updateRipples(deltaTime) {
+                for (let i = timeRipples.length - 1; i >= 0; i--) {
+                    const r = timeRipples[i];
+                    
+                    // Grow ripple
+                    r.size += r.growSpeed * deltaTime;
+                    r.opacity = Math.max(0, 1 - r.size / r.maxSize);
+                    
+                    // Update DOM element
+                    r.element.style.width = `${r.size}px`;
+                    r.element.style.height = `${r.size}px`;
+                    r.element.style.opacity = r.opacity;
+                    
+                    // Remove ripple if it's too big or transparent
+                    if (r.size >= r.maxSize) {
+                        r.element.remove();
+                        timeRipples.splice(i, 1);
+                    }
+                }
+            }
+            
+            // Animation loop
+            function animate(currentTime) {
+                // Calculate delta time for smooth animations
+                const deltaTime = lastTime ? (currentTime - lastTime) / 16.67 : 1; // Normalize to ~60fps
+                lastTime = currentTime;
+                time = currentTime * 0.001; // Convert to seconds
+                
+                // Clear canvases
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+                distortionCtx.clearRect(0, 0, distortionCanvas.width, distortionCanvas.height);
+                
+                // Update anomaly pulsing effect
+                for (const anomaly of anomalies) {
+                    anomaly.pulsePhase += 0.02 * deltaTime;
+                    anomaly.rotationAngle += anomaly.rotationSpeed * deltaTime;
+                }
+                
+                // Draw background (stars)
+                ctx.fillStyle = '#121212';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw stars
+                for (const star of stars) {
+                    // Apply slight movement based on mouse position
+                    const dx = mouseX - canvas.width / 2;
+                    const dy = mouseY - canvas.height / 2;
+                    
+                    star.x += Math.cos(star.angle) * star.speed * (dx / canvas.width * 2) * animationSettings.starSpeed * deltaTime;
+                    star.y += Math.sin(star.angle) * star.speed * (dy / canvas.height * 2) * animationSettings.starSpeed * deltaTime;
+                    
+                    // Wrap around edges
+                    if (star.x < 0) star.x = canvas.width;
+                    if (star.x > canvas.width) star.x = 0;
+                    if (star.y < 0) star.y = canvas.height;
+                    if (star.y > canvas.height) star.y = 0;
+                    
+                    // Twinkle effect
+                    star.opacity = 0.1 + Math.abs(Math.sin(time * star.twinkleSpeed + star.twinkleOffset)) * 0.9;
+                    
+                    // Draw star
+                    ctx.beginPath();
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Reset grid points to original positions
+                for (const point of gridPoints) {
+                    point.x = point.originalX;
+                    point.y = point.originalY;
+                }
+                
+                // Apply mouse distortion first
+                for (const point of gridPoints) {
+                    const distorted = calculateDistortion(
+                        point.x, 
+                        point.y, 
+                        mouseX, 
+                        mouseY, 
+                        distortionRadius, 
+                        distortionStrength, 
+                        distortionType
+                    );
+                    
+                    point.x = distorted.x;
+                    point.y = distorted.y;
+                }
+                
+                // Then apply anomaly distortions
+                for (const anomaly of anomalies) {
+                    // Calculate effective radius with pulsing effect
+                    const pulseEffect = Math.sin(anomaly.pulsePhase) * 0.2;
+                    const effectiveRadius = anomaly.radius * (1 + pulseEffect);
+                    
+                    for (const point of gridPoints) {
+                        const distorted = calculateDistortion(
+                            point.x, 
+                            point.y, 
+                            anomaly.x, 
+                            anomaly.y, 
+                            effectiveRadius, 
+                            anomaly.strength, 
+                            anomaly.type
+                        );
+                        
+                        point.x = distorted.x;
+                        point.y = distorted.y;
+                    }
+                }
+                
+                // Draw grid according to style
+                switch (gridStyle) {
+                    case 'dots':
+                        drawDotGrid();
+                        break;
+                    case 'triangles':
+                        drawTriangleGrid();
+                        break;
+                    case 'circuit':
+                        drawCircuitGrid();
+                        break;
+                    case 'lines':
+                    default:
+                        drawLineGrid();
+                        break;
+                }
+                
+                // Visualize anomalies
+                for (const anomaly of anomalies) {
+                    drawAnomaly(anomaly);
+                }
+                
+                // Update ripples
+                updateRipples(deltaTime);
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Draw standard line grid
+            function drawLineGrid() {
+                gridCtx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
+                gridCtx.lineWidth = 1;
+                
+                // Calculate rows and columns for grid
+                const cols = Math.ceil(canvas.width / gridSize);
+                const rows = Math.ceil(canvas.height / gridSize);
+                
+                // Draw horizontal grid lines
+                for (let y = 0; y <= rows; y++) {
+                    gridCtx.beginPath();
+                    
+                    for (let x = 0; x <= cols; x++) {
+                        const index = y * (cols + 1) + x;
+                        if (index >= gridPoints.length) continue;
+                        
+                        const point = gridPoints[index];
+                        
+                        if (x === 0) {
+                            gridCtx.moveTo(point.x, point.y);
+                        } else {
+                            gridCtx.lineTo(point.x, point.y);
+                        }
+                    }
+                    
+                    gridCtx.stroke();
+                }
+                
+                // Draw vertical grid lines
+                for (let x = 0; x <= cols; x++) {
+                    gridCtx.beginPath();
+                    
+                    for (let y = 0; y <= rows; y++) {
+                        const index = y * (cols + 1) + x;
+                        if (index >= gridPoints.length) continue;
+                        
+                        const point = gridPoints[index];
+                        
+                        if (y === 0) {
+                            gridCtx.moveTo(point.x, point.y);
+                        } else {
+                            gridCtx.lineTo(point.x, point.y);
+                        }
+                    }
+                    
+                    gridCtx.stroke();
+                }
+            }
+            
+            // Draw grid as dots
+            function drawDotGrid() {
+                gridCtx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+                
+                for (const point of gridPoints) {
+                    const pulseSize = 1 + Math.sin(time * 2 + point.pulseFactor * 10) * 0.3;
+                    
+                    gridCtx.beginPath();
+                    gridCtx.arc(point.x, point.y, point.size * pulseSize, 0, Math.PI * 2);
+                    gridCtx.fill();
+                }
+            }
+            
+            // Draw triangular grid
+            function drawTriangleGrid() {
+                const cols = Math.ceil(canvas.width / gridSize);
+                const rows = Math.ceil(canvas.height / gridSize);
+                
+                gridCtx.strokeStyle = 'rgba(0, 255, 255, 0.15)';
+                gridCtx.lineWidth = 1;
+                
+                // Draw triangles
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        const index1 = y * (cols + 1) + x;
+                        const index2 = y * (cols + 1) + x + 1;
+                        const index3 = (y + 1) * (cols + 1) + x;
+                        const index4 = (y + 1) * (cols + 1) + x + 1;
+                        
+                        if (index1 >= gridPoints.length || 
+                            index2 >= gridPoints.length || 
+                            index3 >= gridPoints.length || 
+                            index4 >= gridPoints.length) continue;
+                        
+                        const p1 = gridPoints[index1];
+                        const p2 = gridPoints[index2];
+                        const p3 = gridPoints[index3];
+                        const p4 = gridPoints[index4];
+                        
+                        // Draw first triangle
+                        gridCtx.beginPath();
+                        gridCtx.moveTo(p1.x, p1.y);
+                        gridCtx.lineTo(p2.x, p2.y);
+                        gridCtx.lineTo(p3.x, p3.y);
+                        gridCtx.closePath();
+                        gridCtx.stroke();
+                        
+                        // Draw second triangle
+                        gridCtx.beginPath();
+                        gridCtx.moveTo(p2.x, p2.y);
+                        gridCtx.lineTo(p3.x, p3.y);
+                        gridCtx.lineTo(p4.x, p4.y);
+                        gridCtx.closePath();
+                        gridCtx.stroke();
+                    }
+                }
+            }
+            
+            // Draw circuit-like grid
+            function drawCircuitGrid() {
+                const cols = Math.ceil(canvas.width / gridSize);
+                const rows = Math.ceil(canvas.height / gridSize);
+                
+                gridCtx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
+                gridCtx.lineWidth = 1;
+                
+                // Draw horizontal/vertical lines with gaps
+                for (let y = 0; y <= rows; y += 2) {
+                    for (let x = 0; x < cols; x++) {
+                        const index1 = y * (cols + 1) + x;
+                        const index2 = y * (cols + 1) + x + 1;
+                        
+                        if (index1 >= gridPoints.length || index2 >= gridPoints.length) continue;
+                        
+                        if (Math.random() > 0.3) { // 70% chance to draw line
+                            const p1 = gridPoints[index1];
+                            const p2 = gridPoints[index2];
+                            
+                            gridCtx.beginPath();
+                            gridCtx.moveTo(p1.x, p1.y);
+                            gridCtx.lineTo(p2.x, p2.y);
+                            gridCtx.stroke();
+                        }
+                    }
+                }
+                
+                for (let x = 0; x <= cols; x += 2) {
+                    for (let y = 0; y < rows; y++) {
+                        const index1 = y * (cols + 1) + x;
+                        const index2 = (y + 1) * (cols + 1) + x;
+                        
+                        if (index1 >= gridPoints.length || index2 >= gridPoints.length) continue;
+                        
+                        if (Math.random() > 0.3) { // 70% chance to draw line
+                            const p1 = gridPoints[index1];
+                            const p2 = gridPoints[index2];
+                            
+                            gridCtx.beginPath();
+                            gridCtx.moveTo(p1.x, p1.y);
+                            gridCtx.lineTo(p2.x, p2.y);
+                            gridCtx.stroke();
+                        }
+                    }
+                }
+                
+                // Draw nodes at intersections
+                for (let y = 0; y <= rows; y += 2) {
+                    for (let x = 0; x <= cols; x += 2) {
+                        const index = y * (cols + 1) + x;
+                        
+                        if (index >= gridPoints.length) continue;
+                        
+                        const point = gridPoints[index];
+                        const pulse = Math.sin(time * 2 + (x + y) * 0.1) * 0.5 + 0.5;
+                        
+                        gridCtx.beginPath();
+                        gridCtx.arc(point.x, point.y, 2 + pulse, 0, Math.PI * 2);
+                        gridCtx.fillStyle = `rgba(0, 255, 255, ${0.3 + pulse * 0.4})`;
+                        gridCtx.fill();
+                    }
+                }
+            }
+            
+            // Draw anomaly visualization
+            function drawAnomaly(anomaly) {
+                    const pulseEffect = Math.sin(anomaly.pulsePhase) * 0.2;
+                    const effectiveRadius = anomaly.radius * (1 + pulseEffect);
+                    
+                    // Determine color based on anomaly type
+                    let gradientColor;
+                    switch (anomaly.type) {
+                        case 'singularity':
+                            gradientColor = 'rgba(0, 255, 255, 1)';
+                            break;
+                        case 'wormhole':
+                            gradientColor = 'rgba(255, 0, 255, 1)';
+                            break;
+                        case 'timeDilation':
+                            gradientColor = 'rgba(0, 255, 0, 1)';
+                            break;
+                        case 'quantumFluctuation':
+                            gradientColor = 'rgba(255, 255, 0, 1)';
+                            break;
+                        default:
+                            gradientColor = 'rgba(0, 255, 255, 1)';
+                    }
+                
+                // Is this the selected anomaly?
+                const isSelected = selectedAnomaly && selectedAnomaly.uniqueId === anomaly.uniqueId;
+                    
+                    // Create gradient
+                    const gradient = distortionCtx.createRadialGradient(
+                        anomaly.x, anomaly.y, 0,
+                        anomaly.x, anomaly.y, effectiveRadius
+                    );
+                    
+                    gradient.addColorStop(0, gradientColor.replace('1)', '0.3)'));
+                    gradient.addColorStop(0.5, gradientColor.replace('1)', '0.1)'));
+                    gradient.addColorStop(1, gradientColor.replace('1)', '0)'));
+                    
+                    // Draw anomaly
+                    distortionCtx.beginPath();
+                    distortionCtx.fillStyle = gradient;
+                    distortionCtx.arc(anomaly.x, anomaly.y, effectiveRadius, 0, Math.PI * 2);
+                    distortionCtx.fill();
+                
+                // If selected, add a highlight
+                if (isSelected) {
+                    distortionCtx.beginPath();
+                    distortionCtx.strokeStyle = gradientColor;
+                    distortionCtx.lineWidth = 2;
+                    distortionCtx.setLineDash([5, 5]);
+                    distortionCtx.arc(anomaly.x, anomaly.y, effectiveRadius + 5, 0, Math.PI * 2);
+                    distortionCtx.stroke();
+                    distortionCtx.setLineDash([]);
+                }
+                    
+                    // Draw additional effects based on anomaly type
+                    switch (anomaly.type) {
+                        case 'singularity':
+                            // Draw center black hole
+                            distortionCtx.beginPath();
+                            distortionCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                            distortionCtx.arc(anomaly.x, anomaly.y, effectiveRadius * 0.2, 0, Math.PI * 2);
+                            distortionCtx.fill();
+                            
+                            // Draw accretion disk
+                            distortionCtx.beginPath();
+                            distortionCtx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+                            distortionCtx.lineWidth = 3;
+                            distortionCtx.arc(anomaly.x, anomaly.y, effectiveRadius * 0.3, 0, Math.PI * 2);
+                            distortionCtx.stroke();
+                            break;
+                            
+                        case 'wormhole':
+                            // Draw spiral effect
+                            for (let i = 0; i < 4; i++) {
+                                const angle = anomaly.rotationAngle + i * Math.PI / 2;
+                                
+                                distortionCtx.beginPath();
+                                distortionCtx.moveTo(anomaly.x, anomaly.y);
+                                distortionCtx.lineTo(
+                                    anomaly.x + Math.cos(angle) * effectiveRadius * 0.8,
+                                    anomaly.y + Math.sin(angle) * effectiveRadius * 0.8
+                                );
+                                distortionCtx.strokeStyle = 'rgba(255, 0, 255, 0.5)';
+                                distortionCtx.lineWidth = 3;
+                                distortionCtx.stroke();
+                            }
+                            break;
+                            
+                        case 'timeDilation':
+                            // Draw clock-like effect
+                            for (let i = 0; i < 12; i++) {
+                                const angle = i * Math.PI / 6;
+                                
+                                distortionCtx.beginPath();
+                                distortionCtx.moveTo(
+                                    anomaly.x + Math.cos(angle) * effectiveRadius * 0.5,
+                                    anomaly.y + Math.sin(angle) * effectiveRadius * 0.5
+                                );
+                                distortionCtx.lineTo(
+                                    anomaly.x + Math.cos(angle) * effectiveRadius * 0.6,
+                                    anomaly.y + Math.sin(angle) * effectiveRadius * 0.6
+                                );
+                                distortionCtx.strokeStyle = 'rgba(0, 255, 0, 0.7)';
+                                distortionCtx.lineWidth = 2;
+                                distortionCtx.stroke();
+                            }
+                            
+                            // Draw hands
+                            const hourAngle = anomaly.rotationAngle;
+                            const minuteAngle = anomaly.rotationAngle * 12;
+                            
+                            // Hour hand
+                            distortionCtx.beginPath();
+                            distortionCtx.moveTo(anomaly.x, anomaly.y);
+                            distortionCtx.lineTo(
+                                anomaly.x + Math.cos(hourAngle) * effectiveRadius * 0.3,
+                                anomaly.y + Math.sin(hourAngle) * effectiveRadius * 0.3
+                            );
+                            distortionCtx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+                            distortionCtx.lineWidth = 3;
+                            distortionCtx.stroke();
+                            
+                            // Minute hand
+                            distortionCtx.beginPath();
+                            distortionCtx.moveTo(anomaly.x, anomaly.y);
+                            distortionCtx.lineTo(
+                                anomaly.x + Math.cos(minuteAngle) * effectiveRadius * 0.4,
+                                anomaly.y + Math.sin(minuteAngle) * effectiveRadius * 0.4
+                            );
+                            distortionCtx.strokeStyle = 'rgba(0, 255, 0, 0.6)';
+                            distortionCtx.lineWidth = 2;
+                            distortionCtx.stroke();
+                            break;
+                            
+                        case 'quantumFluctuation':
+                            // Draw random particles
+                            for (let i = 0; i < 20; i++) {
+                                const particleAngle = Math.random() * Math.PI * 2;
+                                const particleDistance = Math.random() * effectiveRadius * 0.8;
+                                
+                                distortionCtx.beginPath();
+                                distortionCtx.fillStyle = `rgba(255, 255, 0, ${Math.random() * 0.7})`;
+                                distortionCtx.arc(
+                                    anomaly.x + Math.cos(particleAngle) * particleDistance,
+                                    anomaly.y + Math.sin(particleAngle) * particleDistance,
+                                    1 + Math.random() * 3,
+                                    0,
+                                    Math.PI * 2
+                                );
+                                distortionCtx.fill();
+                            }
+                            break;
+                    }
+                }
+                
+            // Initialize the animation
+            requestAnimationFrame(function(timestamp) {
+                lastTime = timestamp;
+                animate(timestamp);
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Resize canvases
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gridCanvas.width = window.innerWidth;
+                gridCanvas.height = window.innerHeight;
+                distortionCanvas.width = window.innerWidth;
+                distortionCanvas.height = window.innerHeight;
+                
+                // Reset grid and stars
+                gridPoints.length = 0;
+                initGrid();
+                createStars();
+            });
+        });
+    </script>
+</body>
+</html> 

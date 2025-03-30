@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Digital Rain Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #000000;
+            font-family: 'Courier New', monospace;
+            color: #00ff41;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #00ff41;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #00ff41;
+            opacity: 0.8;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(0, 40, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00ff41;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #00ff41;
+        }
+        
+        input[type="range"],
+        select {
+            width: 120px;
+            cursor: pointer;
+            background-color: #001a00;
+            border: 1px solid #00ff41;
+            color: #00ff41;
+        }
+        
+        button {
+            background-color: rgba(0, 40, 0, 0.7);
+            color: #00ff41;
+            border: 1px solid #00ff41;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        button:hover {
+            background-color: rgba(0, 60, 0, 0.9);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 5;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00ff41;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+        }
+        
+        .cursor::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 5px;
+            height: 5px;
+            background-color: #00ff41;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 255, 65, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Matrix Digital Rain</h1>
+        <p>Move your cursor to create falling digital characters, just like in "The Matrix" movie. Click to create a rain burst.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="rain-density">Rain Density</label>
+                <input type="range" id="rain-density" min="1" max="10" step="1" value="5">
+            </div>
+            
+            <div class="control-group">
+                <label for="rain-speed">Rain Speed</label>
+                <input type="range" id="rain-speed" min="1" max="20" step="1" value="10">
+            </div>
+            
+            <div class="control-group">
+                <label for="char-set">Character Set</label>
+                <select id="char-set">
+                    <option value="matrix">Matrix (Japanese-like)</option>
+                    <option value="binary">Binary (0/1)</option>
+                    <option value="hex">Hexadecimal</option>
+                    <option value="ascii">ASCII</option>
+                </select>
+            </div>
+            
+            <button id="clear-btn">Clear Screen</button>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Custom cursor element
+            const cursor = document.getElementById('cursor');
+            
+            // Controls
+            const rainDensitySlider = document.getElementById('rain-density');
+            const rainSpeedSlider = document.getElementById('rain-speed');
+            const charSetSelect = document.getElementById('char-set');
+            const clearBtn = document.getElementById('clear-btn');
+            
+            // Config variables
+            let rainDensity = parseInt(rainDensitySlider.value);
+            let rainSpeed = parseInt(rainSpeedSlider.value);
+            let charSet = getCharacterSet(charSetSelect.value);
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let lastX = mouseX;
+            let lastY = mouseY;
+            let mouseVelocity = 0;
+            let drops = [];
+            
+            // Character sets
+            function getCharacterSet(type) {
+                switch(type) {
+                    case 'binary':
+                        return '01';
+                    case 'hex':
+                        return '0123456789ABCDEF';
+                    case 'ascii':
+                        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
+                    case 'matrix':
+                    default:
+                        return 'ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ1234567890¦｢｣､･ｦｧｨｩｪｫｬｭｮｯ<>:+=-?.;,/*[]{}';
+                }
+            }
+            
+            // Event listeners for controls
+            rainDensitySlider.addEventListener('input', () => {
+                rainDensity = parseInt(rainDensitySlider.value);
+            });
+            
+            rainSpeedSlider.addEventListener('input', () => {
+                rainSpeed = parseInt(rainSpeedSlider.value);
+            });
+            
+            charSetSelect.addEventListener('change', () => {
+                charSet = getCharacterSet(charSetSelect.value);
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                drops = [];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                lastX = mouseX;
+                lastY = mouseY;
+                
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Calculate velocity
+                const dx = mouseX - lastX;
+                const dy = mouseY - lastY;
+                mouseVelocity = Math.sqrt(dx * dx + dy * dy);
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Create drops based on mouse movement
+                if (mouseVelocity > 2) {
+                    const createCount = Math.floor(mouseVelocity * 0.2) * rainDensity;
+                    for (let i = 0; i < createCount; i++) {
+                        createDrop(mouseX, mouseY);
+                    }
+                }
+            });
+            
+            // Handle mouse clicks
+            document.addEventListener('mousedown', () => {
+                // Create a burst of drops
+                const burstCount = 50 * rainDensity;
+                for (let i = 0; i < burstCount; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 50 + 10;
+                    const x = mouseX + Math.cos(angle) * distance;
+                    const y = mouseY + Math.sin(angle) * distance;
+                    createDrop(x, y);
+                }
+                
+                // Pulse the cursor
+                cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                setTimeout(() => {
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 200);
+            });
+            
+            // Matrix Rain Drop class
+            class MatrixDrop {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.speed = Math.random() * 2 + rainSpeed * 0.5;
+                    this.characters = [];
+                    this.fontSize = Math.floor(Math.random() * 8) + 12;
+                    this.length = Math.floor(Math.random() * 10) + 10;
+                    this.opacity = 1;
+                    this.fadeOut = false;
+                    
+                    // Generate random characters
+                    for (let i = 0; i < this.length; i++) {
+                        this.characters.push(this.getRandomCharacter());
+                    }
+                    
+                    // Change frequency (how often characters change)
+                    this.changeFrequency = Math.random() * 0.2 + 0.1;
+                }
+                
+                getRandomCharacter() {
+                    return charSet.charAt(Math.floor(Math.random() * charSet.length));
+                }
+                
+                update() {
+                    // Move drop down
+                    this.y += this.speed;
+                    
+                    // Randomly change some characters as it falls
+                    for (let i = 0; i < this.characters.length; i++) {
+                        if (Math.random() < this.changeFrequency) {
+                            this.characters[i] = this.getRandomCharacter();
+                        }
+                    }
+                    
+                    // Check if drop has reached bottom of screen
+                    if (this.y > canvas.height + this.length * this.fontSize) {
+                        this.fadeOut = true;
+                    }
+                    
+                    // Fade out if needed
+                    if (this.fadeOut) {
+                        this.opacity -= 0.05;
+                    }
+                    
+                    return this.opacity > 0;
+                }
+                
+                draw() {
+                    ctx.font = `${this.fontSize}px "Courier New", monospace`;
+                    
+                    // Draw each character in the drop
+                    for (let i = 0; i < this.characters.length; i++) {
+                        // Lead character is brightest
+                        if (i === 0) {
+                            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                        } else {
+                            // Characters fade as they go down
+                            const charOpacity = Math.max(0, this.opacity - (i / this.length));
+                            ctx.fillStyle = `rgba(0, 255, 65, ${charOpacity})`;
+                        }
+                        
+                        // Draw character
+                        ctx.fillText(
+                            this.characters[i], 
+                            this.x, 
+                            this.y - i * this.fontSize
+                        );
+                    }
+                }
+            }
+            
+            // Create a new drop
+            function createDrop(x, y) {
+                drops.push(new MatrixDrop(x, y));
+            }
+            
+            // Animation loop
+            function animate() {
+                // Apply fade effect to create trail
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw all drops
+                drops = drops.filter(drop => {
+                    const isActive = drop.update();
+                    if (isActive) {
+                        drop.draw();
+                    }
+                    return isActive;
+                });
+                
+                // Request next frame
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Start animation
+            animate();
+            
+            // Add some initial drops for effect
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                createDrop(x, y);
+            }
+        });
+    </script>
+</body>
+</html> 

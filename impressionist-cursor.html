@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impressionist Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #f0e6d2;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #333;
+            font-family: 'Times New Roman', serif;
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: rgba(0, 0, 0, 0.7);
+            font-family: 'Georgia', serif;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 90%;
+            pointer-events: auto;
+        }
+        
+        button, .selector {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-family: 'Georgia', serif;
+        }
+        
+        button:hover, .selector:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            pointer-events: none;
+            z-index: 1000;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23555" d="M7,14c0,0,0-3,0-4s1-2,2-2s2,1,2,2s0,4,0,4h4c0,0,0-3,0-4s1-2,2-2s2,1,2,2s0,4,0,4 M5,14H19c1,0,2,1,2,2v3c0,1-1,2-2,2H5c-1,0-2-1-2-2v-3C3,15,4,14,5,14z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+        }
+        
+        .color-palette {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 20px;
+            padding: 5px 15px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .palette-label {
+            font-size: 0.9rem;
+            margin-right: 5px;
+            font-family: 'Georgia', serif;
+        }
+        
+        .color-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .color-option:hover {
+            transform: scale(1.2);
+        }
+        
+        .color-option.active {
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .selector {
+            display: flex;
+            align-items: center;
+            padding: 5px 15px;
+        }
+        
+        select {
+            margin-left: 10px;
+            background: transparent;
+            border: none;
+            font-family: 'Georgia', serif;
+            font-size: 0.9rem;
+            color: #333;
+            padding: 2px 5px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="6" viewBox="0 0 12 6"><path fill="%23555" d="M0,0l6,6l6-6H0z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right center;
+            padding-right: 20px;
+        }
+        
+        #canvas-texture {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFEmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxNDAgNzkuMTYwNDUxLCAyMDE3LzA1LzA2LTAxOjA4OjIxICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgMjAxOCAoTWFjaW50b3NoKSIgeG1wOkNyZWF0ZURhdGU9IjIwMTgtMDctMThUMTM6NTk6NDgrMDg6MDAiIHhtcDpNb2RpZnlEYXRlPSIyMDE4LTA3LTE4VDE0OjAxOjMyKzA4OjAwIiB4bXA6TWV0YWRhdGFEYXRlPSIyMDE4LTA3LTE4VDE0OjAxOjMyKzA4OjAwIiBkYzpmb3JtYXQ9ImltYWdlL3BuZyIgcGhvdG9zaG9wOkNvbG9yTW9kZT0iMyIgcGhvdG9zaG9wOklDQ1Byb2ZpbGU9InNSR0IgSUVDNjE5NjYtMi4xIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOmI5YjM1NzI1LTYwODYtNGRkYS1hNDBiLTJlMWYxZWU5ZGU4NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpiOWIzNTcyNS02MDg2LTRkZGEtYTQwYi0yZTFmMWVlOWRlODciIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpiOWIzNTcyNS02MDg2LTRkZGEtYTQwYi0yZTFmMWVlOWRlODciPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOmI5YjM1NzI1LTYwODYtNGRkYS1hNDBiLTJlMWYxZWU5ZGU4NyIgc3RFdnQ6d2hlbj0iMjAxOC0wNy0xOFQxMzo1OToxMSswODowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTggKFdpbmRvd3MpIi8+IDwvcmRmOlNlcT4gPC94bXBNTTpIaXN0b3J5PiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pg0kYdUAAAAHdElNRQfiBhgLDwUDa2T1AAAAQElEQVRo3u3MoREAAAjEsMP+fV4goGMkkCYN5vUAwAcUgBIiA0IIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC8t3AcAtgJ2gkLO6gAAAABJRU5ErkJggg==');
+            opacity: 0.05;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="canvas-texture"></div>
+    
+    <div class="content">
+        <h1>Impressionist Cursor</h1>
+        <p>Move your cursor to create beautiful swirling brushstrokes inspired by Van Gogh. Click to create starry night bursts.</p>
+    </div>
+    
+    <div class="controls">
+        <div class="color-palette">
+            <span class="palette-label">Colors:</span>
+            <div class="color-option active" style="background-color: #4A90E2;" data-color="#4A90E2"></div>
+            <div class="color-option" style="background-color: #50E3C2;" data-color="#50E3C2"></div>
+            <div class="color-option" style="background-color: #F5A623;" data-color="#F5A623"></div>
+            <div class="color-option" style="background-color: #D0021B;" data-color="#D0021B"></div>
+            <div class="color-option" style="background-color: #417505;" data-color="#417505"></div>
+            <div class="color-option" style="background-color: #9013FE;" data-color="#9013FE"></div>
+        </div>
+        
+        <div class="selector">
+            <label for="style-selector">Style:</label>
+            <select id="style-selector">
+                <option value="swirl">Swirling Strokes</option>
+                <option value="dot">Pointillism</option>
+                <option value="starry">Starry Night</option>
+                <option value="thick">Thick Impasto</option>
+            </select>
+        </div>
+        
+        <button id="clear-canvas">Clear Canvas</button>
+        <button id="save-artwork">Save Artwork</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            document.body.appendChild(cursor);
+            
+            // Initial parameters
+            let currentColor = '#4A90E2';
+            let currentStyle = 'swirl';
+            let isMouseDown = false;
+            let mouseX = 0;
+            let mouseY = 0;
+            let lastX = 0;
+            let lastY = 0;
+            let frameCount = 0;
+            
+            // Preload brushstroke images
+            const brushImages = [];
+            const brushCount = 5;
+            for (let i = 0; i < brushCount; i++) {
+                const brushImg = new Image();
+                // Using data URL for simplicity, but could be separate image files
+                brushImg.src = createBrushImageDataUrl(i);
+                brushImages.push(brushImg);
+            }
+            
+            // Create brush images programmatically
+            function createBrushImageDataUrl(index) {
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = 50;
+                tempCanvas.height = 50;
+                
+                tempCtx.fillStyle = '#000';
+                
+                // Different brush shapes
+                switch(index % 5) {
+                    case 0: // Circular brush
+                        tempCtx.beginPath();
+                        tempCtx.arc(25, 25, 20, 0, Math.PI * 2);
+                        tempCtx.fill();
+                        break;
+                    case 1: // Dash brush
+                        tempCtx.beginPath();
+                        tempCtx.ellipse(25, 25, 20, 10, Math.PI/4, 0, Math.PI * 2);
+                        tempCtx.fill();
+                        break;
+                    case 2: // Dot pattern brush
+                        for(let i = 0; i < 10; i++) {
+                            const x = 15 + Math.random() * 20;
+                            const y = 15 + Math.random() * 20;
+                            const size = 2 + Math.random() * 5;
+                            tempCtx.beginPath();
+                            tempCtx.arc(x, y, size, 0, Math.PI * 2);
+                            tempCtx.fill();
+                        }
+                        break;
+                    case 3: // Swirl brush
+                        tempCtx.beginPath();
+                        tempCtx.moveTo(25, 25);
+                        for(let i = 0; i < 30; i++) {
+                            const angle = i * 0.2;
+                            const radius = i * 0.7;
+                            const x = 25 + Math.cos(angle) * radius;
+                            const y = 25 + Math.sin(angle) * radius;
+                            tempCtx.lineTo(x, y);
+                        }
+                        tempCtx.lineWidth = 3;
+                        tempCtx.stroke();
+                        break;
+                    case 4: // Star brush
+                        tempCtx.beginPath();
+                        for(let i = 0; i < 5; i++) {
+                            const angle = (i * Math.PI * 2 / 5) - Math.PI/2;
+                            const x1 = 25 + Math.cos(angle) * 20;
+                            const y1 = 25 + Math.sin(angle) * 20;
+                            const x2 = 25 + Math.cos(angle + Math.PI/5) * 8;
+                            const y2 = 25 + Math.sin(angle + Math.PI/5) * 8;
+                            if(i === 0) tempCtx.moveTo(x1, y1);
+                            else tempCtx.lineTo(x1, y1);
+                            tempCtx.lineTo(x2, y2);
+                        }
+                        tempCtx.closePath();
+                        tempCtx.fill();
+                        break;
+                }
+                
+                return tempCanvas.toDataURL();
+            }
+            
+            // Stroke class for impressionist brush strokes
+            class Stroke {
+                constructor(x, y, color, style, initialAngle) {
+                    this.x = x;
+                    this.y = y;
+                    this.color = color;
+                    this.style = style;
+                    this.size = 8 + Math.random() * 20;
+                    this.opacity = 0.6 + Math.random() * 0.4;
+                    this.angle = initialAngle || Math.random() * Math.PI * 2;
+                    this.brushIndex = Math.floor(Math.random() * brushCount);
+                    this.curlFactor = 0.5 + Math.random() * 1.5;
+                    this.life = 100;
+                    this.fadeSpeed = 0.5 + Math.random() * 0.5;
+                    this.turbulence = 0.1 + Math.random() * 0.3;
+                    
+                    // Style-specific properties
+                    switch(style) {
+                        case 'swirl':
+                            this.size *= 1.2;
+                            this.curlFactor *= 1.5;
+                            break;
+                        case 'dot':
+                            this.size *= 0.7;
+                            this.opacity *= 1.2;
+                            break;
+                        case 'starry':
+                            this.size *= 1.5;
+                            this.turbulence *= 2;
+                            break;
+                        case 'thick':
+                            this.size *= 2;
+                            this.opacity *= 1.3;
+                            break;
+                    }
+                }
+                
+                update() {
+                    // Update position based on style
+                    switch(this.style) {
+                        case 'swirl':
+                            this.angle += 0.1 * this.curlFactor;
+                            this.x += Math.cos(this.angle) * 2;
+                            this.y += Math.sin(this.angle) * 2;
+                            break;
+                        case 'dot':
+                            // Dots don't move much
+                            this.x += (Math.random() - 0.5) * 2;
+                            this.y += (Math.random() - 0.5) * 2;
+                            break;
+                        case 'starry':
+                            // Starry moves along spiral paths
+                            this.angle += 0.05;
+                            const noiseX = Math.sin(frameCount * 0.01 + this.x * 0.01) * this.turbulence * 10;
+                            const noiseY = Math.cos(frameCount * 0.01 + this.y * 0.01) * this.turbulence * 10;
+                            this.x += Math.cos(this.angle) * 3 + noiseX;
+                            this.y += Math.sin(this.angle) * 3 + noiseY;
+                            break;
+                        case 'thick':
+                            // Thick strokes move slowly in the initial direction
+                            this.x += Math.cos(this.angle) * 1;
+                            this.y += Math.sin(this.angle) * 1;
+                            break;
+                    }
+                    
+                    // Reduce life
+                    this.life -= this.fadeSpeed;
+                    
+                    return this.life > 0;
+                }
+                
+                draw() {
+                    ctx.save();
+                    
+                    // Set transparency
+                    ctx.globalAlpha = this.opacity * (this.life / 100);
+                    
+                    // Set composite operation based on style
+                    if (this.style === 'thick') {
+                        ctx.globalCompositeOperation = 'source-over';
+                    } else if (this.style === 'swirl') {
+                        ctx.globalCompositeOperation = 'lighter';
+                    } else {
+                        ctx.globalCompositeOperation = 'source-over';
+                    }
+                    
+                    // Draw the stroke
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.angle);
+                    ctx.scale(this.size / 40, this.size / 40);
+                    
+                    // Set color
+                    ctx.fillStyle = this.color;
+                    ctx.strokeStyle = this.color;
+                    
+                    if (brushImages[this.brushIndex].complete) {
+                        // If brush image is loaded, draw it
+                        ctx.drawImage(brushImages[this.brushIndex], -25, -25, 50, 50);
+                    } else {
+                        // Fallback if image isn't loaded
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    ctx.restore();
+                }
+            }
+            
+            // Star effect for clicks
+            class Star {
+                constructor(x, y, color) {
+                    this.x = x;
+                    this.y = y;
+                    this.color = color;
+                    this.rays = 5 + Math.floor(Math.random() * 5);
+                    this.innerRadius = 10 + Math.random() * 20;
+                    this.outerRadius = this.innerRadius * (2 + Math.random());
+                    this.rotation = Math.random() * Math.PI * 2;
+                    this.expansionRate = 2 + Math.random() * 3;
+                    this.life = 100;
+                    this.fadeSpeed = 1 + Math.random();
+                }
+                
+                update() {
+                    this.outerRadius += this.expansionRate;
+                    this.innerRadius += this.expansionRate * 0.5;
+                    this.rotation += 0.01;
+                    this.life -= this.fadeSpeed;
+                    
+                    return this.life > 0;
+                }
+                
+                draw() {
+                    ctx.save();
+                    
+                    // Set transparency
+                    ctx.globalAlpha = this.life / 100;
+                    
+                    // Draw the star
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rotation);
+                    
+                    ctx.beginPath();
+                    for (let i = 0; i < this.rays; i++) {
+                        const angle = (i / this.rays) * Math.PI * 2;
+                        const xOuter = Math.cos(angle) * this.outerRadius;
+                        const yOuter = Math.sin(angle) * this.outerRadius;
+                        const xInner = Math.cos(angle + Math.PI / this.rays) * this.innerRadius;
+                        const yInner = Math.sin(angle + Math.PI / this.rays) * this.innerRadius;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(xOuter, yOuter);
+                        } else {
+                            ctx.lineTo(xOuter, yOuter);
+                        }
+                        
+                        ctx.lineTo(xInner, yInner);
+                    }
+                    
+                    ctx.closePath();
+                    
+                    // Use a gradient fill
+                    const gradient = ctx.createRadialGradient(0, 0, this.innerRadius * 0.5, 0, 0, this.outerRadius);
+                    gradient.addColorStop(0, this.color);
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                    
+                    ctx.restore();
+                }
+            }
+            
+            // Collections for drawing elements
+            const strokes = [];
+            const stars = [];
+            
+            // Mouse events
+            document.addEventListener('mousemove', (e) => {
+                // Record mouse position
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                if (isMouseDown) {
+                    // Calculate distance moved
+                    const dx = mouseX - lastX;
+                    const dy = mouseY - lastY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance > 5) {
+                        // Get angle of movement
+                        const moveAngle = Math.atan2(dy, dx);
+                        
+                        // Create strokes along the path
+                        const steps = Math.max(1, Math.floor(distance / 5));
+                        for (let i = 0; i < steps; i++) {
+                            const t = i / steps;
+                            const x = lastX + dx * t;
+                            const y = lastY + dy * t;
+                            createStroke(x, y, moveAngle);
+                        }
+                        
+                        // Update last position
+                        [lastX, lastY] = [mouseX, mouseY];
+                    }
+                }
+            });
+            
+            document.addEventListener('mousedown', (e) => {
+                if (!e.target.closest('.controls')) {
+                    isMouseDown = true;
+                    lastX = mouseX = e.clientX;
+                    lastY = mouseY = e.clientY;
+                    
+                    // Create initial stroke
+                    createStroke(lastX, lastY);
+                    
+                    // Expand cursor momentarily
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1.5) rotate(-45deg)';
+                    setTimeout(() => {
+                        cursor.style.transform = 'translate(-50%, -50%) scale(1) rotate(-45deg)';
+                    }, 300);
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isMouseDown = false;
+            });
+            
+            document.addEventListener('click', (e) => {
+                // Prevent click on controls from creating stars
+                if (!e.target.closest('.controls')) {
+                    createStar(e.clientX, e.clientY);
+                }
+            });
+            
+            // Create brushstroke
+            function createStroke(x, y, angle) {
+                // Create main stroke
+                strokes.push(new Stroke(x, y, currentColor, currentStyle, angle));
+                
+                // Create additional strokes for certain styles
+                if (currentStyle === 'swirl') {
+                    // Additional swirls
+                    for (let i = 0; i < 2; i++) {
+                        const offsetX = x + (Math.random() - 0.5) * 20;
+                        const offsetY = y + (Math.random() - 0.5) * 20;
+                        strokes.push(new Stroke(offsetX, offsetY, currentColor, currentStyle, angle));
+                    }
+                } else if (currentStyle === 'dot') {
+                    // Multiple dots for pointillism
+                    for (let i = 0; i < 5; i++) {
+                        const offsetX = x + (Math.random() - 0.5) * 30;
+                        const offsetY = y + (Math.random() - 0.5) * 30;
+                        strokes.push(new Stroke(offsetX, offsetY, currentColor, currentStyle));
+                    }
+                } else if (currentStyle === 'thick') {
+                    // Create some smaller strokes around the main one
+                    for (let i = 0; i < 3; i++) {
+                        const offsetX = x + (Math.random() - 0.5) * 15;
+                        const offsetY = y + (Math.random() - 0.5) * 15;
+                        const stroke = new Stroke(offsetX, offsetY, currentColor, currentStyle, angle);
+                        stroke.size *= 0.7;
+                        strokes.push(stroke);
+                    }
+                }
+            }
+            
+            // Create star effect
+            function createStar(x, y) {
+                // Main star
+                stars.push(new Star(x, y, currentColor));
+                
+                // Create additional stars based on style
+                if (currentStyle === 'starry') {
+                    for (let i = 0; i < 3; i++) {
+                        const offsetX = x + (Math.random() - 0.5) * 100;
+                        const offsetY = y + (Math.random() - 0.5) * 100;
+                        stars.push(new Star(offsetX, offsetY, currentColor));
+                    }
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                frameCount++;
+                
+                // Update strokes
+                for (let i = strokes.length - 1; i >= 0; i--) {
+                    const stroke = strokes[i];
+                    if (!stroke.update()) {
+                        strokes.splice(i, 1);
+                    }
+                }
+                
+                // Update stars
+                for (let i = stars.length - 1; i >= 0; i--) {
+                    const star = stars[i];
+                    if (!star.update()) {
+                        stars.splice(i, 1);
+                    }
+                }
+                
+                // Draw all elements
+                ctx.fillStyle = 'rgba(240, 230, 210, 0.01)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw strokes and stars
+                strokes.forEach(stroke => stroke.draw());
+                stars.forEach(star => star.draw());
+                
+                // Continue animation
+                requestAnimationFrame(animate);
+            }
+            
+            // UI elements
+            const styleSelector = document.getElementById('style-selector');
+            const clearButton = document.getElementById('clear-canvas');
+            const saveButton = document.getElementById('save-artwork');
+            const colorOptions = document.querySelectorAll('.color-option');
+            
+            // UI Event Listeners
+            styleSelector.addEventListener('change', (e) => {
+                currentStyle = e.target.value;
+                
+                // Update cursor appearance
+                switch(currentStyle) {
+                    case 'swirl':
+                        cursor.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23555" d="M7,14c0,0,0-3,0-4s1-2,2-2s2,1,2,2s0,4,0,4h4c0,0,0-3,0-4s1-2,2-2s2,1,2,2s0,4,0,4 M5,14H19c1,0,2,1,2,2v3c0,1-1,2-2,2H5c-1,0-2-1-2-2v-3C3,15,4,14,5,14z"/></svg>')`;
+                        break;
+                    case 'dot':
+                        cursor.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle fill="%23555" cx="12" cy="12" r="10"/></svg>')`;
+                        break;
+                    case 'starry':
+                        cursor.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23555" d="M12,2L15.09,8.09L22,9.4L17,14.24L18.18,21.1L12,17.77L5.82,21.1L7,14.24L2,9.4L8.91,8.09L12,2Z"/></svg>')`;
+                        break;
+                    case 'thick':
+                        cursor.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23555" d="M12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22Z"/></svg>')`;
+                        break;
+                }
+            });
+            
+            clearButton.addEventListener('click', () => {
+                // Clear canvas with fade
+                ctx.fillStyle = '#f0e6d2';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                strokes.length = 0;
+                stars.length = 0;
+            });
+            
+            saveButton.addEventListener('click', () => {
+                // Create a link to download the canvas
+                const link = document.createElement('a');
+                link.download = 'impressionist-artwork.png';
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            
+            colorOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    // Remove active class from all
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    
+                    // Add active to selected
+                    option.classList.add('active');
+                    
+                    // Set color
+                    currentColor = option.getAttribute('data-color');
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Save current content
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Resize canvas
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Restore content
+                ctx.putImageData(imageData, 0, 0);
+            });
+            
+            // Initialize canvas with background
+            ctx.fillStyle = '#f0e6d2';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

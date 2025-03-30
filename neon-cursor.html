@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #050505;
+            font-family: Arial, sans-serif;
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .neon-cursor {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 2px solid #0ff;
+            box-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 15px #0ff, 0 0 20px #0ff;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.8;
+        }
+        
+        .neon-cursor::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background-color: #0ff;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 15px #0ff;
+        }
+        
+        .neon-trail {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #0ff;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 0 5px #0ff, 0 0 10px #0ff;
+            opacity: 0;
+        }
+        
+        .neon-button {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            background-color: transparent;
+            color: #0ff;
+            border: 2px solid #0ff;
+            border-radius: 5px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: none;
+            box-shadow: 0 0 5px #0ff, 0 0 10px #0ff;
+            transition: all 0.3s ease;
+        }
+        
+        .neon-button:hover {
+            background-color: #0ff;
+            color: #000;
+            box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Neon Cursor Effect</h1>
+        <p>Move your cursor around to see the glowing neon trail effect. The cursor and its trail illuminate with a bright cyan glow, creating a futuristic cyberpunk aesthetic.</p>
+        
+        <div class="neon-button">Hover Me</div>
+        <div class="neon-button">Click Me</div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            
+            // Create neon cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'neon-cursor';
+            body.appendChild(cursor);
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            // Trail dots
+            const trailCount = 15;
+            const trails = [];
+            const trailLifespan = 15; // Frames before a trail starts to fade
+            
+            // Create trail elements
+            for (let i = 0; i < trailCount; i++) {
+                const trail = document.createElement('div');
+                trail.className = 'neon-trail';
+                
+                // Randomize the trail size slightly
+                const size = 8 - (i * 0.4);
+                trail.style.width = `${size}px`;
+                trail.style.height = `${size}px`;
+                
+                body.appendChild(trail);
+                trails.push({
+                    element: trail,
+                    x: 0,
+                    y: 0,
+                    age: 0
+                });
+            }
+            
+            // Mouse move event
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Click effect
+            document.addEventListener('mousedown', () => {
+                // Expand cursor on click
+                cursor.style.width = '40px';
+                cursor.style.height = '40px';
+                cursor.style.borderWidth = '3px';
+                cursor.style.boxShadow = '0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff, 0 0 40px #0ff';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                // Return cursor to normal size
+                cursor.style.width = '30px';
+                cursor.style.height = '30px';
+                cursor.style.borderWidth = '2px';
+                cursor.style.boxShadow = '0 0 5px #0ff, 0 0 10px #0ff, 0 0 15px #0ff, 0 0 20px #0ff';
+            });
+            
+            // Handle button hover effects
+            const buttons = document.querySelectorAll('.neon-button');
+            
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', () => {
+                    cursor.style.borderColor = '#ff00ff';
+                    cursor.style.boxShadow = '0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 15px #ff00ff, 0 0 20px #ff00ff';
+                });
+                
+                button.addEventListener('mouseleave', () => {
+                    cursor.style.borderColor = '#0ff';
+                    cursor.style.boxShadow = '0 0 5px #0ff, 0 0 10px #0ff, 0 0 15px #0ff, 0 0 20px #0ff';
+                });
+            });
+            
+            // Animation loop
+            function animate() {
+                // Shift all trails one position forward
+                for (let i = trails.length - 1; i > 0; i--) {
+                    trails[i].x = trails[i-1].x;
+                    trails[i].y = trails[i-1].y;
+                    trails[i].age = trails[i-1].age + 1;
+                }
+                
+                // Set the first trail to the current mouse position
+                if (trails.length > 0) {
+                    trails[0].x = mouseX;
+                    trails[0].y = mouseY;
+                    trails[0].age = 0;
+                }
+                
+                // Update trail positions and opacity based on age
+                trails.forEach(trail => {
+                    trail.element.style.left = `${trail.x}px`;
+                    trail.element.style.top = `${trail.y}px`;
+                    
+                    // Fade out based on age
+                    if (trail.age < trailLifespan) {
+                        trail.element.style.opacity = 1 - (trail.age / trailLifespan);
+                    } else {
+                        trail.element.style.opacity = 0;
+                    }
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            // Color change over time
+            let hue = 180; // Start with cyan (180)
+            function colorCycle() {
+                hue = (hue + 1) % 360;
+                
+                // Change cursor color
+                cursor.style.borderColor = `hsl(${hue}, 100%, 50%)`;
+                cursor.style.boxShadow = `0 0 5px hsl(${hue}, 100%, 50%), 
+                                        0 0 10px hsl(${hue}, 100%, 50%), 
+                                        0 0 15px hsl(${hue}, 100%, 50%), 
+                                        0 0 20px hsl(${hue}, 100%, 50%)`;
+                
+                cursor.querySelector('::before').style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
+                
+                // Change trail colors
+                trails.forEach((trail, index) => {
+                    const trailHue = (hue + index * 5) % 360;
+                    trail.element.style.backgroundColor = `hsl(${trailHue}, 100%, 50%)`;
+                    trail.element.style.boxShadow = `0 0 5px hsl(${trailHue}, 100%, 50%), 
+                                                  0 0 10px hsl(${trailHue}, 100%, 50%)`;
+                });
+                
+                setTimeout(colorCycle, 100);
+            }
+            
+            // Enable color cycle with a control button
+            const colorToggleBtn = document.querySelector('.neon-button:last-child');
+            colorToggleBtn.addEventListener('click', () => {
+                if (colorToggleBtn.textContent === 'Click Me') {
+                    colorToggleBtn.textContent = 'Stop Cycle';
+                    colorCycle();
+                } else {
+                    colorToggleBtn.textContent = 'Click Me';
+                    // The cycle will stop on its own since we're using setTimeout
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

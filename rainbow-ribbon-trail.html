@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Ribbon Cursor Trail</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #121212;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .ribbon {
+            position: absolute;
+            height: 10px;
+            border-radius: 5px;
+            transform-origin: left center;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.8;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            transition: opacity 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Rainbow Ribbon Cursor Trail</h1>
+        <p>Move your cursor around to see the flowing rainbow ribbons. The colorful ribbons follow your cursor movement, creating a vibrant trail that gradually fades away.</p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Mouse position and history
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                createRibbon();
+            });
+            
+            // Rainbow colors in HSL
+            let hue = 0;
+            
+            function createRibbon() {
+                const ribbon = document.createElement('div');
+                ribbon.className = 'ribbon';
+                
+                // Calculate the direction and length of movement
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Only create ribbon if there's enough movement
+                if (distance < 5) return;
+                
+                // Calculate the angle of movement
+                const angle = Math.atan2(dy, dx);
+                
+                // Set ribbon position and transformation
+                ribbon.style.left = `${prevMouseX}px`;
+                ribbon.style.top = `${prevMouseY}px`;
+                ribbon.style.width = `${distance}px`;
+                ribbon.style.transform = `rotate(${angle}rad)`;
+                
+                // Increment hue for rainbow effect
+                hue = (hue + 10) % 360;
+                ribbon.style.backgroundColor = `hsl(${hue}, 100%, 60%)`;
+                
+                // Add to body
+                body.appendChild(ribbon);
+                
+                // Fade out and remove
+                setTimeout(() => {
+                    ribbon.style.opacity = '0';
+                }, 500);
+                
+                setTimeout(() => {
+                    body.removeChild(ribbon);
+                }, 1000);
+            }
+            
+            // Add click effect
+            document.addEventListener('click', (e) => {
+                // Create a burst of ribbons on click
+                for (let i = 0; i < 12; i++) {
+                    const ribbon = document.createElement('div');
+                    ribbon.className = 'ribbon';
+                    
+                    // Calculate angle for the burst (circular)
+                    const angle = (i / 12) * Math.PI * 2;
+                    const length = 50 + Math.random() * 50;
+                    
+                    // Position at click point
+                    ribbon.style.left = `${e.clientX}px`;
+                    ribbon.style.top = `${e.clientY}px`;
+                    ribbon.style.width = `${length}px`;
+                    ribbon.style.transform = `rotate(${angle}rad)`;
+                    
+                    // Rainbow color
+                    const burstHue = (hue + i * 30) % 360;
+                    ribbon.style.backgroundColor = `hsl(${burstHue}, 100%, 60%)`;
+                    
+                    // Add to body
+                    body.appendChild(ribbon);
+                    
+                    // Animate length
+                    let currentLength = 0;
+                    const growSpeed = 200; // pixels per second
+                    const startTime = Date.now();
+                    
+                    function animateRibbon() {
+                        const elapsed = Date.now() - startTime;
+                        const newLength = Math.min(elapsed / 1000 * growSpeed, length);
+                        
+                        if (newLength < length) {
+                            ribbon.style.width = `${newLength}px`;
+                            requestAnimationFrame(animateRibbon);
+                        }
+                    }
+                    
+                    animateRibbon();
+                    
+                    // Fade out and remove
+                    setTimeout(() => {
+                        ribbon.style.opacity = '0';
+                    }, 800);
+                    
+                    setTimeout(() => {
+                        if (ribbon.parentNode === body) {
+                            body.removeChild(ribbon);
+                        }
+                    }, 1300);
+                }
+            });
+            
+            // Add ribbon trail with key press
+            let isTrailActive = false;
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    isTrailActive = !isTrailActive;
+                }
+            });
+            
+            // Create continuous ribbon trail when active
+            function createTrail() {
+                if (isTrailActive && (prevMouseX !== mouseX || prevMouseY !== mouseY)) {
+                    const trailRibbon = document.createElement('div');
+                    trailRibbon.className = 'ribbon';
+                    
+                    // Set a shorter, thinner ribbon for continuous trail
+                    const dx = mouseX - prevMouseX;
+                    const dy = mouseY - prevMouseY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx);
+                    
+                    trailRibbon.style.left = `${prevMouseX}px`;
+                    trailRibbon.style.top = `${prevMouseY}px`;
+                    trailRibbon.style.width = `${distance}px`;
+                    trailRibbon.style.height = '5px';
+                    trailRibbon.style.transform = `rotate(${angle}rad)`;
+                    
+                    // Rainbow color
+                    hue = (hue + 5) % 360;
+                    trailRibbon.style.backgroundColor = `hsl(${hue}, 100%, 60%)`;
+                    
+                    body.appendChild(trailRibbon);
+                    
+                    // Fade out and remove more quickly
+                    setTimeout(() => {
+                        trailRibbon.style.opacity = '0';
+                    }, 300);
+                    
+                    setTimeout(() => {
+                        if (trailRibbon.parentNode === body) {
+                            body.removeChild(trailRibbon);
+                        }
+                    }, 800);
+                }
+                
+                requestAnimationFrame(createTrail);
+            }
+            
+            createTrail();
+        });
+    </script>
+</body>
+</html> 

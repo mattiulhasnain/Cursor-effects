@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Scramble Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #111;
+            font-family: 'Courier New', monospace;
+            color: #0f0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .text-container {
+            width: 80%;
+            max-width: 800px;
+            line-height: 1.6;
+            font-size: 1.2rem;
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #0f0;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 999;
+        }
+        
+        .scramble-area {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Text Scramble Cursor Effect</h1>
+    
+    <div class="text-container">
+        <p>In the digital realm of ones and zeros, coding is the art of turning human ideas into machine commands. The journey of programming is an exploration of logical pathways, where syntax and semantics merge to form powerful tools that shape our modern world. As we navigate through this cybernetic landscape, we construct algorithms that solve problems, create experiences, and extend human capability far beyond what was once thought possible.</p>
+        <p>Move your cursor around this text to see the scramble effect. The characters near your cursor will be scrambled in real-time, creating a digital glitch aesthetic that resembles data corruption. This effect can be used to create an interactive and futuristic user experience on your website.</p>
+        <p>The technique uses JavaScript to detect cursor position and manipulate text characters within a defined radius, randomly replacing them with other characters from a predefined set to create the appearance of digital noise or data interference.</p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const textContainer = document.querySelector('.text-container');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Create scramble area indicator
+            const scrambleArea = document.createElement('div');
+            scrambleArea.className = 'scramble-area';
+            body.appendChild(scrambleArea);
+            
+            // Original text and character maps
+            let originalText = textContainer.innerHTML;
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+{}|:<>?';
+            
+            // Convert the text to span elements
+            function prepareText() {
+                // Create a temporary element to hold the HTML
+                const temp = document.createElement('div');
+                temp.innerHTML = originalText;
+                
+                // Process each text node in the HTML
+                const textNodes = [];
+                
+                function findTextNodes(node) {
+                    if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
+                        textNodes.push(node);
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        for (let i = 0; i < node.childNodes.length; i++) {
+                            findTextNodes(node.childNodes[i]);
+                        }
+                    }
+                }
+                
+                findTextNodes(temp);
+                
+                // Replace each text node with spans for each character
+                textNodes.forEach(textNode => {
+                    const parent = textNode.parentNode;
+                    const text = textNode.textContent;
+                    const fragment = document.createDocumentFragment();
+                    
+                    for (let i = 0; i < text.length; i++) {
+                        if (text[i] === ' ') {
+                            fragment.appendChild(document.createTextNode(' '));
+                        } else {
+                            const span = document.createElement('span');
+                            span.textContent = text[i];
+                            span.dataset.original = text[i];
+                            fragment.appendChild(span);
+                        }
+                    }
+                    
+                    parent.replaceChild(fragment, textNode);
+                });
+                
+                textContainer.innerHTML = temp.innerHTML;
+            }
+            
+            prepareText();
+            
+            // Update cursor position on mouse move
+            document.addEventListener('mousemove', (e) => {
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Update scramble area position
+                scrambleArea.style.left = `${mouseX}px`;
+                scrambleArea.style.top = `${mouseY}px`;
+                
+                // Apply scramble effect
+                scrambleText(mouseX, mouseY);
+            });
+            
+            function scrambleText(x, y) {
+                const spans = textContainer.querySelectorAll('span');
+                const scrambleRadius = 75; // radius in pixels
+                
+                spans.forEach(span => {
+                    const rect = span.getBoundingClientRect();
+                    const spanX = rect.left + rect.width / 2;
+                    const spanY = rect.top + rect.height / 2;
+                    
+                    // Calculate distance from mouse to span
+                    const distance = Math.sqrt(Math.pow(spanX - x, 2) + Math.pow(spanY - y, 2));
+                    
+                    if (distance < scrambleRadius) {
+                        // Scramble text based on proximity to cursor
+                        const scrambleFactor = 1 - (distance / scrambleRadius);
+                        
+                        // Only scramble some characters based on probability
+                        if (Math.random() < scrambleFactor * 0.8) {
+                            // Get random character from chars
+                            const randomIndex = Math.floor(Math.random() * chars.length);
+                            span.textContent = chars[randomIndex];
+                        } else {
+                            // Reset to original character
+                            span.textContent = span.dataset.original;
+                        }
+                    } else {
+                        // Reset to original character
+                        span.textContent = span.dataset.original;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

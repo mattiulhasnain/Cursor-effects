@@ -1,0 +1,3124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A beautiful collection of 70+ cursor effects for modern web design - featuring interactive, useful and creative cursor animations">
+    <title>Cursor Effects Collection - 70+ Interactive Cursor Animations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --background: #0a192f;
+            --card-bg: rgba(28, 42, 57, 0.7);
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+            --gradient-light: linear-gradient(135deg, #66b2ff, #5dbb63);
+            --gradient-dark: linear-gradient(135deg, #2d7d46, #173e7a);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        ::selection {
+            background: var(--secondary);
+            color: var(--background);
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            margin: 0;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            cursor: none; /* Hide default cursor when using custom cursor */
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zm20.97 0l9.315 9.314-1.414 1.414L34.828 0h2.83zM22.344 0L13.03 9.314l1.414 1.414L25.172 0h-2.83zM32 0l12.142 12.142-1.414 1.414L30 2.828 17.272 15.556l-1.414-1.414L28 0h4zM.284 0l28 28-1.414 1.414L0 2.544V0h.284zM0 5.373l25.456 25.455-1.414 1.415L0 8.2V5.374zm0 5.656l22.627 22.627-1.414 1.414L0 13.86v-2.83zm0 5.656l19.8 19.8-1.415 1.413L0 19.514v-2.83zm0 5.657l16.97 16.97-1.414 1.415L0 25.172v-2.83zM0 28l14.142 14.142-1.414 1.414L0 30.828V28zm0 5.657L11.314 44.97 9.9 46.386l-9.9-9.9v-2.828zm0 5.657L8.485 47.8 7.07 49.214 0 42.143v-2.83zm0 5.657l5.657 5.657-1.414 1.415L0 47.8v-2.83zm0 5.657l2.828 2.83-1.414 1.413L0 53.456v-2.83zM54.627 60L30 35.373 5.373 60H8.2L30 38.2 51.8 60h2.827zm-5.656 0L30 41.03 11.03 60h2.828L30 43.858 46.142 60h2.83zm-5.656 0L30 46.686 16.686 60h2.83L30 49.515 40.485 60h2.83zm-5.657 0L30 52.343 22.344 60h2.83L30 55.172 34.828 60h2.83zM32 60l-2-2-2 2h4zM59.716 0l-28 28 1.414 1.414L60 2.544V0h-.284zM60 5.373L34.544 30.828l1.414 1.415L60 8.2V5.374zm0 5.656L37.373 33.656l1.414 1.414L60 13.86v-2.83zm0 5.656l-19.8 19.8 1.415 1.413L60 19.514v-2.83zm0 5.657l-16.97 16.97 1.414 1.415L60 25.172v-2.83zM60 28L45.858 42.142l1.414 1.414L60 30.828V28zm0 5.657L48.686 44.97l1.415 1.415 9.9-9.9v-2.828zm0 5.657L51.515 47.8l1.414 1.414L60 42.143v-2.83zm0 5.657l-5.657 5.657 1.414 1.415L60 47.8v-2.83zm0 5.657l-2.828 2.83 1.414 1.413L60 53.456v-2.83zM39.9 16.385l1.414-1.414L30 3.658 18.686 14.97l1.415 1.415 9.9-9.9 9.9 9.9zm-2.83 2.828l1.415-1.414L30 9.313 21.515 17.8l1.414 1.413L30 11.8l7.07 7.414v-.002zm-2.827 2.83l1.414-1.416L30 14.97l-5.657 5.657 1.414 1.415L30 17.8l4.243 4.242zm-2.83 2.827l1.415-1.414L30 20.626l-2.828 2.83 1.414 1.414L30 23.456l1.414 1.414zM56.87 59.414L58.284 58 30 29.716 1.716 58l1.414 1.414L30 32.544l26.87 26.87z' fill='rgba(93, 187, 99, 0.05)' fill-rule='evenodd'/%3E%3C/svg%3E"),
+        radial-gradient(circle at 30% 10%, rgba(93, 187, 99, 0.07) 0%, transparent 50%),
+        radial-gradient(circle at 70% 90%, rgba(102, 178, 255, 0.07) 0%, transparent 50%),
+        radial-gradient(circle at 20% 40%, rgba(255, 218, 138, 0.05) 0%, transparent 30%),
+        radial-gradient(circle at 80% 30%, rgba(255, 126, 185, 0.05) 0%, transparent 30%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(10, 25, 47, 0.5) 0%, rgba(10, 25, 47, 0.8) 100%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Fireflies effect */
+.fireflies {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.firefly {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background-color: rgba(255, 247, 180, 0.8);
+    border-radius: 50%;
+    filter: blur(1px);
+    animation: firefly-float 15s linear infinite, firefly-glow 3s ease-in-out infinite;
+    opacity: 0;
+}
+
+@keyframes firefly-float {
+    0% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(100px) translateY(-50px); }
+    50% { transform: translateX(200px) translateY(100px); }
+    75% { transform: translateX(100px) translateY(200px); }
+    100% { transform: translateX(0) translateY(0); }
+}
+
+@keyframes firefly-glow {
+    0%, 100% { opacity: 0; box-shadow: 0 0 4px 0px rgba(255, 247, 180, 0.7); }
+    50% { opacity: 0.8; box-shadow: 0 0 10px 2px rgba(255, 247, 180, 0.9); }
+}
+
+/* Magic forest elements */
+.forest-spirits {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.07;
+}
+
+.spirit {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: brightness(1.5) saturate(1.2);
+}
+
+.spirit1 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%235dbb63'%3E%3Cpath d='M50,10 C40,20 10,40 10,60 C10,80 30,90 50,90 C70,90 90,80 90,60 C90,40 60,20 50,10z M50,30 C45,35 30,45 30,55 C30,65 40,70 50,70 C60,70 70,65 70,55 C70,45 55,35 50,30z'/%3E%3C/svg%3E");
+    animation: spirit-float 25s ease-in-out infinite;
+}
+
+.spirit2 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%2366b2ff'%3E%3Cpath d='M50,90 C60,80 90,60 90,40 C90,20 70,10 50,10 C30,10 10,20 10,40 C10,60 40,80 50,90z M50,70 C55,65 70,55 70,45 C70,35 60,30 50,30 C40,30 30,35 30,45 C30,55 45,65 50,70z'/%3E%3C/svg%3E");
+    animation: spirit-float 30s ease-in-out infinite reverse;
+}
+
+.spirit3 {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ffda8a'%3E%3Cpath d='M30,50 C30,20 70,20 70,50 C90,50 90,90 50,90 C10,90 10,50 30,50z'/%3E%3C/svg%3E");
+    animation: spirit-float 20s ease-in-out infinite alternate;
+}
+
+@keyframes spirit-float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 0.7; }
+    25% { transform: translate(30px, -20px) rotate(5deg) scale(1.1); opacity: 1; }
+    50% { transform: translate(60px, 0px) rotate(0deg) scale(1); opacity: 0.7; }
+    75% { transform: translate(30px, 20px) rotate(-5deg) scale(0.9); opacity: 1; }
+}
+
+/* Enhanced leaves */
+.leaf {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.15;
+    filter: brightness(1.5) drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+    pointer-events: none;
+    z-index: -1;
+}
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            margin: 0;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            cursor: none; /* Hide default cursor when using custom cursor */
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zm20.97 0l9.315 9.314-1.414 1.414L34.828 0h2.83zM22.344 0L13.03 9.314l1.414 1.414L25.172 0h-2.83zM32 0l12.142 12.142-1.414 1.414L30 2.828 17.272 15.556l-1.414-1.414L28 0h4zM.284 0l28 28-1.414 1.414L0 2.544V0h.284zM0 5.373l25.456 25.455-1.414 1.415L0 8.2V5.374zm0 5.656l22.627 22.627-1.414 1.414L0 13.86v-2.83zm0 5.656l19.8 19.8-1.415 1.413L0 19.514v-2.83zm0 5.657l16.97 16.97-1.414 1.415L0 25.172v-2.83zM0 28l14.142 14.142-1.414 1.414L0 30.828V28zm0 5.657L11.314 44.97 9.9 46.386l-9.9-9.9v-2.828zm0 5.657L8.485 47.8 7.07 49.214 0 42.143v-2.83zm0 5.657l5.657 5.657-1.414 1.415L0 47.8v-2.83zm0 5.657l2.828 2.83-1.414 1.413L0 53.456v-2.83zM54.627 60L30 35.373 5.373 60H8.2L30 38.2 51.8 60h2.827zm-5.656 0L30 41.03 11.03 60h2.828L30 43.858 46.142 60h2.83zm-5.656 0L30 46.686 16.686 60h2.83L30 49.515 40.485 60h2.83zm-5.657 0L30 52.343 22.344 60h2.83L30 55.172 34.828 60h2.83zM32 60l-2-2-2 2h4zM59.716 0l-28 28 1.414 1.414L60 2.544V0h-.284zM60 5.373L34.544 30.828l1.414 1.415L60 8.2V5.374zm0 5.656L37.373 33.656l1.414 1.414L60 13.86v-2.83zm0 5.656l-19.8 19.8 1.415 1.413L60 19.514v-2.83zm0 5.657l-16.97 16.97 1.414 1.415L60 25.172v-2.83zM60 28L45.858 42.142l1.414 1.414L60 30.828V28zm0 5.657L48.686 44.97l1.415 1.415 9.9-9.9v-2.828zm0 5.657L51.515 47.8l1.414 1.414L60 42.143v-2.83zm0 5.657l-5.657 5.657 1.414 1.415L60 47.8v-2.83zm0 5.657l-2.828 2.83 1.414 1.413L60 53.456v-2.83zM39.9 16.385l1.414-1.414L30 3.658 18.686 14.97l1.415 1.415 9.9-9.9 9.9 9.9zm-2.83 2.828l1.415-1.414L30 9.313 21.515 17.8l1.414 1.413L30 11.8l7.07 7.414v-.002zm-2.827 2.83l1.414-1.416L30 14.97l-5.657 5.657 1.414 1.415L30 17.8l4.243 4.242zm-2.83 2.827l1.415-1.414L30 20.626l-2.828 2.83 1.414 1.414L30 23.456l1.414 1.414zM56.87 59.414L58.284 58 30 29.716 1.716 58l1.414 1.414L30 32.544l26.87 26.87z' fill='rgba(93, 187, 99, 0.05)' fill-rule='evenodd'/%3E%3C/svg%3E"),
+                radial-gradient(circle at 30% 10%, rgba(93, 187, 99, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 70% 90%, rgba(102, 178, 255, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 25, 47, 0.5) 0%, rgba(10, 25, 47, 0.8) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+            margin-bottom: 60px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background: rgba(10, 25, 47, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(93, 187, 99, 0.2);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 30% 50%, rgba(141, 228, 175, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(102, 178, 255, 0.15) 0%, transparent 50%);
+            animation: rotate 40s linear infinite;
+            z-index: -1;
+        }
+
+        /* Add divine light rays */
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                from 0deg, 
+                transparent 0deg, 
+                rgba(255, 255, 255, 0.03) 10deg,
+                transparent 20deg,
+                transparent 80deg,
+                rgba(255, 255, 255, 0.03) 90deg,
+                transparent 100deg,
+                transparent 160deg,
+                rgba(255, 255, 255, 0.03) 170deg,
+                transparent 180deg,
+                transparent 240deg,
+                rgba(255, 255, 255, 0.03) 250deg,
+                transparent 260deg,
+                transparent 320deg,
+                rgba(255, 255, 255, 0.03) 330deg,
+                transparent 340deg
+            );
+            animation: rotate 30s linear infinite reverse;
+            z-index: -1;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .leaves {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .leaf {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            filter: brightness(1.5);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .leaf1 {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235dbb63'%3E%3Cpath d='M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.52,6.52,0,0,0,1.5,4.07L6,15.37l.73,1.58L12,15A10.73,10.73,0,0,1,17,8Z'/%3E%3C/svg%3E");
+        }
+
+        .leaf2 {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2366b2ff'%3E%3Cpath d='M12,22a9,9,0,0,1-9-9A9.86,9.86,0,0,1,5.53,5.19,1,1,0,0,1,7,5.25,12.32,12.32,0,0,0,9.5,7.1,10.37,10.37,0,0,0,12,13a9.91,9.91,0,0,0,2-6,1,1,0,0,1,2,0A14.17,14.17,0,0,1,12,18v2.75A1,1,0,0,1,12,22Z'/%3E%3C/svg%3E");
+        }
+        
+        .leaf3 {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff7eb9'%3E%3Cpath d='M12.93,2.65c-.27-.27-.54-.53-.82-.77A10.73,10.73,0,0,0,6.9,0a8.71,8.71,0,0,0-6.25,2.65,8.92,8.92,0,0,0,0,12.6A9.78,9.78,0,0,0,6,18.16l.92-1.62a8.19,8.19,0,0,1-4.76-2.4,7,7,0,0,1,0-9.87,6.93,6.93,0,0,1,4.46-2.1A9.15,9.15,0,0,1,11.36,3l0,0a9.11,9.11,0,0,0-3,7A10.5,10.5,0,0,0,15.64,21l.75-1.58a9,9,0,0,1-6.09-9.12A10.07,10.07,0,0,1,13.49,4a10.47,10.47,0,0,1,3,3.84A11,11,0,0,1,17.31,12a7.61,7.61,0,0,1-1.05,3.86l1.67.79a8.59,8.59,0,0,0,1.38-3.45c.08-.47.14-.93.14-1.4A11.11,11.11,0,0,0,12.93,2.65Z'/%3E%3C/svg%3E");
+        }
+        
+        .leaf4 {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffda8a'%3E%3Cpath d='M17.75,3.95a7.5,7.5,0,0,1,3.13,1.23A5.39,5.39,0,0,1,22,7v0a5.39,5.39,0,0,1-1.12,1.87,7.5,7.5,0,0,1-3.13,1.23v5.45a7.5,7.5,0,0,1-3.13,1.23A5.39,5.39,0,0,1,12.75,18v0a5.39,5.39,0,0,1-1.12-1.87,7.5,7.5,0,0,1-3.13-1.23V9.41a7.5,7.5,0,0,1,3.13-1.23A5.39,5.39,0,0,1,13.5,6.31v0a5.39,5.39,0,0,1,1.12,1.87,7.5,7.5,0,0,1,3.13,1.23Z'/%3E%3C/svg%3E");
+        }
+        
+        .leaf5 {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2399ccff'%3E%3Cpath d='M12,7.45a3.94,3.94,0,0,0-3.76,2.76H5V8.45H3v3.76H5V10.45H8.24v.93a2,2,0,0,0-1.67,2h-2a1,1,0,0,0,0,2H8.24a4,4,0,0,0,7.52,0h2.43a1,1,0,0,0,0-2h-2a2,2,0,0,0-1.67-2v-.93H17v1.76h2V8.45H17v1.76H14.76A3.94,3.94,0,0,0,12,7.45Z'/%3E%3C/svg%3E");
+        }
+
+        .flower {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: -1;
+            transform-origin: center bottom;
+        }
+
+        .flower1 {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff7eb9'%3E%3Cpath d='M12,22a5,5,0,0,1-3-9,5,5,0,0,1,0-8,5,5,0,0,1,6,0,5,5,0,0,1,0,8,5,5,0,0,1-3,9Z'/%3E%3Ccircle cx='12' cy='9' r='2' fill='%23ffda8a'/%3E%3C/svg%3E");
+        }
+
+        .flower2 {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235dbb63'%3E%3Cpath d='M12,11A3,3,0,1,0,9,8,3,3,0,0,0,12,11Zm0-4a1,1,0,1,1-1,1A1,1,0,0,1,12,7Z'/%3E%3Cpath d='M12,22c-.34,0-.67,0-1-.06a1,1,0,0,1-.78-1.18,1,1,0,0,1,1.18-.78A7.91,7.91,0,0,0,12,20,8,8,0,0,0,19.71,8.7a7.23,7.23,0,0,0-3-4.95,8.24,8.24,0,0,0-9.36.07,7.16,7.16,0,0,0-3,5,1,1,0,1,1-2-.24,9.09,9.09,0,0,1,3.91-6.4A10.2,10.2,0,0,1,17.6,2a9.26,9.26,0,0,1,3.94,6.45A10,10,0,0,1,12,22Z'/%3E%3C/svg%3E");
+        }
+
+        @keyframes floatSwaying {
+            0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+            25% { transform: translateY(-15px) rotate(-5deg) scale(1.05); }
+            50% { transform: translateY(-25px) rotate(0deg) scale(1); }
+            75% { transform: translateY(-15px) rotate(5deg) scale(0.95); }
+        }
+        
+        @keyframes floatCircular {
+            0%, 100% { transform: translate(0, 0) rotate(0) scale(1); }
+            25% { transform: translate(10px, -15px) rotate(5deg) scale(1.05); }
+            50% { transform: translate(0, -25px) rotate(10deg) scale(1); }
+            75% { transform: translate(-10px, -15px) rotate(5deg) scale(0.95); }
+        }
+        
+        @keyframes floatSideways {
+            0%, 100% { transform: translate(0, 0) rotate(0); }
+            50% { transform: translate(15px, -10px) rotate(10deg); }
+        }
+        
+        .vine {
+            position: fixed;
+            width: 100px;
+            height: 300px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .vine1 {
+            top: 0;
+            left: 5%;
+            height: 400px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 300' fill='none' stroke='%235dbb63' stroke-width='2'%3E%3Cpath d='M50,0 C50,50 80,80 60,150 C40,220 70,250 50,300' stroke-linecap='round'/%3E%3Cpath d='M50,50 C70,50 90,70 90,90' stroke-linecap='round'/%3E%3Cpath d='M60,100 C80,100 100,80 110,60' stroke-linecap='round'/%3E%3Cpath d='M55,150 C75,150 85,170 80,190' stroke-linecap='round'/%3E%3Cpath d='M50,200 C30,210 20,230 30,250' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+        
+        .vine2 {
+            top: 0;
+            right: 5%;
+            height: 500px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 400' fill='none' stroke='%233c9d50' stroke-width='2'%3E%3Cpath d='M50,0 C50,100 20,150 40,200 C60,250 30,300 50,400' stroke-linecap='round'/%3E%3Cpath d='M40,50 C20,60 0,80 10,100' stroke-linecap='round'/%3E%3Cpath d='M35,120 C15,130 5,150 15,170' stroke-linecap='round'/%3E%3Cpath d='M40,220 C20,230 0,250 10,270' stroke-linecap='round'/%3E%3Cpath d='M45,300 C65,310 75,330 65,350' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+        
+        .vine3 {
+            bottom: 0;
+            left: 10%;
+            height: 300px;
+            transform: scaleY(-1);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 300' fill='none' stroke='%235dbb63' stroke-width='2'%3E%3Cpath d='M50,0 C50,50 80,80 60,150 C40,220 70,250 50,300' stroke-linecap='round'/%3E%3Cpath d='M50,50 C70,50 90,70 90,90' stroke-linecap='round'/%3E%3Cpath d='M60,100 C80,100 100,80 110,60' stroke-linecap='round'/%3E%3Cpath d='M55,150 C75,150 85,170 80,190' stroke-linecap='round'/%3E%3Cpath d='M50,200 C30,210 20,230 30,250' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+        
+        .vine4 {
+            bottom: 0;
+            right: 10%;
+            height: 250px;
+            transform: scaleY(-1) scaleX(-1);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 300' fill='none' stroke='%233c9d50' stroke-width='2'%3E%3Cpath d='M50,0 C50,50 80,80 60,150 C40,220 70,250 50,300' stroke-linecap='round'/%3E%3Cpath d='M50,50 C70,50 90,70 90,90' stroke-linecap='round'/%3E%3Cpath d='M60,100 C80,100 100,80 110,60' stroke-linecap='round'/%3E%3Cpath d='M55,150 C75,150 85,170 80,190' stroke-linecap='round'/%3E%3Cpath d='M50,200 C30,210 20,230 30,250' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+        
+        .fern {
+            position: fixed;
+            width: 150px;
+            height: 200px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .fern1 {
+            bottom: 0;
+            left: 30%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 200' fill='none' stroke='%235dbb63' stroke-width='2'%3E%3Cpath d='M75,0 C75,100 75,150 75,200' stroke-linecap='round'/%3E%3Cpath d='M75,20 C85,15 95,15 105,20 C115,25 125,35 130,50' stroke-linecap='round'/%3E%3Cpath d='M105,20 C110,15 115,15 120,20' stroke-linecap='round'/%3E%3Cpath d='M115,30 C120,25 125,25 130,30' stroke-linecap='round'/%3E%3Cpath d='M75,40 C85,35 95,35 105,40 C115,45 125,55 130,70' stroke-linecap='round'/%3E%3Cpath d='M105,40 C110,35 115,35 120,40' stroke-linecap='round'/%3E%3Cpath d='M115,50 C120,45 125,45 130,50' stroke-linecap='round'/%3E%3Cpath d='M75,60 C85,55 95,55 105,60 C115,65 125,75 130,90' stroke-linecap='round'/%3E%3Cpath d='M105,60 C110,55 115,55 120,60' stroke-linecap='round'/%3E%3Cpath d='M115,70 C120,65 125,65 130,70' stroke-linecap='round'/%3E%3Cpath d='M75,80 C65,75 55,75 45,80 C35,85 25,95 20,110' stroke-linecap='round'/%3E%3Cpath d='M45,80 C40,75 35,75 30,80' stroke-linecap='round'/%3E%3Cpath d='M35,90 C30,85 25,85 20,90' stroke-linecap='round'/%3E%3Cpath d='M75,100 C65,95 55,95 45,100 C35,105 25,115 20,130' stroke-linecap='round'/%3E%3Cpath d='M45,100 C40,95 35,95 30,100' stroke-linecap='round'/%3E%3Cpath d='M35,110 C30,105 25,105 20,110' stroke-linecap='round'/%3E%3Cpath d='M75,120 C65,115 55,115 45,120 C35,125 25,135 20,150' stroke-linecap='round'/%3E%3Cpath d='M45,120 C40,115 35,115 30,120' stroke-linecap='round'/%3E%3Cpath d='M35,130 C30,125 25,125 20,130' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+        
+        .fern2 {
+            bottom: 0;
+            right: 30%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 200' fill='none' stroke='%233c9d50' stroke-width='2'%3E%3Cpath d='M75,0 C75,100 75,150 75,200' stroke-linecap='round'/%3E%3Cpath d='M75,20 C85,15 95,15 105,20 C115,25 125,35 130,50' stroke-linecap='round'/%3E%3Cpath d='M105,20 C110,15 115,15 120,20' stroke-linecap='round'/%3E%3Cpath d='M115,30 C120,25 125,25 130,30' stroke-linecap='round'/%3E%3Cpath d='M75,40 C85,35 95,35 105,40 C115,45 125,55 130,70' stroke-linecap='round'/%3E%3Cpath d='M105,40 C110,35 115,35 120,40' stroke-linecap='round'/%3E%3Cpath d='M115,50 C120,45 125,45 130,50' stroke-linecap='round'/%3E%3Cpath d='M75,60 C85,55 95,55 105,60 C115,65 125,75 130,90' stroke-linecap='round'/%3E%3Cpath d='M105,60 C110,55 115,55 120,60' stroke-linecap='round'/%3E%3Cpath d='M115,70 C120,65 125,65 130,70' stroke-linecap='round'/%3E%3Cpath d='M75,80 C65,75 55,75 45,80 C35,85 25,95 20,110' stroke-linecap='round'/%3E%3Cpath d='M45,80 C40,75 35,75 30,80' stroke-linecap='round'/%3E%3Cpath d='M35,90 C30,85 25,85 20,90' stroke-linecap='round'/%3E%3Cpath d='M75,100 C65,95 55,95 45,100 C35,105 25,115 20,130' stroke-linecap='round'/%3E%3Cpath d='M45,100 C40,95 35,95 30,100' stroke-linecap='round'/%3E%3Cpath d='M35,110 C30,105 25,105 20,110' stroke-linecap='round'/%3E%3Cpath d='M75,120 C65,115 55,115 45,120 C35,125 25,135 20,150' stroke-linecap='round'/%3E%3Cpath d='M45,120 C40,115 35,115 30,120' stroke-linecap='round'/%3E%3Cpath d='M35,130 C30,125 25,125 20,130' stroke-linecap='round'/%3E%3C/svg%3E");
+            transform: scaleX(-1);
+        }
+
+        h1 {
+            font-size: 3.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            margin-top: 60px;
+            background: linear-gradient(135deg, #ffffff, var(--primary-light) 30%, var(--secondary-light) 70%, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titlePulse 4s ease-in-out infinite;
+            position: relative;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 3px;
+            background: var(--gradient-light);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(141, 228, 175, 0.5);
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(93, 187, 99, 0.5)); }
+            50% { filter: drop-shadow(0 0 25px rgba(102, 178, 255, 0.7)); }
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin: 2.5rem auto;
+            color: var(--text);
+            position: relative;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            line-height: 1.8;
+        }
+
+        .search-container {
+            max-width: 700px;
+            margin: 50px auto;
+            position: relative;
+            z-index: 5;
+        }
+
+        .search-container::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
+            background: radial-gradient(ellipse at center, rgba(141, 228, 175, 0.1) 0%, transparent 70%);
+            border-radius: 50px;
+            z-index: -1;
+            opacity: 0.7;
+            animation: search-glow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes search-glow {
+            0% { opacity: 0.5; transform: scale(0.95); }
+            100% { opacity: 0.9; transform: scale(1.05); }
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 18px 25px 18px 60px;
+            border: none;
+            border-radius: 40px;
+            background: rgba(28, 42, 57, 0.6);
+            color: var(--text);
+            font-size: 1.1rem;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 
+                        inset 0 1px 3px rgba(255, 255, 255, 0.1),
+                        0 0 20px rgba(93, 187, 99, 0.2);
+            transition: all 0.4s ease;
+            border: 1px solid rgba(93, 187, 99, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .search-input::placeholder {
+            color: rgba(240, 248, 255, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 10px 30px rgba(93, 187, 99, 0.3), 
+                        inset 0 1px 3px rgba(255, 255, 255, 0.2),
+                        0 0 30px rgba(93, 187, 99, 0.3);
+            border: 1px solid rgba(93, 187, 99, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .search-input:focus::placeholder {
+            opacity: 0.5;
+            transform: translateX(10px);
+        }
+
+        .search-container::after {
+            content: '🔍';
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 22px;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(93, 187, 99, 0.5);
+            pointer-events: none;
+        }
+
+        .search-container:focus-within::after {
+            transform: translateY(-50%) scale(1.1);
+            opacity: 1;
+            text-shadow: 0 0 15px rgba(102, 178, 255, 0.7);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 40px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .card {
+            background: rgba(28, 42, 57, 0.6);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15), 0 0 15px rgba(93, 187, 99, 0.05);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(93, 187, 99, 0.15), rgba(102, 178, 255, 0.15));
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-20px) rotateX(5deg);
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.3), 
+                        0 0 30px rgba(93, 187, 99, 0.2);
+            border-color: rgba(93, 187, 99, 0.3);
+        }
+
+        .card:hover::before,
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        /* Divine light aura on hover */
+        .card:hover .card-image::after {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        .card-image {
+            height: 200px;
+            background: rgba(28, 42, 57, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .card-image::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle at center, rgba(93, 187, 99, 0.3) 0%, transparent 70%);
+            opacity: 0.3;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            z-index: 0;
+        }
+
+        /* Divine light rays on hover */
+        .card-image::after {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            top: -25%;
+            left: -25%;
+            background: conic-gradient(
+                from 0deg, 
+                transparent 0deg, 
+                rgba(255, 255, 255, 0.05) 10deg,
+                transparent 20deg,
+                transparent 80deg,
+                rgba(255, 255, 255, 0.05) 90deg,
+                transparent 100deg,
+                transparent 160deg,
+                rgba(255, 255, 255, 0.05) 170deg,
+                transparent 180deg,
+                transparent 240deg,
+                rgba(255, 255, 255, 0.05) 250deg,
+                transparent 260deg,
+                transparent 320deg,
+                rgba(255, 255, 255, 0.05) 330deg,
+                transparent 340deg
+            );
+            opacity: 0;
+            transition: opacity 1s ease, transform 1s ease;
+            z-index: 0;
+            animation: rotate 30s linear infinite;
+        }
+
+        .card:hover .card-image::before {
+            opacity: 0.7;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-icon {
+            font-size: 4.2rem;
+            filter: drop-shadow(0 0 15px rgba(93, 187, 99, 0.5));
+            transition: all 0.5s ease;
+            position: relative;
+            z-index: 2;
+            transform-style: preserve-3d;
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.15) translateZ(20px) rotate(10deg);
+            filter: drop-shadow(0 0 25px rgba(102, 178, 255, 0.8));
+        }
+
+        .card-content {
+            padding: 30px;
+            position: relative;
+            background: linear-gradient(to bottom, rgba(28, 42, 57, 0), rgba(28, 42, 57, 0.8));
+            z-index: 2;
+        }
+
+        .card-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff, var(--primary-light) 50%, var(--secondary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+            transition: all 0.4s ease;
+        }
+
+        .card-title::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-light);
+            transition: width 0.4s ease;
+            box-shadow: 0 0 8px rgba(93, 187, 99, 0.5);
+            border-radius: 2px;
+        }
+
+        .card:hover .card-title::after {
+            width: 100%;
+        }
+
+        .card:hover .card-title {
+            transform: translateZ(10px);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .card-description {
+            font-size: 1rem;
+            color: var(--text);
+            margin-bottom: 30px;
+            line-height: 1.7;
+            transition: all 0.3s ease;
+            transform: translateZ(0);
+        }
+
+        .card:hover .card-description {
+            color: var(--text);
+            transform: translateZ(5px);
+        }
+
+        .card-link {
+            display: inline-block;
+            padding: 14px 35px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--background);
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(93, 187, 99, 0.3), 0 0 5px rgba(93, 187, 99, 0.2);
+            z-index: 2;
+            transform: translateZ(0);
+        }
+
+        .card-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+
+        .card:hover .card-link {
+            transform: translateY(-5px) translateZ(10px);
+            box-shadow: 0 8px 25px rgba(93, 187, 99, 0.5), 0 0 10px rgba(102, 178, 255, 0.3);
+        }
+
+        .card-link:hover {
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 12px 30px rgba(93, 187, 99, 0.6), 0 0 15px rgba(102, 178, 255, 0.5) !important;
+        }
+
+        .card-link:hover::before {
+            opacity: 1;
+        }
+
+        .card-link span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-link:hover span {
+            animation: pulse 1s ease infinite;
+        }
+
+        /* Nature elements for each card */
+        .card .nature-element {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0;
+            filter: brightness(1.5);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .card:hover .nature-element {
+            opacity: 0.2;
+            animation: nature-float 5s ease-in-out infinite;
+        }
+
+        .nature-element.top-left {
+            top: 10px;
+            left: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235dbb63'%3E%3Cpath d='M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.52,6.52,0,0,0,1.5,4.07L6,15.37l.73,1.58L12,15A10.73,10.73,0,0,1,17,8Z'/%3E%3C/svg%3E");
+            transform-origin: bottom right;
+        }
+
+        .nature-element.top-right {
+            top: 10px;
+            right: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2366b2ff'%3E%3Cpath d='M12,22a9,9,0,0,1-9-9A9.86,9.86,0,0,1,5.53,5.19,1,1,0,0,1,7,5.25,12.32,12.32,0,0,0,9.5,7.1,10.37,10.37,0,0,0,12,13a9.91,9.91,0,0,0,2-6,1,1,0,0,1,2,0A14.17,14.17,0,0,1,12,18v2.75A1,1,0,0,1,12,22Z'/%3E%3C/svg%3E");
+            transform-origin: bottom left;
+        }
+
+        .nature-element.bottom-left {
+            bottom: 10px;
+            left: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffda8a'%3E%3Cpath d='M17.75,3.95a7.5,7.5,0,0,1,3.13,1.23A5.39,5.39,0,0,1,22,7v0a5.39,5.39,0,0,1-1.12,1.87,7.5,7.5,0,0,1-3.13,1.23v5.45a7.5,7.5,0,0,1-3.13,1.23A5.39,5.39,0,0,1,12.75,18v0a5.39,5.39,0,0,1-1.12-1.87,7.5,7.5,0,0,1-3.13-1.23V9.41a7.5,7.5,0,0,1,3.13-1.23A5.39,5.39,0,0,1,13.5,6.31v0a5.39,5.39,0,0,1,1.12,1.87,7.5,7.5,0,0,1,3.13,1.23Z'/%3E%3C/svg%3E");
+            transform-origin: top right;
+        }
+
+        .nature-element.bottom-right {
+            bottom: 10px;
+            right: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff7eb9'%3E%3Cpath d='M12.93,2.65c-.27-.27-.54-.53-.82-.77A10.73,10.73,0,0,0,6.9,0a8.71,8.71,0,0,0-6.25,2.65,8.92,8.92,0,0,0,0,12.6A9.78,9.78,0,0,0,6,18.16l.92-1.62a8.19,8.19,0,0,1-4.76-2.4,7,7,0,0,1,0-9.87,6.93,6.93,0,0,1,4.46-2.1A9.15,9.15,0,0,1,11.36,3l0,0a9.11,9.11,0,0,0-3,7A10.5,10.5,0,0,0,15.64,21l.75-1.58a9,9,0,0,1-6.09-9.12A10.07,10.07,0,0,1,13.49,4a10.47,10.47,0,0,1,3,3.84A11,11,0,0,1,17.31,12a7.61,7.61,0,0,1-1.05,3.86l1.67.79a8.59,8.59,0,0,0,1.38-3.45c.08-.47.14-.93.14-1.4A11.11,11.11,0,0,0,12.93,2.65Z'/%3E%3C/svg%3E");
+            transform-origin: top left;
+        }
+
+        @keyframes nature-float {
+            0%, 100% { transform: translate(0, 0) rotate(0); }
+            50% { transform: translate(5px, -5px) rotate(10deg); }
+        }
+
+        .card-highlight {
+            animation: highlight-pulse 1.2s ease-in-out;
+        }
+
+        @keyframes highlight-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 30px 40px rgba(93, 187, 99, 0.5), 0 0 30px rgba(102, 178, 255, 0.3); }
+        }
+
+        /* Category navigation */
+        .category-nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 40px auto 60px;
+            max-width: 1100px;
+            position: relative;
+            padding: 20px;
+            z-index: 3;
+        }
+
+        .category-nav::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(93, 187, 99, 0.3), transparent);
+            z-index: -1;
+        }
+
+        .category-nav::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(102, 178, 255, 0.3), transparent);
+            z-index: -1;
+        }
+
+        .category-btn {
+            padding: 12px 22px;
+            background: rgba(28, 42, 57, 0.7);
+            border: 1px solid rgba(93, 187, 99, 0.2);
+            color: var(--text-muted);
+            border-radius: 30px;
+            font-size: 0.95rem;
+            cursor: none;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
+        }
+
+        .category-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(93, 187, 99, 0.3), rgba(102, 178, 255, 0.3));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+
+        .category-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease, transform 0.6s ease;
+            transform: scale(0.5);
+            z-index: -1;
+        }
+
+        .category-btn:hover, .category-btn.active {
+            color: var(--text);
+            border-color: rgba(93, 187, 99, 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15), 0 0 15px rgba(93, 187, 99, 0.2);
+        }
+
+        .category-btn:hover::before, 
+        .category-btn.active::before {
+            opacity: 1;
+        }
+
+        .category-btn:hover::after,
+        .category-btn.active::after {
+            opacity: 0.5;
+            transform: scale(1) rotate(30deg);
+        }
+
+        .category-btn.active {
+            background: linear-gradient(135deg, rgba(93, 187, 99, 0.4), rgba(102, 178, 255, 0.4));
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 0 0 20px rgba(93, 187, 99, 0.3);
+            transform: translateY(-5px) scale(1.05);
+        }
+
+        .category-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 3px;
+            background: var(--gradient-light);
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(93, 187, 99, 0.5);
+        }
+
+        /* Add nature icon before each category button */
+        .category-btn span {
+            position: relative;
+            z-index: 1;
+            padding-left: 22px;
+        }
+
+        .category-btn span::before {
+            content: '🌿';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) scale(0.9);
+            font-size: 14px;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover span::before,
+        .category-btn.active span::before {
+            transform: translateY(-50%) scale(1.1) rotate(10deg);
+            opacity: 1;
+        }
+
+        .category-btn:nth-child(2) span::before { content: '🌱'; }
+        .category-btn:nth-child(3) span::before { content: '🌳'; }
+        .category-btn:nth-child(4) span::before { content: '✨'; }
+        .category-btn:nth-child(5) span::before { content: '🎨'; }
+        .category-btn:nth-child(6) span::before { content: '🔆'; }
+        .category-btn:nth-child(7) span::before { content: '🛠️'; }
+        .category-btn:nth-child(8) span::before { content: '🧩'; }
+        .category-btn:nth-child(9) span::before { content: '🌐'; }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 0;
+            background: rgba(28, 42, 57, 0.7);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(93, 187, 99, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(93, 187, 99, 0.05), transparent);
+            pointer-events: none;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 40px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .footer-column {
+            flex: 1;
+            min-width: 250px;
+            padding: 20px;
+            text-align: left;
+        }
+        
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            background: var(--gradient-light);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: var(--gradient-light);
+            border-radius: 2px;
+        }
+        
+        .footer-column p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+            font-size: 0.9rem;
+            padding-left: 22px;
+            display: inline-block;
+        }
+
+        .footer-links a::before {
+            content: '🍃';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+        
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 22px;
+            width: 0;
+            height: 1px;
+            background: var(--gradient-light);
+            transition: width 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--text);
+        }
+        
+        .footer-links a:hover::before {
+            transform: translateY(-50%) rotate(15deg);
+            color: var(--primary);
+            opacity: 1;
+        }
+        
+        .footer-links a:hover::after {
+            width: calc(100% - 22px);
+        }
+        
+        .footer-bottom {
+            padding: 20px;
+            border-top: 1px solid rgba(93, 187, 99, 0.1);
+        }
+        
+        .footer-bottom p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+
+        /* Custom cursor styles */
+        .custom-cursor-dot {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 8px;
+            background-color: #8de4af;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(0, 0);
+            transition: transform 0.1s, width 0.1s, height 0.1s;
+            box-shadow: 0 0 10px rgba(141, 228, 175, 0.8), 0 0 20px rgba(141, 228, 175, 0.4);
+            mix-blend-mode: screen;
+        }
+        
+        .custom-cursor-circle {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(141, 228, 175, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(0, 0);
+            transition: width 0.3s, height 0.3s, border-color 0.3s, transform 0.2s;
+            box-shadow: 0 0 15px rgba(141, 228, 175, 0.2);
+        }
+        
+        .cursor-hover {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(93, 187, 99, 0.1);
+            border-color: var(--secondary);
+        }
+        
+        /* Floating elements animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        /* Media queries */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+            .hero { padding: 40px 20px; }
+            .footer-column { min-width: 100%; }
+        }
+
+        /* Custom cursor styles */
+        .custom-cursor-dot {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 8px;
+            background-color: #8de4af;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(0, 0);
+            transition: transform 0.1s, width 0.1s, height 0.1s;
+            box-shadow: 0 0 10px rgba(141, 228, 175, 0.8), 0 0 20px rgba(141, 228, 175, 0.4);
+            mix-blend-mode: screen;
+        }
+        
+        .custom-cursor-circle {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(141, 228, 175, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(0, 0);
+            transition: width 0.3s, height 0.3s, border-color 0.3s, transform 0.2s;
+            box-shadow: 0 0 15px rgba(141, 228, 175, 0.2);
+        }
+
+        /* Divine aura around cursor */
+        .custom-cursor-aura {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9997;
+            transform: translate(0, 0);
+            background: radial-gradient(circle at center, 
+                        rgba(141, 228, 175, 0.2) 0%, 
+                        rgba(102, 178, 255, 0.1) 40%, 
+                        transparent 70%);
+            opacity: 0.7;
+            filter: blur(5px);
+            transition: all 0.5s ease;
+        }
+
+        /* Nature particles around cursor */
+        .cursor-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9996;
+        }
+
+        .cursor-particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 9996;
+        }
+
+        .particle-leaf {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235dbb63'%3E%3Cpath d='M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.52,6.52,0,0,0,1.5,4.07L6,15.37l.73,1.58L12,15A10.73,10.73,0,0,1,17,8Z'/%3E%3C/svg%3E");
+        }
+
+        .particle-flower {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff7eb9'%3E%3Cpath d='M12,22a5,5,0,0,1-3-9,5,5,0,0,1,0-8,5,5,0,0,1,6,0,5,5,0,0,1,0,8,5,5,0,0,1-3,9Z'/%3E%3Ccircle cx='12' cy='9' r='2' fill='%23ffda8a'/%3E%3C/svg%3E");
+        }
+
+        .particle-sparkle {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2366b2ff'%3E%3Cpath d='M12,2L9.1,9.1L2,12l7.1,2.9L12,22l2.9-7.1L22,12l-7.1-2.9L12,2z'/%3E%3C/svg%3E");
+        }
+
+        .cursor-hover {
+            width: 70px;
+            height: 70px;
+            background-color: rgba(141, 228, 175, 0.15);
+            border-color: rgba(102, 178, 255, 0.8);
+            border-width: 3px;
+            box-shadow: 0 0 20px rgba(141, 228, 175, 0.4), inset 0 0 15px rgba(102, 178, 255, 0.2);
+        }
+
+        .cursor-hover-aura {
+            width: 120px;
+            height: 120px;
+            opacity: 1;
+            background: radial-gradient(circle at center, 
+                        rgba(141, 228, 175, 0.3) 0%, 
+                        rgba(102, 178, 255, 0.2) 40%, 
+                        transparent 70%);
+        }
+
+        /* Divine ambient background */
+        .ambient-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -5;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .ambient-orb {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            filter: blur(50px);
+            animation: ambient-float 20s ease-in-out infinite;
+        }
+
+        .ambient-orb.primary {
+            background: radial-gradient(circle at center, rgba(141, 228, 175, 0.3) 0%, transparent 70%);
+        }
+
+        .ambient-orb.secondary {
+            background: radial-gradient(circle at center, rgba(102, 178, 255, 0.3) 0%, transparent 70%);
+        }
+
+        .ambient-orb.accent {
+            background: radial-gradient(circle at center, rgba(255, 126, 185, 0.2) 0%, transparent 70%);
+        }
+
+        .ambient-orb.gold {
+            background: radial-gradient(circle at center, rgba(255, 218, 138, 0.2) 0%, transparent 70%);
+        }
+
+        @keyframes ambient-float {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            25% { transform: translate(5%, -5%) scale(1.1); opacity: 0.5; }
+            50% { transform: translate(10%, 0%) scale(1); opacity: 0.3; }
+            75% { transform: translate(5%, 5%) scale(0.9); opacity: 0.5; }
+        }
+
+        /* Divine light rays */
+        .divine-rays {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg,
+                rgba(255, 255, 255, 0.01) 5deg,
+                transparent 10deg,
+                transparent 30deg,
+                rgba(255, 255, 255, 0.01) 35deg,
+                transparent 40deg,
+                transparent 60deg,
+                rgba(255, 255, 255, 0.01) 65deg,
+                transparent 70deg,
+                transparent 90deg,
+                rgba(255, 255, 255, 0.01) 95deg,
+                transparent 100deg,
+                transparent 120deg,
+                rgba(255, 255, 255, 0.01) 125deg,
+                transparent 130deg,
+                transparent 150deg,
+                rgba(255, 255, 255, 0.01) 155deg,
+                transparent 160deg,
+                transparent 180deg,
+                rgba(255, 255, 255, 0.01) 185deg,
+                transparent 190deg,
+                transparent 210deg,
+                rgba(255, 255, 255, 0.01) 215deg,
+                transparent 220deg,
+                transparent 240deg,
+                rgba(255, 255, 255, 0.01) 245deg,
+                transparent 250deg,
+                transparent 270deg,
+                rgba(255, 255, 255, 0.01) 275deg,
+                transparent 280deg,
+                transparent 300deg,
+                rgba(255, 255, 255, 0.01) 305deg,
+                transparent 310deg,
+                transparent 330deg,
+                rgba(255, 255, 255, 0.01) 335deg,
+                transparent 340deg
+            );
+            opacity: 0.3;
+            z-index: -4;
+            animation: rotate-rays 120s linear infinite;
+        }
+
+        @keyframes rotate-rays {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-background">
+        <div class="divine-rays"></div>
+        <!-- Generated dynamically with JavaScript -->
+    </div>
+    
+    <div class="fireflies">
+        <!-- Generated dynamically with JavaScript -->
+    </div>
+
+    <div class="forest-spirits">
+        <div class="spirit spirit1" style="top: 20%; left: 10%;"></div>
+        <div class="spirit spirit2" style="top: 70%; left: 80%;"></div>
+        <div class="spirit spirit3" style="top: 40%; left: 60%;"></div>
+    </div>
+    
+    <div class="leaves">
+        <!-- Generated dynamically with JavaScript -->
+    </div>
+    
+    <div class="vines">
+        <div class="vine vine1"></div>
+        <div class="vine vine2"></div>
+        <div class="vine vine3"></div>
+        <div class="vine vine4"></div>
+    </div>
+    
+    <div class="ferns">
+        <div class="fern fern1"></div>
+        <div class="fern fern2"></div>
+    </div>
+    
+    <div class="flowers-container">
+        <!-- Generated dynamically with JavaScript -->
+    </div>
+    
+    <div class="container">
+        <div class="hero">
+            <div class="celestial-orb"></div>
+            <h1>Cursor Effects Collection</h1>
+            <p>Journey through our divine collection of 70+ enchanting cursor effects for modern web design. Create immersive, interactive experiences that connect your users with the digital realm.</p>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search for mystical cursor effects..." id="searchInput">
+        </div>
+        
+        <div class="category-nav">
+            <button class="category-btn active" data-category="all"><span>All Effects</span></button>
+            <button class="category-btn" data-category="trail"><span>Trails & Particles</span></button>
+            <button class="category-btn" data-category="physics"><span>Physics Effects</span></button>
+            <button class="category-btn" data-category="glow"><span>Glow & Light</span></button>
+            <button class="category-btn" data-category="creative"><span>Creative & Artistic</span></button>
+            <button class="category-btn" data-category="new"><span>New Effects</span></button>
+            <button class="category-btn" data-category="utility"><span>Utility Tools</span></button>
+            <button class="category-btn" data-category="visual"><span>Visual Effects</span></button>
+            <button class="category-btn" data-category="interactive"><span>Interactive Systems</span></button>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <div class="nature-element top-left"></div>
+                <div class="nature-element top-right"></div>
+                <div class="nature-element bottom-left"></div>
+                <div class="nature-element bottom-right"></div>
+                <div class="card-image">
+                    <div class="card-icon">🧠</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Particle Swarm Intelligence</h3>
+                    <p class="card-description">Intelligent particles organize into various shapes and patterns as they follow your cursor.</p>
+                    <a href="particle-swarm-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌈</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Cursor Trail</h3>
+                    <p class="card-description">Colorful dots follow your cursor, creating a rainbow trail effect.</p>
+                    <a href="cursor-trail.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">✨</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Particle Effect</h3>
+                    <p class="card-description">Particles appear and scatter as you move your cursor.</p>
+                    <a href="cursor-particles.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🧲</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Magnetic Cursor</h3>
+                    <p class="card-description">Elements are attracted to your cursor like a magnet.</p>
+                    <a href="magnetic-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">💡</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Spotlight Cursor</h3>
+                    <p class="card-description">Your cursor creates a spotlight effect on a dark background.</p>
+                    <a href="spotlight-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">💦</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Ripple Effect</h3>
+                    <p class="card-description">Clicking creates ripples that expand outward like water.</p>
+                    <a href="ripple-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🖱️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Custom Cursor Image</h3>
+                    <p class="card-description">Replace the default cursor with custom images and icons.</p>
+                    <a href="custom-cursor-image.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">📝</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Text Scramble</h3>
+                    <p class="card-description">Text characters scramble and glitch as your cursor passes over them.</p>
+                    <a href="text-scramble-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌟</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Glowing Halo</h3>
+                    <p class="card-description">A colorful glowing halo surrounds your cursor as you move.</p>
+                    <a href="glowing-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌌</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Gravity Effect</h3>
+                    <p class="card-description">Particles are pulled toward your cursor by gravitational force.</p>
+                    <a href="gravity-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">💫</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Neon Cursor</h3>
+                    <p class="card-description">A glowing neon cursor with colorful trail effects.</p>
+                    <a href="neon-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">✏️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Path Drawing</h3>
+                    <p class="card-description">Draw and save colorful paths as you move your cursor.</p>
+                    <a href="path-drawing-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔍</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Magnifying Glass</h3>
+                    <p class="card-description">Magnify content under your cursor with zoom controls.</p>
+                    <a href="magnifying-glass-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">💧</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Fluid Effect</h3>
+                    <p class="card-description">Particles behave like a fluid that reacts to your cursor.</p>
+                    <a href="fluid-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌠</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Parallax Effect</h3>
+                    <p class="card-description">Create depth with elements that move at different speeds.</p>
+                    <a href="parallax-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🧊</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">3D Transform</h3>
+                    <p class="card-description">3D cubes rotate and transform based on cursor position.</p>
+                    <a href="3d-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔄</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">SVG Morphing</h3>
+                    <p class="card-description">SVG shapes morph and transform as your cursor moves.</p>
+                    <a href="svg-morph-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">👾</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Digital Glitch</h3>
+                    <p class="card-description">Your cursor creates digital distortion and glitch effects.</p>
+                    <a href="glitch-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🎨</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Kaleidoscope</h3>
+                    <p class="card-description">Create mesmerizing symmetrical patterns as you move your cursor.</p>
+                    <a href="kaleidoscope-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🖌️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Watercolor</h3>
+                    <p class="card-description">Create beautiful soft watercolor splotches with your cursor.</p>
+                    <a href="watercolor-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌻</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Impressionist</h3>
+                    <p class="card-description">Paint swirling Van Gogh-inspired brushstrokes with your cursor.</p>
+                    <a href="impressionist-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">⚛️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Physics-Based</h3>
+                    <p class="card-description">Interactive spring physics simulation that reacts to your cursor movements.</p>
+                    <a href="physics-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🏓</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Pendulum Physics</h3>
+                    <p class="card-description">Interact with pendulums that demonstrate gravitational force and periodic motion.</p>
+                    <a href="pendulum-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">💥</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Collision Physics</h3>
+                    <p class="card-description">Particles collide with each other demonstrating conservation of momentum and energy.</p>
+                    <a href="collision-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🎆</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Fireworks</h3>
+                    <p class="card-description">Create colorful firework explosions with your cursor as you click and move.</p>
+                    <a href="fireworks-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">⚡</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Lightning</h3>
+                    <p class="card-description">Generate electric lightning bolts that follow your cursor movements.</p>
+                    <a href="lightning-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🫧</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Bubbles</h3>
+                    <p class="card-description">Create floating soap bubbles that rise upward as you move your cursor.</p>
+                    <a href="bubbles-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🧲</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Magnetic Field</h3>
+                    <p class="card-description">Visualize magnetic field lines with interactive poles that respond to your cursor.</p>
+                    <a href="magnetic-field-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔢</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Matrix Digital Rain</h3>
+                    <p class="card-description">Create falling digital characters like in "The Matrix" as you move your cursor.</p>
+                    <a href="matrix-rain-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🎨</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Paint Splatter</h3>
+                    <p class="card-description">Create artistic paint splatters, drips, and trails as you move and click your cursor.</p>
+                    <a href="paint-splatter-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">⚡</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Energy Field</h3>
+                    <p class="card-description">Create a dynamic field of energy particles that react to your cursor movements.</p>
+                    <a href="energy-field-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">✏️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Sketch Artist</h3>
+                    <p class="card-description">Transform your cursor into an artistic pencil that creates beautiful sketches.</p>
+                    <a href="sketch-artist-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌊</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Wave Simulator</h3>
+                    <p class="card-description">Generate beautiful interactive wave patterns that respond to your cursor.</p>
+                    <a href="wave-simulator-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔮</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Crystal Ball</h3>
+                    <p class="card-description">Your cursor becomes a mystical crystal ball with swirling particle effects inside.</p>
+                    <a href="crystal-ball-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🕰️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Time Distortion</h3>
+                    <p class="card-description">Warp space and time around your cursor with visual distortion effects.</p>
+                    <a href="time-distortion-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔥</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Flame Trail</h3>
+                    <p class="card-description">Leave a trail of realistic animated flames as you move your cursor.</p>
+                    <a href="flame-trail-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🧩</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Puzzle Pieces</h3>
+                    <p class="card-description">Watch as puzzle pieces assemble and disassemble around your cursor movements.</p>
+                    <a href="puzzle-pieces-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌀</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Vortex</h3>
+                    <p class="card-description">Create a swirling vortex that pulls particles toward the center of your cursor.</p>
+                    <a href="vortex-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🎵</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Music Visualizer</h3>
+                    <p class="card-description">Your cursor creates audio-reactive visualizations that pulse to the music.</p>
+                    <a href="music-visualizer-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🪁</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Wind Simulation</h3>
+                    <p class="card-description">Generate realistic wind effects that blow objects away from your cursor.</p>
+                    <a href="wind-simulation-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌌</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Galaxy Creator</h3>
+                    <p class="card-description">Generate spiral galaxies and cosmic dust clouds that form around your cursor.</p>
+                    <a href="galaxy-creator-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🧬</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">DNA Helix</h3>
+                    <p class="card-description">Create an animated DNA double helix structure that follows your cursor movement.</p>
+                    <a href="dna-helix-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🫧</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Bubbling Liquid</h3>
+                    <p class="card-description">Create colorful bubbling liquid that responds to your cursor movements.</p>
+                    <a href="bubbling-liquid-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔌</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Digital Circuit</h3>
+                    <p class="card-description">Glowing circuit paths appear and connect as you move your cursor.</p>
+                    <a href="digital-circuit-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🐞</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Firefly Effect</h3>
+                    <p class="card-description">Glowing fireflies gather around your cursor as you move across the screen.</p>
+                    <a href="firefly-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">📐</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Geometry Creator</h3>
+                    <p class="card-description">Geometric shapes form and morph around your cursor as you move.</p>
+                    <a href="geometry-creator-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌈</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Holographic</h3>
+                    <p class="card-description">Your cursor creates shimmering holographic effects with rainbow reflections.</p>
+                    <a href="holographic-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌿</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Interactive Nature</h3>
+                    <p class="card-description">Generate digital vines, flowers, and tech-nature hybrids that grow organically as you move your cursor.</p>
+                    <a href="interactive-nature-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">✨</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Neon Glow Trail</h3>
+                    <p class="card-description">Create vibrant neon trails that glow and fade as you move your cursor.</p>
+                    <a href="neon-glow-trail.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🖌️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Paintbrush</h3>
+                    <p class="card-description">Turn your cursor into a paintbrush that leaves colorful strokes on the canvas.</p>
+                    <a href="paintbrush-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🎮</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Pixel Art</h3>
+                    <p class="card-description">Create retro-style pixel art trails and effects with your cursor.</p>
+                    <a href="pixel-art-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🧚</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Pixie Dust</h3>
+                    <p class="card-description">Magical sparkly dust particles follow your cursor movements.</p>
+                    <a href="pixie-dust-trail.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">⚛️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Quantum Particles</h3>
+                    <p class="card-description">Particles exhibit quantum behavior and entanglement as they follow your cursor.</p>
+                    <a href="quantum-particle-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌈</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Rainbow Ribbon</h3>
+                    <p class="card-description">Flowing rainbow ribbons trail behind your cursor creating colorful paths.</p>
+                    <a href="rainbow-ribbon-trail.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">💨</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Smoke Trail</h3>
+                    <p class="card-description">Create realistic smoke trails that follow your cursor movements.</p>
+                    <a href="smoke-trail-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔊</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Sound Wave</h3>
+                    <p class="card-description">Audio-inspired waveforms pulse and animate around your cursor.</p>
+                    <a href="sound-wave-cursor.html" class="card-link">View Effect</a>
+                </div>
+            </div>
+            
+            <!-- New effects start here -->
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌳</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Fractal Tree</h3>
+                    <p class="card-description">Create mathematical fractal trees that grow based on your cursor movements with seasonal variations.</p>
+                    <a href="fractal-tree-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">✨</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Constellation Creator</h3>
+                    <p class="card-description">Create stars and connect them into beautiful constellations as you move your cursor.</p>
+                    <a href="constellation-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">👋</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Shadow Puppets</h3>
+                    <p class="card-description">Create interactive shadow puppets that cast shadows on virtual objects as you move your cursor.</p>
+                    <a href="shadow-puppet-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌿</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Interactive Nature</h3>
+                    <p class="card-description">Generate digital vines, flowers, and tech-nature hybrids that grow organically as you move your cursor.</p>
+                    <a href="interactive-nature-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            <!-- New effects end here -->
+            
+            <!-- New cursor effects - March 2025 update -->
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">✂️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Selection Tool</h3>
+                    <p class="card-description">Creates rectangular selection zones with a crosshair cursor, useful for defining capture areas or measuring regions.</p>
+                    <a href="selection-tool-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔎</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Content Analyzer</h3>
+                    <p class="card-description">Hover over content to see word count, reading time, and content analysis with a smart tooltip display.</p>
+                    <a href="content-analyzer-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🎨</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Color Picker</h3>
+                    <p class="card-description">Extracts color information from anything under your cursor, with live hex and RGB values in a stylish tooltip.</p>
+                    <a href="color-picker-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌪️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Reality Distortion</h3>
+                    <p class="card-description">Warps and distorts the surrounding content as your cursor moves, creating a bend in the digital fabric.</p>
+                    <a href="reality-distortion-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌊</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Ocean Depth</h3>
+                    <p class="card-description">Your cursor creates rippling water effects with realistic physics, including bubbles that rise on click.</p>
+                    <a href="ocean-depth-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">⚡</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Circuit Builder</h3>
+                    <p class="card-description">Create live electronic circuits as you move your cursor, with components that activate when connected.</p>
+                    <a href="circuit-builder-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🧵</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Thread Weaver</h3>
+                    <p class="card-description">Weave intricate thread patterns that connect page elements with colorful strands that gently sway.</p>
+                    <a href="thread-weaver-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🎭</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Mood Cursor</h3>
+                    <p class="card-description">A cursor that changes expressions and appearance based on the content you hover over and your interaction patterns.</p>
+                    <a href="mood-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">📏</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Pixel Ruler</h3>
+                    <p class="card-description">Professional measuring tool that displays precise pixel dimensions between elements and creates guidelines.</p>
+                    <a href="pixel-ruler-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🍃</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Weather System</h3>
+                    <p class="card-description">Your cursor controls a miniature weather system, from gentle breeze to storms, affecting page elements realistically.</p>
+                    <a href="weather-system-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🧠</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Neural Network</h3>
+                    <p class="card-description">Visualizes a neural network that learns from your cursor movements, creating increasingly complex patterns.</p>
+                    <a href="neural-network-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">📱</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Mobile Preview</h3>
+                    <p class="card-description">Shows how content will appear on mobile devices with a cursor-attached phone frame that displays live previews.</p>
+                    <a href="mobile-preview-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🧫</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Biological Growth</h3>
+                    <p class="card-description">Simulates cellular division and organism growth based on cursor movements and environmental conditions.</p>
+                    <a href="biological-growth-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔮</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">AI Predictor</h3>
+                    <p class="card-description">Predicts your next cursor movement with visual indicators, becoming more accurate as it learns your patterns.</p>
+                    <a href="ai-predictor-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌓</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Day-Night Cycle</h3>
+                    <p class="card-description">Your cursor creates a local time zone, transitioning between day and night with corresponding lighting effects.</p>
+                    <a href="day-night-cycle-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌧️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Rain Effect</h3>
+                    <p class="card-description">Creates falling raindrops as the cursor moves with splash effects when they hit the bottom of the screen.</p>
+                    <a href="rain-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">❄️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Snow Flurry</h3>
+                    <p class="card-description">Generates snowflakes that drift down naturally with realistic wobble motion and physics as the cursor moves.</p>
+                    <a href="snow-flurry-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">⚡</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Lightning Strike</h3>
+                    <p class="card-description">Creates electrifying lightning bolts that follow the cursor with branching patterns and flash effects.</p>
+                    <a href="lightning-strike-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌪️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Tornado Vortex</h3>
+                    <p class="card-description">Creates a swirling tornado effect that pulls in debris and particles as the cursor moves across the screen.</p>
+                    <a href="tornado-vortex-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌫️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Fog Effect</h3>
+                    <p class="card-description">Generates misty fog that swirls and obscures content as it follows your mouse movements, creating an atmospheric effect.</p>
+                    <a href="fog-effect-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🌈</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Rainbow Trails</h3>
+                    <p class="card-description">Creates rain drops and rainbow arcs that form after rain effects based on cursor movement patterns.</p>
+                    <a href="rainbow-trails-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🍂</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Autumn Wind</h3>
+                    <p class="card-description">Blows autumn leaves across the screen with realistic physics and wind path visualization based on cursor movement.</p>
+                    <a href="autumn-wind-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">🔥</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Heat Wave</h3>
+                    <p class="card-description">Creates visible heat distortion effects using canvas pixel manipulation for a realistic mirage effect that follows your cursor.</p>
+                    <a href="heat-wave-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">☁️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Cloud Formation</h3>
+                    <p class="card-description">Generates fluffy clouds that form, drift, and evolve as your cursor moves across the sky.</p>
+                    <a href="cloud-formation-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-image">
+                    <div class="card-icon">❄️</div>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Frost Patterns</h3>
+                    <p class="card-description">Creates crystalline frost patterns that grow organically from the cursor position with beautiful ice formations.</p>
+                    <a href="frost-patterns-cursor.html" class="card-link"><span>View Effect</span></a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Cursor Effects Collection</h3>
+                <p>A curated showcase of stunning interactive cursor effects for modern web design.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Categories</h3>
+                <ul class="footer-links">
+                    <li><a href="#" data-category="trail">Trails & Particles</a></li>
+                    <li><a href="#" data-category="physics">Physics Effects</a></li>
+                    <li><a href="#" data-category="glow">Glow & Light</a></li>
+                    <li><a href="#" data-category="creative">Creative & Artistic</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Resources</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Documentation</a></li>
+                    <li><a href="#">About the Project</a></li>
+                    <li><a href="#">Contribute</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>Cursor Effects Collection &copy; 2025 - All effects use vanilla HTML, CSS, and JavaScript.</p>
+            <p>Made with ❤️ for creative web developers</p>
+        </div>
+    </footer>
+
+    <!-- Custom cursor elements -->
+    <div class="custom-cursor-dot"></div>
+    <div class="custom-cursor-circle"></div>
+    <div class="custom-cursor-aura"></div>
+    <div class="cursor-particles"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create fireflies
+            const fireflies = document.querySelector('.fireflies');
+            const fireflyCount = 25;
+            
+            for (let i = 0; i < fireflyCount; i++) {
+                const firefly = document.createElement('div');
+                firefly.className = 'firefly';
+                
+                // Random position
+                firefly.style.left = `${Math.random() * 100}%`;
+                firefly.style.top = `${Math.random() * 100}%`;
+                
+                // Random size
+                const size = 2 + Math.random() * 4;
+                firefly.style.width = `${size}px`;
+                firefly.style.height = `${size}px`;
+                
+                // Random animation delay
+                firefly.style.animationDelay = `${Math.random() * 15}s, ${Math.random() * 3}s`;
+                
+                // Random animation duration
+                const duration = 15 + Math.random() * 20;
+                firefly.style.animationDuration = `${duration}s, 3s`;
+                
+                fireflies.appendChild(firefly);
+            }
+            
+            // Create floating leaves
+            const leaves = document.querySelector('.leaves');
+            const leafTypes = ['leaf1', 'leaf2', 'leaf3', 'leaf4', 'leaf5'];
+            const leafCount = 45;
+            
+            for (let i = 0; i < leafCount; i++) {
+                const leaf = document.createElement('div');
+                leaf.className = `leaf ${leafTypes[Math.floor(Math.random() * leafTypes.length)]}`;
+                
+                // Random position
+                leaf.style.left = `${Math.random() * 100}%`;
+                leaf.style.top = `${Math.random() * 100}%`;
+                
+                // Random size
+                const size = 15 + Math.random() * 30;
+                leaf.style.width = `${size}px`;
+                leaf.style.height = `${size}px`;
+                
+                // Random rotation
+                leaf.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                // Random animation
+                const animationType = Math.random() < 0.33 ? 'floatSwaying' : (Math.random() < 0.5 ? 'floatCircular' : 'floatSideways');
+                leaf.style.animation = `${animationType} ${5 + Math.random() * 10}s ease-in-out infinite`;
+                leaf.style.animationDelay = `${Math.random() * 5}s`;
+                
+                leaves.appendChild(leaf);
+            }
+            
+            // Create flowers
+            const flowersContainer = document.querySelector('.flowers-container');
+            const flowerTypes = ['flower1', 'flower2'];
+            const flowerCount = 15;
+            
+            for (let i = 0; i < flowerCount; i++) {
+                const flower = document.createElement('div');
+                flower.className = `flower ${flowerTypes[Math.floor(Math.random() * flowerTypes.length)]}`;
+                
+                // Position flowers mostly at the bottom half
+                flower.style.left = `${Math.random() * 100}%`;
+                flower.style.top = `${50 + Math.random() * 45}%`;
+                
+                // Random size
+                const size = 30 + Math.random() * 20;
+                flower.style.width = `${size}px`;
+                flower.style.height = `${size}px`;
+                
+                // Gentle swaying animation
+                flower.style.animation = `floatSwaying ${8 + Math.random() * 7}s ease-in-out infinite`;
+                flower.style.animationDelay = `${Math.random() * 3}s`;
+                
+                flowersContainer.appendChild(flower);
+            }
+            
+            // Add subtle animation to vines and ferns
+            document.querySelectorAll('.vine, .fern').forEach(element => {
+                // Add subtle breathing animation
+                element.style.animation = `breathing ${10 + Math.random() * 5}s ease-in-out infinite`;
+                element.style.animationDelay = `${Math.random() * 3}s`;
+            });
+            
+            // Define the breathing animation dynamically
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes breathing {
+                    0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.1; }
+                    50% { transform: scale(1.05) translate(5px, -5px); opacity: 0.15; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Custom cursor implementation
+            const cursorDot = document.querySelector('.custom-cursor-dot');
+            const cursorCircle = document.querySelector('.custom-cursor-circle');
+            const cursorAura = document.querySelector('.custom-cursor-aura');
+            const cursorParticles = document.querySelector('.cursor-particles');
+            
+            let mouseX = 0;
+            let mouseY = 0;
+            let dotX = 0;
+            let dotY = 0;
+            let circleX = 0;
+            let circleY = 0;
+            let auraX = 0;
+            let auraY = 0;
+            
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Occasionally spawn a tiny leaf or flower when moving the cursor
+                if (Math.random() < 0.05) {
+                    createCursorParticle(mouseX, mouseY);
+                }
+            });
+            
+            // Create cursor particles
+            function createCursorParticle(x, y) {
+                const particle = document.createElement('div');
+                particle.className = 'cursor-particle';
+                
+                // Randomly choose particle type
+                const particleTypes = ['particle-leaf', 'particle-flower', 'particle-sparkle'];
+                const particleClass = particleTypes[Math.floor(Math.random() * particleTypes.length)];
+                particle.classList.add(particleClass);
+                
+                // Random size
+                const size = 5 + Math.random() * 10;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Position near cursor
+                const offsetX = (Math.random() * 40) - 20;
+                const offsetY = (Math.random() * 40) - 20;
+                particle.style.left = `${x + offsetX}px`;
+                particle.style.top = `${y + offsetY}px`;
+                
+                // Random rotation
+                particle.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                cursorParticles.appendChild(particle);
+                
+                // Animate the particle
+                const duration = 1000 + Math.random() * 1500;
+                const distance = 30 + Math.random() * 60;
+                const angle = Math.random() * Math.PI * 2; // Random angle in radians
+                const destX = distance * Math.cos(angle);
+                const destY = distance * Math.sin(angle);
+                
+                particle.animate(
+                    [
+                        { opacity: 0, transform: `translate(0, 0) rotate(0deg) scale(0.5)` },
+                        { opacity: 0.8, transform: `translate(${destX * 0.3}px, ${destY * 0.3}px) rotate(${Math.random() * 180}deg) scale(1)` },
+                        { opacity: 0, transform: `translate(${destX}px, ${destY}px) rotate(${Math.random() * 360}deg) scale(0.5)` }
+                    ],
+                    {
+                        duration: duration,
+                        easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                    }
+                );
+                
+                // Remove after animation completes
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, duration);
+            }
+            
+            // Create particles burst on click
+            document.addEventListener('click', (e) => {
+                for (let i = 0; i < 12; i++) {
+                    setTimeout(() => {
+                        createCursorParticle(e.clientX, e.clientY);
+                    }, i * 50);
+                }
+                
+                // Create ripple effect
+                const ripple = document.createElement('div');
+                ripple.style.position = 'absolute';
+                ripple.style.left = `${e.clientX}px`;
+                ripple.style.top = `${e.clientY}px`;
+                ripple.style.width = '10px';
+                ripple.style.height = '10px';
+                ripple.style.borderRadius = '50%';
+                ripple.style.backgroundColor = 'transparent';
+                ripple.style.border = '2px solid rgba(141, 228, 175, 0.8)';
+                ripple.style.transform = 'translate(-50%, -50%)';
+                ripple.style.zIndex = '9995';
+                ripple.style.pointerEvents = 'none';
+                
+                document.body.appendChild(ripple);
+                
+                ripple.animate(
+                    [
+                        { width: '10px', height: '10px', opacity: 1, borderWidth: '2px' },
+                        { width: '200px', height: '200px', opacity: 0, borderWidth: '1px' }
+                    ],
+                    {
+                        duration: 1000,
+                        easing: 'cubic-bezier(0, 0, 0.2, 1)'
+                    }
+                );
+                
+                setTimeout(() => {
+                    if (ripple.parentNode) {
+                        ripple.parentNode.removeChild(ripple);
+                    }
+                }, 1000);
+            });
+            
+            function updateCursor() {
+                // Smooth animation for cursor elements
+                dotX += (mouseX - dotX) * 0.8;
+                dotY += (mouseY - dotY) * 0.8;
+                
+                circleX += (mouseX - circleX) * 0.3;
+                circleY += (mouseY - circleY) * 0.3;
+                
+                auraX += (mouseX - auraX) * 0.1;
+                auraY += (mouseY - auraY) * 0.1;
+                
+                cursorDot.style.transform = `translate(${dotX}px, ${dotY}px)`;
+                cursorCircle.style.transform = `translate(${circleX}px, ${circleY}px)`;
+                cursorAura.style.transform = `translate(${auraX}px, ${auraY}px)`;
+                
+                requestAnimationFrame(updateCursor);
+            }
+            
+            updateCursor();
+            
+            // Add hover effects for interactive elements
+            const allInteractive = document.querySelectorAll('a, .card, .category-btn, .search-input');
+            
+            allInteractive.forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    cursorCircle.classList.add('cursor-hover');
+                    cursorAura.classList.add('cursor-hover-aura');
+                    cursorDot.style.width = '6px';
+                    cursorDot.style.height = '6px';
+                });
+                
+                element.addEventListener('mouseleave', () => {
+                    cursorCircle.classList.remove('cursor-hover');
+                    cursorAura.classList.remove('cursor-hover-aura');
+                    cursorDot.style.width = '8px';
+                    cursorDot.style.height = '8px';
+                });
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            const cards = document.querySelectorAll('.card');
+            
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                
+                cards.forEach(card => {
+                    const title = card.querySelector('.card-title').innerText.toLowerCase();
+                    const description = card.querySelector('.card-description').innerText.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                        card.style.display = 'block';
+                        // Highlight animation
+                        card.classList.add('card-highlight');
+                        setTimeout(() => {
+                            card.classList.remove('card-highlight');
+                        }, 500);
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Category selection
+            const categoryLinks = document.querySelectorAll('[data-category]');
+            const categoryButtons = document.querySelectorAll('.category-btn');
+            
+            categoryLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const category = link.getAttribute('data-category');
+                    
+                    filterByCategory(category);
+                    
+                    // Update active button if it's a category button
+                    if (link.classList.contains('category-btn')) {
+                        categoryButtons.forEach(btn => btn.classList.remove('active'));
+                        link.classList.add('active');
+                    }
+                });
+            });
+            
+            function filterByCategory(category) {
+                // Clear search
+                searchInput.value = '';
+                
+                // Show all cards initially
+                cards.forEach(card => {
+                    card.style.display = 'block';
+                    card.classList.remove('card-highlight');
+                });
+                
+                if (category !== 'all') {
+                    // Add staggered animation to matching cards
+                    let delay = 0;
+                    cards.forEach(card => {
+                        const cardCategory = getCardCategory(card);
+                        
+                        if (!cardCategory.includes(category)) {
+                            card.style.display = 'none';
+                        } else {
+                            // Add staggered highlight animation
+                            setTimeout(() => {
+                                card.classList.add('card-highlight');
+                                setTimeout(() => {
+                                    card.classList.remove('card-highlight');
+                                }, 500);
+                            }, delay);
+                            delay += 50; // Increment delay for next card
+                        }
+                    });
+                }
+            }
+            
+            // Add some interactivity to cards
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    const icon = card.querySelector('.card-icon');
+                    icon.style.transform = 'scale(1.2) rotate(5deg)';
+                    
+                    // Add nature growth effect on hover
+                    addGrowthEffect(card);
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    const icon = card.querySelector('.card-icon');
+                    icon.style.transform = 'scale(1) rotate(0deg)';
+                    
+                    // Remove existing growth elements
+                    card.querySelectorAll('.card-growth-element').forEach(el => {
+                        el.style.opacity = '0';
+                        setTimeout(() => {
+                            if (el.parentNode) el.parentNode.removeChild(el);
+                        }, 500);
+                    });
+                });
+                
+                // Make cards clickable (redirect to effect page)
+                card.addEventListener('click', () => {
+                    const link = card.querySelector('.card-link').getAttribute('href');
+                    window.location.href = link;
+                });
+            });
+            
+            // Add scroll animation for cards
+            const animateOnScroll = () => {
+                cards.forEach(card => {
+                    const cardTop = card.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    
+                    if (cardTop < windowHeight * 0.9) {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }
+                });
+            };
+            
+            // Set initial state for scroll animation
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            });
+            
+            // Run animation on scroll
+            window.addEventListener('scroll', animateOnScroll);
+            
+            // Initial run for elements already in viewport
+            animateOnScroll();
+            
+            // Helper function to determine card category based on content
+            function getCardCategory(card) {
+                const title = card.querySelector('.card-title').innerText.toLowerCase();
+                const description = card.querySelector('.card-description').innerText.toLowerCase();
+                const content = title + ' ' + description;
+                
+                let categories = [];
+                
+                if (content.includes('trail') || content.includes('particle') || 
+                    content.includes('dust') || content.includes('ribbon')) {
+                    categories.push('trail');
+                }
+                
+                if (content.includes('physics') || content.includes('gravity') || 
+                    content.includes('magnetic') || content.includes('force') ||
+                    content.includes('collision') || content.includes('pendulum')) {
+                    categories.push('physics');
+                }
+                
+                if (content.includes('glow') || content.includes('light') || 
+                    content.includes('neon') || content.includes('spotlight')) {
+                    categories.push('glow');
+                }
+                
+                if (content.includes('art') || content.includes('paint') || 
+                    content.includes('sketch') || content.includes('water')) {
+                    categories.push('creative');
+                }
+                
+                // Add new category for our latest effects
+                if (content.includes('fractal') || content.includes('constellation') || 
+                    content.includes('shadow puppet') || content.includes('interactive nature')) {
+                    categories.push('new');
+                }
+                
+                // Add March 2025 update categories
+                if (content.includes('selection tool') || content.includes('content analyzer') || 
+                    content.includes('color picker') || content.includes('pixel ruler') ||
+                    content.includes('mobile preview')) {
+                    categories.push('utility');
+                }
+                
+                if (content.includes('reality distortion') || content.includes('ocean depth') ||
+                    content.includes('thread weaver') || content.includes('day-night cycle') ||
+                    content.includes('weather system')) {
+                    categories.push('visual');
+                }
+                
+                if (content.includes('circuit builder') || content.includes('mood cursor') ||
+                    content.includes('neural network') || content.includes('ai predictor') ||
+                    content.includes('biological growth')) {
+                    categories.push('interactive');
+                }
+                
+                return categories;
+            }
+            
+            // Function to add growth elements to cards on hover
+            function addGrowthEffect(card) {
+                // Add small vine or leaf elements growing from corners or edges
+                const growthPoints = [
+                    { x: 0, y: 0 },          // top-left
+                    { x: 0, y: '100%' },     // bottom-left
+                    { x: '100%', y: 0 },     // top-right
+                    { x: '100%', y: '100%' } // bottom-right
+                ];
+                
+                // Create 2-3 growth elements at random positions
+                const count = 2 + Math.floor(Math.random() * 2);
+                const usedIndices = [];
+                
+                for (let i = 0; i < count; i++) {
+                    // Choose a unique position
+                    let index;
+                    do {
+                        index = Math.floor(Math.random() * growthPoints.length);
+                    } while (usedIndices.includes(index));
+                    usedIndices.push(index);
+                    
+                    const point = growthPoints[index];
+                    
+                    // Create a vine or leaf element
+                    const element = document.createElement('div');
+                    element.className = 'card-growth-element';
+                    
+                    // Randomly select vine or leaf
+                    const isVine = Math.random() < 0.6;
+                    let svgPath;
+                    
+                    if (isVine) {
+                        svgPath = `<svg viewBox="0 0 50 50" fill="none" stroke="#5dbb63" stroke-width="1.5">
+                            <path d="M10,10 C20,15 25,25 15,35 C5,45 15,50 25,45" stroke-linecap="round"/>
+                            <path d="M15,25 C20,20 25,25 25,30" stroke-linecap="round"/>
+                        </svg>`;
+                    } else {
+                        svgPath = `<svg viewBox="0 0 24 24" fill="#5dbb63">
+                            <path d="M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.52,6.52,0,0,0,1.5,4.07L6,15.37l.73,1.58L12,15A10.73,10.73,0,0,1,17,8Z"/>
+                        </svg>`;
+                    }
+                    
+                    // Set styles
+                    element.style.cssText = `
+                        position: absolute;
+                        width: 40px;
+                        height: 40px;
+                        left: ${point.x};
+                        top: ${point.y};
+                        z-index: 2;
+                        opacity: 0;
+                        pointer-events: none;
+                        transition: opacity 0.5s ease, transform 1s ease;
+                        transform-origin: ${point.x === 0 ? 'left' : 'right'} ${point.y === 0 ? 'top' : 'bottom'};
+                    `;
+                    
+                    element.innerHTML = svgPath;
+                    
+                    // Add to card and animate
+                    card.appendChild(element);
+                    
+                    // Stagger animation
+                    setTimeout(() => {
+                        element.style.opacity = '0.5';
+                        element.style.transform = 'scale(1.2) rotate(5deg)';
+                    }, i * 100);
+                }
+            }
+
+            // Add nature elements to all cards
+            function addNatureElementsToCards() {
+                const cards = document.querySelectorAll('.card');
+                
+                cards.forEach(card => {
+                    // Add nature elements to each card
+                    const topLeft = document.createElement('div');
+                    topLeft.className = 'nature-element top-left';
+                    
+                    const topRight = document.createElement('div');
+                    topRight.className = 'nature-element top-right';
+                    
+                    const bottomLeft = document.createElement('div');
+                    bottomLeft.className = 'nature-element bottom-left';
+                    
+                    const bottomRight = document.createElement('div');
+                    bottomRight.className = 'nature-element bottom-right';
+                    
+                    // Append all elements to the card
+                    card.prepend(topLeft, topRight, bottomLeft, bottomRight);
+                });
+            }
+
+            // Call the function to add nature elements to all cards
+            addNatureElementsToCards();
+
+            // Add subtle parallax effect to cards
+            document.addEventListener('mousemove', (e) => {
+                const cards = document.querySelectorAll('.card');
+                const mouseX = e.clientX / window.innerWidth;
+                const mouseY = e.clientY / window.innerHeight;
+                
+                cards.forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    const cardCenterX = rect.left + rect.width / 2;
+                    const cardCenterY = rect.top + rect.height / 2;
+                    
+                    // Calculate distance from mouse to card center (normalized)
+                    const distX = (e.clientX - cardCenterX) / window.innerWidth;
+                    const distY = (e.clientY - cardCenterY) / window.innerHeight;
+                    
+                    // Only apply effect if mouse is relatively close to the card
+                    const distance = Math.sqrt(distX * distX + distY * distY);
+                    
+                    if (distance < 0.3) {
+                        // Subtle rotation effect
+                        const rotateX = distY * 5; // Max 5 degrees
+                        const rotateY = -distX * 5; // Max 5 degrees
+                        
+                        // Apply transform with subtle ease
+                        card.style.transition = 'transform 0.3s ease-out';
+                        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                        
+                        // Subtle movement for nature elements
+                        const natureElements = card.querySelectorAll('.nature-element');
+                        natureElements.forEach(element => {
+                            if (element.classList.contains('top-left')) {
+                                element.style.transform = `translate(${-distX * 20}px, ${-distY * 20}px) rotate(${distX * 10}deg)`;
+                            } else if (element.classList.contains('top-right')) {
+                                element.style.transform = `translate(${-distX * 15}px, ${-distY * 15}px) rotate(${-distY * 10}deg)`;
+                            } else if (element.classList.contains('bottom-left')) {
+                                element.style.transform = `translate(${-distX * 10}px, ${-distY * 10}px) rotate(${-distX * 10}deg)`;
+                            } else if (element.classList.contains('bottom-right')) {
+                                element.style.transform = `translate(${-distX * 15}px, ${-distY * 15}px) rotate(${distY * 10}deg)`;
+                            }
+                        });
+                        
+                        // Subtle glow effect based on distance
+                        const glowOpacity = 0.3 - distance;
+                        card.style.boxShadow = `0 15px 30px rgba(0, 0, 0, 0.15), 
+                                              0 0 ${30 + (1 - distance) * 20}px rgba(93, 187, 99, ${glowOpacity * 1.5})`;
+                    } else {
+                        // Reset card transform if mouse is far
+                        card.style.transition = 'transform 0.5s ease-out, box-shadow 0.5s ease-out';
+                        card.style.transform = '';
+                        card.style.boxShadow = '';
+                        
+                        // Reset nature elements
+                        const natureElements = card.querySelectorAll('.nature-element');
+                        natureElements.forEach(element => {
+                            element.style.transform = '';
+                        });
+                    }
+                });
+            });
+
+            // Create ambient background orbs
+            function createAmbientBackground() {
+                const ambientBackground = document.querySelector('.ambient-background');
+                
+                // Create large ambient orbs
+                const orbCount = 6;
+                const orbTypes = ['primary', 'secondary', 'accent', 'gold'];
+                
+                for (let i = 0; i < orbCount; i++) {
+                    const orb = document.createElement('div');
+                    orb.className = `ambient-orb ${orbTypes[i % orbTypes.length]}`;
+                    
+                    // Random size (larger orbs)
+                    const size = 300 + Math.random() * 400;
+                    orb.style.width = `${size}px`;
+                    orb.style.height = `${size}px`;
+                    
+                    // Position across the screen
+                    orb.style.left = `${Math.random() * 100}%`;
+                    orb.style.top = `${Math.random() * 100}%`;
+                    
+                    // Random animation timing
+                    orb.style.animationDelay = `${Math.random() * 10}s`;
+                    orb.style.animationDuration = `${20 + Math.random() * 40}s`;
+                    
+                    if (Math.random() > 0.5) {
+                        orb.style.animationDirection = 'reverse';
+                    }
+                    
+                    ambientBackground.appendChild(orb);
+                }
+            }
+
+            createAmbientBackground();
+
+            // Add subtle breathing animation to the divine rays
+            function animateDivineRays() {
+                const divineRays = document.querySelector('.divine-rays');
+                
+                setInterval(() => {
+                    const opacity = 0.2 + Math.random() * 0.2;
+                    divineRays.style.opacity = opacity;
+                }, 5000);
+            }
+
+            animateDivineRays();
+        });
+    </script>
+</body>
+</html> 

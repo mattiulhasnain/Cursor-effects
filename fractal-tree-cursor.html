@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Tree Cursor</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0c0c14;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            cursor: none;
+            color: white;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #6eff93, #00a4e4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            pointer-events: all;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover, .control-btn.active {
+            background: rgba(110, 255, 147, 0.3);
+            border-color: #6eff93;
+            transform: translateY(-2px);
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            pointer-events: all;
+        }
+        
+        .slider-label {
+            width: 120px;
+            text-align: right;
+            font-size: 0.9em;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            width: 150px;
+            height: 5px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #6eff93;
+            cursor: pointer;
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            pointer-events: all;
+            z-index: 10;
+        }
+        
+        .return-link:hover {
+            background: rgba(110, 255, 147, 0.3);
+            border-color: #6eff93;
+            transform: translateY(-2px);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: rgba(110, 255, 147, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(110, 255, 147, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Fractal Tree Cursor</h1>
+        <p>Move your cursor and watch as mathematical fractal trees grow from your cursor position. Each tree follows unique patterns based on natural growth algorithms.</p>
+        
+        <div class="controls">
+            <button class="control-btn active" data-season="spring">Spring</button>
+            <button class="control-btn" data-season="summer">Summer</button>
+            <button class="control-btn" data-season="autumn">Autumn</button>
+            <button class="control-btn" data-season="winter">Winter</button>
+        </div>
+        
+        <div class="slider-container">
+            <div class="slider-label">Branching Angle:</div>
+            <input type="range" min="10" max="45" value="25" class="slider" id="angleSlider">
+        </div>
+        
+        <div class="slider-container">
+            <div class="slider-label">Depth:</div>
+            <input type="range" min="4" max="12" value="8" class="slider" id="depthSlider">
+        </div>
+        
+        <div class="slider-container">
+            <div class="slider-label">Growth Speed:</div>
+            <input type="range" min="1" max="10" value="5" class="slider" id="speedSlider">
+        </div>
+    </div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <canvas id="canvas"></canvas>
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Full screen canvas
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Cursor
+            const cursor = document.querySelector('.cursor');
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            
+            // Track mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Control variables
+            let branchAngle = 25 * Math.PI / 180;
+            let maxDepth = 8;
+            let growthSpeed = 5;
+            let currentSeason = 'spring';
+            
+            // Season colors
+            const seasonColors = {
+                spring: {
+                    leaf: '#a7e9af',
+                    branch: '#67443d',
+                    accent: '#f8c6df'
+                },
+                summer: {
+                    leaf: '#2e933c',
+                    branch: '#5e3023',
+                    accent: '#f9dc5c'
+                },
+                autumn: {
+                    leaf: '#e76f51',
+                    branch: '#774936',
+                    accent: '#f4a261'
+                },
+                winter: {
+                    leaf: '#f1faee',
+                    branch: '#495057',
+                    accent: '#a8dadc'
+                }
+            };
+            
+            // Update controls
+            document.getElementById('angleSlider').addEventListener('input', (e) => {
+                branchAngle = e.target.value * Math.PI / 180;
+            });
+            
+            document.getElementById('depthSlider').addEventListener('input', (e) => {
+                maxDepth = parseInt(e.target.value);
+            });
+            
+            document.getElementById('speedSlider').addEventListener('input', (e) => {
+                growthSpeed = parseInt(e.target.value);
+            });
+            
+            // Season buttons
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSeason = btn.dataset.season;
+                });
+            });
+            
+            // Trees array
+            const trees = [];
+            const maxTrees = 10;
+            
+            // Tree class
+            class FractalTree {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.initialLength = 40 + Math.random() * 30;
+                    this.currentGrowth = 0;
+                    this.growthRate = 0.01 * growthSpeed;
+                    this.angleVariation = (Math.random() - 0.5) * 0.2;
+                    this.opacity = 1;
+                    this.age = 0;
+                    this.maxAge = 200 + Math.random() * 100;
+                    this.season = currentSeason;
+                    this.leafSize = 3 + Math.random() * 2;
+                }
+                
+                update() {
+                    this.age++;
+                    
+                    // Grow tree
+                    if (this.currentGrowth < 1) {
+                        this.currentGrowth += this.growthRate;
+                    }
+                    
+                    // Fade out when old
+                    if (this.age > this.maxAge) {
+                        this.opacity -= 0.01;
+                    }
+                }
+                
+                drawBranch(x, y, length, angle, depth, growthProgress) {
+                    if (depth === 0 || growthProgress <= 0) return;
+                    
+                    // Calculate branch endpoint
+                    const endX = x + length * Math.cos(angle) * growthProgress;
+                    const endY = y + length * Math.sin(angle) * growthProgress;
+                    
+                    // Draw branch
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(endX, endY);
+                    ctx.strokeStyle = `rgba(${this.getBranchColor()}, ${this.opacity})`;
+                    ctx.lineWidth = depth * 0.5;
+                    ctx.stroke();
+                    
+                    // If fully grown, draw child branches
+                    if (growthProgress >= 1 && depth > 1) {
+                        // Left branch
+                        this.drawBranch(
+                            endX, 
+                            endY, 
+                            length * 0.7, 
+                            angle - branchAngle - this.angleVariation, 
+                            depth - 1, 
+                            depth > maxDepth - 2 ? this.currentGrowth : 1
+                        );
+                        
+                        // Right branch
+                        this.drawBranch(
+                            endX, 
+                            endY, 
+                            length * 0.7, 
+                            angle + branchAngle + this.angleVariation, 
+                            depth - 1, 
+                            depth > maxDepth - 2 ? this.currentGrowth : 1
+                        );
+                    }
+                    
+                    // Draw leaves at endpoints
+                    if (depth === 1 && growthProgress > 0.5) {
+                        this.drawLeaf(endX, endY, growthProgress);
+                    }
+                }
+                
+                drawLeaf(x, y, growthProgress) {
+                    const size = this.leafSize * growthProgress;
+                    
+                    // Create gradient
+                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 4);
+                    gradient.addColorStop(0, `${seasonColors[this.season].leaf}`);
+                    gradient.addColorStop(1, `${seasonColors[this.season].accent}`);
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, size * 4, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.globalAlpha = 0.1 * this.opacity;
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, size * 2, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.globalAlpha = 0.2 * this.opacity;
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = seasonColors[this.season].leaf;
+                    ctx.globalAlpha = 0.8 * this.opacity;
+                    ctx.fill();
+                    
+                    ctx.globalAlpha = 1;
+                }
+                
+                getBranchColor() {
+                    const colorMap = {
+                        spring: '103, 68, 61',
+                        summer: '94, 48, 35',
+                        autumn: '119, 73, 54',
+                        winter: '73, 80, 87'
+                    };
+                    
+                    return colorMap[this.season];
+                }
+                
+                draw() {
+                    // Draw tree trunk upward
+                    this.drawBranch(
+                        this.x, 
+                        this.y, 
+                        this.initialLength, 
+                        -Math.PI / 2, // Start growing upward
+                        maxDepth, 
+                        this.currentGrowth
+                    );
+                }
+                
+                isFinished() {
+                    return this.opacity <= 0;
+                }
+            }
+            
+            // Create new tree on click
+            document.addEventListener('click', () => {
+                trees.push(new FractalTree(mouseX, mouseY));
+                
+                // Limit number of trees for performance
+                if (trees.length > maxTrees) {
+                    trees.shift();
+                }
+            });
+            
+            // Animation loop
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw trees
+                for (let i = trees.length - 1; i >= 0; i--) {
+                    trees[i].update();
+                    trees[i].draw();
+                    
+                    // Remove finished trees
+                    if (trees[i].isFinished()) {
+                        trees.splice(i, 1);
+                    }
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+        });
+    </script>
+</body>
+</html> 

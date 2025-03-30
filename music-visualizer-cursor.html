@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Visualizer Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #080818;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+            color: #fff;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 15px rgba(255, 50, 150, 0.7);
+        }
+        
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #ccc;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(25, 25, 45, 0.8);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(255, 50, 150, 0.2);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+        
+        input[type="range"], select, button {
+            width: 130px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #ff3296;
+        }
+        
+        input[type="range"] { padding: 0; height: 6px; }
+        
+        button {
+            background-color: #ff3296;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #e01f7b;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 50, 150, 0.8) 0%, rgba(255, 50, 150, 0) 70%);
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(255, 50, 150, 0.8);
+            transition: transform 0.2s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Music Visualizer</h1>
+        <p>Move your cursor to interact with the music visualizer. The particles react to simulated audio frequencies.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="visualizer-type">Visualizer Type</label>
+                <select id="visualizer-type">
+                    <option value="bars">Bars</option>
+                    <option value="circle">Circle</option>
+                    <option value="waveform">Waveform</option>
+                    <option value="particle_explosion">Particle Explosion</option>
+                    <option value="frequency_grid">Frequency Grid</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="sensitivity">Sensitivity</label>
+                <input type="range" id="sensitivity" min="0.1" max="2" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <label for="color-mode">Color Mode</label>
+                <select id="color-mode">
+                    <option value="frequency">Frequency</option>
+                    <option value="rainbow">Rainbow</option>
+                    <option value="monochrome">Monochrome</option>
+                </select>
+            </div>
+            <button id="play-pause-btn">Play Simulated Audio</button>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const cursor = document.getElementById('cursor');
+            const visualizerTypeSelect = document.getElementById('visualizer-type');
+            const sensitivitySlider = document.getElementById('sensitivity');
+            const colorModeSelect = document.getElementById('color-mode');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let audioContext;
+            let analyser;
+            let source;
+            let dataArray;
+            let bufferLength;
+            let isPlaying = false;
+            let visualizerType = visualizerTypeSelect.value;
+            let sensitivity = parseFloat(sensitivitySlider.value);
+            let colorMode = colorModeSelect.value;
+            let animationFrameId;
+            let particles = [];
+
+            // Simulated audio generation
+            let oscillator;
+            let gainNode;
+            let lfo;
+            let lfoGain;
+
+            function initAudio() {
+                if (audioContext) return;
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256; // Adjust for detail vs performance
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+
+                // Create simulated audio source
+                oscillator = audioContext.createOscillator();
+                gainNode = audioContext.createGain();
+                lfo = audioContext.createOscillator();
+                lfoGain = audioContext.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // A3 note
+                lfo.frequency.setValueAtTime(5, audioContext.currentTime); // LFO frequency 5Hz
+                lfoGain.gain.setValueAtTime(50, audioContext.currentTime); // LFO depth
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(oscillator.frequency); // Modulate oscillator frequency
+                oscillator.connect(gainNode);
+                gainNode.connect(analyser);
+                // Don't connect to destination to avoid actual sound output
+                // analyser.connect(audioContext.destination); 
+
+                oscillator.start();
+                lfo.start();
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime); // Start silent
+            }
+
+            function startAudio() {
+                if (!audioContext) initAudio();
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                // Ramp up gain smoothly
+                gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.5); 
+                isPlaying = true;
+                playPauseBtn.textContent = 'Pause Simulated Audio';
+                if (!animationFrameId) animate();
+            }
+
+            function stopAudio() {
+                if (!audioContext || !isPlaying) return;
+                 // Ramp down gain smoothly
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+                isPlaying = false;
+                playPauseBtn.textContent = 'Play Simulated Audio';
+                // Optional: Stop animation when paused?
+                // if (animationFrameId) {
+                //     cancelAnimationFrame(animationFrameId);
+                //     animationFrameId = null;
+                //     // Optionally clear canvas when paused
+                //     ctx.fillStyle = 'rgba(8, 8, 24, 1)';
+                //     ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // }
+            }
+
+            playPauseBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    stopAudio();
+                } else {
+                    startAudio();
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            document.addEventListener('mousedown', () => {
+                 cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                 if (visualizerType === 'particle_explosion' && isPlaying) createBurst(100);
+            });
+             document.addEventListener('mouseup', () => {
+                 cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
+
+            visualizerTypeSelect.addEventListener('change', () => visualizerType = visualizerTypeSelect.value);
+            sensitivitySlider.addEventListener('input', () => sensitivity = parseFloat(sensitivitySlider.value));
+            colorModeSelect.addEventListener('change', () => colorMode = colorModeSelect.value);
+
+            function getColor(value, index) {
+                let hue;
+                const normalizedValue = value / 255;
+                switch (colorMode) {
+                    case 'frequency':
+                        hue = (index / bufferLength) * 360;
+                        break;
+                    case 'rainbow':
+                        hue = (Date.now() / 20 + index * 5) % 360;
+                        break;
+                    case 'monochrome':
+                        hue = 195; // Pinkish hue base
+                         return `hsla(${hue}, 100%, ${50 + normalizedValue * 50}%, ${0.5 + normalizedValue * 0.5})`;
+                    default:
+                        hue = (index / bufferLength) * 360;
+                }
+                const saturation = 80 + normalizedValue * 20;
+                const lightness = 50 + normalizedValue * 30;
+                const alpha = 0.5 + normalizedValue * 0.5;
+                return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
+            }
+
+             // Particle class for explosion effect
+            class Particle {
+                constructor(x, y, size, color, vx, vy) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = size;
+                    this.color = color;
+                    this.vx = vx;
+                    this.vy = vy;
+                    this.life = 1;
+                    this.decay = 0.01 + Math.random() * 0.02;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += 0.05; // Gravity
+                    this.vx *= 0.99;
+                    this.vy *= 0.99;
+                    this.life -= this.decay;
+                    return this.life > 0;
+                }
+
+                draw() {
+                    ctx.globalAlpha = this.life;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+             function createBurst(count) {
+                 const avgLevel = dataArray.reduce((sum, val) => sum + val, 0) / bufferLength / 255;
+                 for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = (Math.random() * 5 + 2) * (1 + avgLevel * sensitivity * 2);
+                    const size = Math.random() * 3 + 1;
+                    const color = getColor(128 + Math.random() * 127, i);
+                    const vx = Math.cos(angle) * speed;
+                    const vy = Math.sin(angle) * speed;
+                    particles.push(new Particle(mouseX, mouseY, size, color, vx, vy));
+                 }
+             }
+
+            function animate() {
+                animationFrameId = requestAnimationFrame(animate);
+                
+                if (!isPlaying || !analyser) {
+                    // Fade out slowly if paused
+                     ctx.fillStyle = 'rgba(8, 8, 24, 0.1)'; 
+                     ctx.fillRect(0, 0, canvas.width, canvas.height);
+                     return;
+                }
+
+                analyser.getByteFrequencyData(dataArray);
+
+                // Smoothly fade background
+                ctx.fillStyle = 'rgba(8, 8, 24, 0.3)'; 
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const avgLevel = dataArray.reduce((sum, val) => sum + val, 0) / bufferLength / 255;
+                const cursorScale = 1 + avgLevel * sensitivity;
+                cursor.style.transform = `translate(-50%, -50%) scale(${cursorScale})`;
+
+                 // Draw based on selected type
+                switch (visualizerType) {
+                    case 'bars': drawBars(); break;
+                    case 'circle': drawCircle(); break;
+                    case 'waveform': drawWaveform(); break;
+                    case 'particle_explosion': drawParticleExplosion(); break;
+                    case 'frequency_grid': drawFrequencyGrid(); break;
+                }
+                
+                 // Update and draw particles if any
+                particles = particles.filter(p => p.update());
+                particles.forEach(p => p.draw());
+            }
+
+            function drawBars() {
+                const barWidth = (canvas.width / bufferLength) * 1.5;
+                let x = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = dataArray[i] * sensitivity;
+                    const color = getColor(dataArray[i], i);
+                    
+                    ctx.fillStyle = color;
+                    const drawX = mouseX + (i - bufferLength / 2) * barWidth * 0.5;
+                    const drawY = mouseY - barHeight / 2;
+                    ctx.fillRect(drawX, drawY, barWidth * 0.8, barHeight);
+                    x += barWidth + 1;
+                }
+            }
+
+            function drawCircle() {
+                const radius = 100 + (dataArray.reduce((s, v) => s + v, 0) / bufferLength) * sensitivity;
+                const centerX = mouseX;
+                const centerY = mouseY;
+                
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = dataArray[i] * 0.5 * sensitivity;
+                    const angle = (i / bufferLength) * Math.PI * 2 - Math.PI / 2;
+                    const color = getColor(dataArray[i], i);
+                    
+                    const x1 = centerX + Math.cos(angle) * radius;
+                    const y1 = centerY + Math.sin(angle) * radius;
+                    const x2 = centerX + Math.cos(angle) * (radius + barHeight);
+                    const y2 = centerY + Math.sin(angle) * (radius + barHeight);
+                    
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+            }
+
+            function drawWaveform() {
+                 analyser.getByteTimeDomainData(dataArray); // Get waveform data
+                 ctx.lineWidth = 2;
+                 ctx.beginPath();
+                 const sliceWidth = canvas.width / bufferLength;
+                 let x = 0;
+
+                 for (let i = 0; i < bufferLength; i++) {
+                     const v = dataArray[i] / 128.0;
+                     const y = v * canvas.height / 4 + mouseY - canvas.height/8; // Centered around mouseY
+                     const color = getColor(dataArray[i], i);
+                      ctx.strokeStyle = color;
+
+                     if (i === 0) {
+                         ctx.moveTo(mouseX - canvas.width/2, y);
+                     } else {
+                         ctx.lineTo(x + mouseX - canvas.width/2, y);
+                     }
+                     x += sliceWidth;
+                 }
+                 ctx.lineTo(mouseX + canvas.width/2, mouseY);
+                 ctx.stroke();
+             }
+             
+             function drawParticleExplosion() {
+                 // Particles are drawn in the main loop
+                 // Maybe trigger small bursts based on frequency peaks?
+                 const peakThreshold = 200;
+                 for (let i = 0; i < bufferLength; i++) {
+                      if (dataArray[i] > peakThreshold * sensitivity && Math.random() > 0.95) {
+                          createBurst(5);
+                      }
+                 }
+             }
+             
+             function drawFrequencyGrid() {
+                  const gridSize = 16; // e.g., 16x16 grid
+                  const cellWidth = 40;
+                  const cellHeight = 40;
+                  const gridWidth = gridSize * cellWidth;
+                  const gridHeight = gridSize * cellHeight;
+                  const startX = mouseX - gridWidth / 2;
+                  const startY = mouseY - gridHeight / 2;
+
+                  const freqStep = Math.floor(bufferLength / (gridSize * gridSize));
+
+                  for (let row = 0; row < gridSize; row++) {
+                      for (let col = 0; col < gridSize; col++) {
+                          const freqIndex = (row * gridSize + col) * freqStep;
+                          const value = freqIndex < bufferLength ? dataArray[freqIndex] : 0;
+                          const normalizedValue = value / 255;
+                          const color = getColor(value, freqIndex);
+                          
+                          ctx.fillStyle = color;
+                          ctx.globalAlpha = 0.2 + normalizedValue * 0.8;
+                          ctx.fillRect(
+                              startX + col * cellWidth,
+                              startY + row * cellHeight,
+                              cellWidth * (0.5 + normalizedValue * 0.5), // Size reacts to value
+                              cellHeight * (0.5 + normalizedValue * 0.5)
+                          );
+                      }
+                  }
+                  ctx.globalAlpha = 1.0; // Reset global alpha
+              }
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+
+            // Initial clear
+            ctx.fillStyle = 'rgba(8, 8, 24, 1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+    </script>
+</body>
+</html> 

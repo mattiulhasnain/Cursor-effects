@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0a192f;
+            color: #f0f8ff;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        h1 {
+            text-align: center;
+            padding-top: 30px;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #5dbb63;
+        }
+        
+        .description {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+            color: rgba(240, 248, 255, 0.7);
+        }
+        
+        .ball {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .cursor-dot {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #5dbb63;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 10px rgba(93, 187, 99, 0.8);
+        }
+        
+        .cursor-circle {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 2px solid #5dbb63;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9998;
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            color: #5dbb63;
+            text-decoration: none;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .return-link:hover {
+            opacity: 1;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(28, 42, 57, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(93, 187, 99, 0.2);
+        }
+        
+        .controls button {
+            background: rgba(93, 187, 99, 0.2);
+            color: #f0f8ff;
+            border: 1px solid rgba(93, 187, 99, 0.4);
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .controls button:hover {
+            background: rgba(93, 187, 99, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <h1>Gravity Cursor Effect</h1>
+    <p class="description">Click anywhere to create balls that fall with gravity. Move your cursor to act as a gravitational force affecting the balls.</p>
+    
+    <div class="controls">
+        <button id="resetBtn">Reset</button>
+        <button id="toggleGravityBtn">Toggle Cursor Gravity</button>
+    </div>
+    
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-circle" id="cursorCircle"></div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cursorDot = document.getElementById('cursorDot');
+            const cursorCircle = document.getElementById('cursorCircle');
+            const resetBtn = document.getElementById('resetBtn');
+            const toggleGravityBtn = document.getElementById('toggleGravityBtn');
+            
+            // Physics variables
+            const gravity = 0.5;
+            const friction = 0.99;
+            const elasticity = 0.7;
+            let cursorGravityEnabled = true;
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            // Array to store all balls
+            const balls = [];
+            
+            // Track mouse movement
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursorDot.style.left = `${mouseX}px`;
+                cursorDot.style.top = `${mouseY}px`;
+                cursorCircle.style.left = `${mouseX}px`;
+                cursorCircle.style.top = `${mouseY}px`;
+            });
+            
+            // Create a new ball on click
+            document.addEventListener('click', (e) => {
+                // Ignore clicks on buttons
+                if (e.target.tagName === 'BUTTON') return;
+                
+                createBall(e.clientX, e.clientY);
+            });
+            
+            // Ball class
+            class Ball {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.velocityX = Math.random() * 10 - 5; // Random initial velocity
+                    this.velocityY = Math.random() * -10 - 5; // Initial upward velocity
+                    this.size = 15 + Math.random() * 30;     // Random size
+                    this.element = document.createElement('div');
+                    this.element.className = 'ball';
+                    
+                    // Random color
+                    const hue = Math.floor(Math.random() * 360);
+                    this.element.style.backgroundColor = `hsl(${hue}, 70%, 60%)`;
+                    
+                    // Set size
+                    this.element.style.width = `${this.size}px`;
+                    this.element.style.height = `${this.size}px`;
+                    
+                    // Add to DOM
+                    document.body.appendChild(this.element);
+                    
+                    // Mass based on size
+                    this.mass = this.size / 10;
+                }
+                
+                update() {
+                    // Apply gravity
+                    this.velocityY += gravity;
+                    
+                    // Apply cursor gravity if enabled
+                    if (cursorGravityEnabled) {
+                        // Calculate distance to cursor
+                        const dx = mouseX - this.x;
+                        const dy = mouseY - this.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Apply force if within range
+                        if (distance < 200) {
+                            const force = 3 * this.mass / (distance * distance);
+                            
+                            // Normalize and apply force
+                            this.velocityX += dx / distance * force;
+                            this.velocityY += dy / distance * force;
+                        }
+                    }
+                    
+                    // Apply friction
+                    this.velocityX *= friction;
+                    this.velocityY *= friction;
+                    
+                    // Update position
+                    this.x += this.velocityX;
+                    this.y += this.velocityY;
+                    
+                    // Check boundaries
+                    this.handleBoundaries();
+                    
+                    // Update DOM element
+                    this.element.style.left = `${this.x - this.size/2}px`;
+                    this.element.style.top = `${this.y - this.size/2}px`;
+                }
+                
+                handleBoundaries() {
+                    // Floor collision
+                    if (this.y + this.size/2 > window.innerHeight) {
+                        this.y = window.innerHeight - this.size/2;
+                        this.velocityY = -this.velocityY * elasticity;
+                    }
+                    
+                    // Ceiling collision
+                    if (this.y - this.size/2 < 0) {
+                        this.y = this.size/2;
+                        this.velocityY = -this.velocityY * elasticity;
+                    }
+                    
+                    // Right wall collision
+                    if (this.x + this.size/2 > window.innerWidth) {
+                        this.x = window.innerWidth - this.size/2;
+                        this.velocityX = -this.velocityX * elasticity;
+                    }
+                    
+                    // Left wall collision
+                    if (this.x - this.size/2 < 0) {
+                        this.x = this.size/2;
+                        this.velocityX = -this.velocityX * elasticity;
+                    }
+                }
+                
+                remove() {
+                    this.element.remove();
+                }
+            }
+            
+            // Create a new ball
+            function createBall(x, y) {
+                const ball = new Ball(x, y);
+                balls.push(ball);
+                
+                // Limit number of balls for performance
+                if (balls.length > 50) {
+                    const removedBall = balls.shift();
+                    removedBall.remove();
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                balls.forEach(ball => ball.update());
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            // Reset button
+            resetBtn.addEventListener('click', () => {
+                balls.forEach(ball => ball.remove());
+                balls.length = 0;
+            });
+            
+            // Toggle cursor gravity
+            toggleGravityBtn.addEventListener('click', () => {
+                cursorGravityEnabled = !cursorGravityEnabled;
+                toggleGravityBtn.textContent = cursorGravityEnabled ? 
+                    'Disable Cursor Gravity' : 'Enable Cursor Gravity';
+                
+                // Visual feedback on cursor
+                if (cursorGravityEnabled) {
+                    cursorCircle.style.borderColor = '#5dbb63';
+                } else {
+                    cursorCircle.style.borderColor = '#ff7eb9';
+                }
+            });
+            
+            // Create some initial balls
+            for (let i = 0; i < 10; i++) {
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight / 2;
+                createBall(x, y);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Ensure balls stay within bounds after resize
+                balls.forEach(ball => ball.handleBoundaries());
+            });
+        });
+    </script>
+</body>
+</html> 

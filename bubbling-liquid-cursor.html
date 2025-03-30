@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubbling Liquid Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #062036;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #6acfff;
+            text-shadow: 0 0 10px rgba(106, 207, 255, 0.7);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #b4e7ff;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(106, 207, 255, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(106, 207, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Bubbling Liquid Cursor</h1>
+        <p>Move your cursor to see the fluid-like effect with bubbles emerging around it. The liquid follows your cursor movement, creating a trail of bubbles.</p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Set canvas size
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let prevMouseX = mouseX;
+            let prevMouseY = mouseY;
+            let mouseVelocityX = 0;
+            let mouseVelocityY = 0;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Calculate velocity
+                mouseVelocityX = mouseX - prevMouseX;
+                mouseVelocityY = mouseY - prevMouseY;
+                
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Bubble class
+            class Bubble {
+                constructor(x, y, velocity) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = 2 + Math.random() * 6;
+                    this.originalSize = this.size;
+                    this.vx = velocity.x * 0.2 + (Math.random() - 0.5) * 1;
+                    this.vy = velocity.y * 0.2 + (Math.random() - 0.5) * 1 - 1; // Slight upward drift
+                    this.alpha = 0.7 + Math.random() * 0.3;
+                    this.color = this.getColor();
+                    this.growRate = 0.03 + Math.random() * 0.07;
+                    this.maxSize = this.size * (2 + Math.random() * 1.5);
+                    this.burstSize = this.maxSize * 1.2;
+                    this.state = 'growing'; // growing, stable, bursting, dead
+                    this.lifespan = 40 + Math.random() * 60; // Frames in stable state
+                    this.stableDuration = 0;
+                    this.burstProgress = 0;
+                }
+                
+                getColor() {
+                    // Blue to cyan color palette
+                    const hue = 190 + Math.random() * 30;
+                    const saturation = 80 + Math.random() * 20;
+                    const lightness = 70 + Math.random() * 20;
+                    return `hsla(${hue}, ${saturation}%, ${lightness}%, ${this.alpha})`;
+                }
+                
+                update() {
+                    // Update position
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Add buoyancy based on size (bigger bubbles rise faster)
+                    this.vy -= 0.01 * (this.size / this.originalSize);
+                    
+                    // Apply drag
+                    this.vx *= 0.98;
+                    this.vy *= 0.98;
+                    
+                    // Update state
+                    switch (this.state) {
+                        case 'growing':
+                            // Grow bubble
+                            this.size += this.growRate;
+                            if (this.size >= this.maxSize) {
+                                this.size = this.maxSize;
+                                this.state = 'stable';
+                            }
+                            break;
+                            
+                        case 'stable':
+                            // Slight size oscillation
+                            this.size = this.maxSize + Math.sin(Date.now() * 0.01) * 0.5;
+                            this.stableDuration++;
+                            
+                            // After stable duration, start bursting
+                            if (this.stableDuration >= this.lifespan) {
+                                this.state = 'bursting';
+                            }
+                            break;
+                            
+                        case 'bursting':
+                            // Quick expansion and fade out
+                            this.burstProgress += 0.1;
+                            this.size = this.maxSize + (this.burstSize - this.maxSize) * this.burstProgress;
+                            this.alpha = Math.max(0, 0.7 - this.burstProgress);
+                            
+                            if (this.burstProgress >= 1) {
+                                this.state = 'dead';
+                            }
+                            break;
+                    }
+                    
+                    // Boundary checks
+                    if (this.x < -this.size || this.x > canvas.width + this.size ||
+                        this.y < -this.size || this.y > canvas.height + this.size) {
+                        this.state = 'dead';
+                    }
+                    
+                    // Return true if still alive
+                    return this.state !== 'dead';
+                }
+                
+                draw(ctx) {
+                    // Draw bubble
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Add highlight for 3D effect
+                    const highlightSize = this.size * 0.3;
+                    const highlightX = this.x - this.size * 0.2;
+                    const highlightY = this.y - this.size * 0.2;
+                    
+                    const gradient = ctx.createRadialGradient(
+                        highlightX, highlightY, 0,
+                        highlightX, highlightY, highlightSize
+                    );
+                    gradient.addColorStop(0, `rgba(255, 255, 255, ${this.alpha * 0.8})`);
+                    gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(highlightX, highlightY, highlightSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Liquid droplet class (for splashes)
+            class LiquidDroplet {
+                constructor(x, y, velocity) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = 1 + Math.random() * 4;
+                    this.vx = velocity.x * 0.5 + (Math.random() - 0.5) * 5;
+                    this.vy = velocity.y * 0.5 + (Math.random() - 0.5) * 5;
+                    this.gravity = 0.2 + Math.random() * 0.1;
+                    this.alpha = 0.7 + Math.random() * 0.3;
+                    this.color = `hsla(200, 90%, 70%, ${this.alpha})`;
+                    this.lifespan = 20 + Math.random() * 10;
+                    this.age = 0;
+                }
+                
+                update() {
+                    // Update position
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Apply gravity
+                    this.vy += this.gravity;
+                    
+                    // Apply drag
+                    this.vx *= 0.96;
+                    this.vy *= 0.96;
+                    
+                    // Age
+                    this.age++;
+                    if (this.age >= this.lifespan) {
+                        this.alpha = Math.max(0, 1 - (this.age - this.lifespan) / 10);
+                    }
+                    
+                    // Return true if still alive
+                    return this.alpha > 0;
+                }
+                
+                draw(ctx) {
+                    ctx.fillStyle = `hsla(200, 90%, 70%, ${this.alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Liquid trail class
+            class LiquidTrail {
+                constructor(x, y, length) {
+                    this.x = x;
+                    this.y = y;
+                    this.length = length || 50;
+                    this.width = 15 + Math.random() * 10;
+                    this.points = [{x, y}];
+                    this.alpha = 0.4 + Math.random() * 0.2;
+                    this.color = `hsla(190, 90%, 70%, ${this.alpha})`;
+                    this.lifespan = 50;
+                    this.age = 0;
+                }
+                
+                update(newX, newY) {
+                    // Add new point if there's significant movement
+                    const lastPoint = this.points[this.points.length - 1];
+                    const dx = newX - lastPoint.x;
+                    const dy = newY - lastPoint.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance > 5) {
+                        this.points.push({x: newX, y: newY});
+                        
+                        // Limit number of points
+                        if (this.points.length > this.length) {
+                            this.points.shift();
+                        }
+                    }
+                    
+                    // Age the trail
+                    this.age++;
+                    
+                    // Return true if still alive
+                    return this.age < this.lifespan;
+                }
+                
+                draw(ctx) {
+                    if (this.points.length < 2) return;
+                    
+                    // Calculate alpha based on age
+                    const ageRatio = this.age / this.lifespan;
+                    const currentAlpha = this.alpha * (1 - ageRatio);
+                    
+                    // Create gradient along the trail
+                    const gradient = ctx.createLinearGradient(
+                        this.points[0].x, this.points[0].y,
+                        this.points[this.points.length - 1].x, this.points[this.points.length - 1].y
+                    );
+                    
+                    gradient.addColorStop(0, `hsla(190, 90%, 70%, 0)`);
+                    gradient.addColorStop(0.2, `hsla(190, 90%, 70%, ${currentAlpha * 0.7})`);
+                    gradient.addColorStop(0.8, `hsla(190, 90%, 70%, ${currentAlpha})`);
+                    gradient.addColorStop(1, `hsla(190, 90%, 70%, ${currentAlpha * 0.7})`);
+                    
+                    // Draw trail
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = this.width * (1 - ageRatio * 0.5);
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(this.points[0].x, this.points[0].y);
+                    
+                    // Use quadratic curves for smoother trail
+                    for (let i = 1; i < this.points.length; i++) {
+                        const xc = (this.points[i].x + this.points[i - 1].x) / 2;
+                        const yc = (this.points[i].y + this.points[i - 1].y) / 2;
+                        ctx.quadraticCurveTo(this.points[i - 1].x, this.points[i - 1].y, xc, yc);
+                    }
+                    
+                    // Connect to the last point
+                    ctx.lineTo(this.points[this.points.length - 1].x, this.points[this.points.length - 1].y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Animation elements
+            const bubbles = [];
+            const droplets = [];
+            let liquidTrail = new LiquidTrail(mouseX, mouseY);
+            
+            // Bubble creation settings
+            const maxBubbles = 100;
+            let bubbleTimer = 0;
+            const bubbleInterval = 2; // Frames between bubble creation
+            
+            // Update function
+            function update() {
+                // Create new bubbles based on mouse movement and velocity
+                bubbleTimer++;
+                
+                const mouseSpeed = Math.sqrt(mouseVelocityX * mouseVelocityX + mouseVelocityY * mouseVelocityY);
+                
+                if (bubbleTimer >= bubbleInterval && mouseSpeed > 1) {
+                    // Create more bubbles when moving faster
+                    const bubbleCount = Math.min(Math.floor(mouseSpeed / 5) + 1, 3);
+                    
+                    for (let i = 0; i < bubbleCount; i++) {
+                        // Random position near cursor
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * 20;
+                        const offsetX = Math.cos(angle) * distance;
+                        const offsetY = Math.sin(angle) * distance;
+                        
+                        bubbles.push(new Bubble(
+                            mouseX + offsetX,
+                            mouseY + offsetY,
+                            { x: mouseVelocityX, y: mouseVelocityY }
+                        ));
+                    }
+                    
+                    bubbleTimer = 0;
+                }
+                
+                // Limit number of bubbles
+                while (bubbles.length > maxBubbles) {
+                    bubbles.shift();
+                }
+                
+                // Update liquid trail
+                if (!liquidTrail.update(mouseX, mouseY)) {
+                    liquidTrail = new LiquidTrail(mouseX, mouseY);
+                }
+                
+                // Update bubbles
+                for (let i = bubbles.length - 1; i >= 0; i--) {
+                    const alive = bubbles[i].update();
+                    
+                    if (!alive) {
+                        bubbles.splice(i, 1);
+                    }
+                }
+                
+                // Update droplets
+                for (let i = droplets.length - 1; i >= 0; i--) {
+                    const alive = droplets[i].update();
+                    
+                    if (!alive) {
+                        droplets.splice(i, 1);
+                    }
+                }
+            }
+            
+            // Drawing function
+            function draw() {
+                // Clear canvas with a semi-transparent background for trail effect
+                ctx.fillStyle = 'rgba(6, 32, 54, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw liquid trail
+                liquidTrail.draw(ctx);
+                
+                // Draw bubbles
+                bubbles.forEach(bubble => {
+                    bubble.draw(ctx);
+                });
+                
+                // Draw droplets
+                droplets.forEach(droplet => {
+                    droplet.draw(ctx);
+                });
+            }
+            
+            // Animation loop
+            function animate() {
+                update();
+                draw();
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Handle clicks - create splash effect
+            document.addEventListener('click', () => {
+                // Create droplet splash
+                for (let i = 0; i < 30; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 8;
+                    
+                    droplets.push(new LiquidDroplet(
+                        mouseX,
+                        mouseY,
+                        {
+                            x: Math.cos(angle) * speed + mouseVelocityX * 0.5,
+                            y: Math.sin(angle) * speed + mouseVelocityY * 0.5
+                        }
+                    ));
+                }
+                
+                // Create burst of bubbles
+                for (let i = 0; i < 15; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 5 + Math.random() * 10;
+                    
+                    bubbles.push(new Bubble(
+                        mouseX + Math.cos(angle) * distance,
+                        mouseY + Math.sin(angle) * distance,
+                        { x: Math.cos(angle) * 3, y: Math.sin(angle) * 3 }
+                    ));
+                }
+                
+                // Visual effect of ripple
+                const ripple = {
+                    x: mouseX,
+                    y: mouseY,
+                    radius: 0,
+                    maxRadius: 50,
+                    alpha: 0.5,
+                    expand: function() {
+                        this.radius += 2;
+                        this.alpha = 0.5 * (1 - this.radius / this.maxRadius);
+                        
+                        // Draw ripple
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        if (this.radius < this.maxRadius) {
+                            requestAnimationFrame(() => this.expand());
+                        }
+                    }
+                };
+                
+                ripple.expand();
+            });
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

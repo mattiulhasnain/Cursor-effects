@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flame Trail Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0e0e0e;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #e6e6e6;
+            text-shadow: 0 0 10px rgba(255, 100, 0, 0.7);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #cccccc;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(30, 30, 30, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(255, 100, 0, 0.3);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #e6e6e6;
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+        }
+        
+        select {
+            width: 120px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            background-color: #333;
+            color: #e6e6e6;
+            border: 1px solid #ff6400;
+        }
+        
+        button {
+            background-color: #ff6400;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #ff8c00;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff6400;
+            box-shadow: 0 0 10px rgba(255, 100, 0, 0.8),
+                        0 0 20px rgba(255, 100, 0, 0.5);
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Flame Trail</h1>
+        <p>Move your cursor to create mesmerizing flame trails. Click to create fire explosions.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="particle-count">Flame Intensity</label>
+                <input type="range" id="particle-count" min="5" max="20" step="1" value="10">
+            </div>
+            
+            <div class="control-group">
+                <label for="flame-size">Flame Size</label>
+                <input type="range" id="flame-size" min="5" max="20" step="1" value="10">
+            </div>
+            
+            <div class="control-group">
+                <label for="flame-life">Flame Lifetime</label>
+                <input type="range" id="flame-life" min="20" max="100" step="5" value="50">
+            </div>
+            
+            <div class="control-group">
+                <label for="flame-type">Flame Type</label>
+                <select id="flame-type">
+                    <option value="normal">Normal Fire</option>
+                    <option value="inferno">Inferno</option>
+                    <option value="blue">Blue Flame</option>
+                    <option value="ghost">Ghost Fire</option>
+                    <option value="rainbow">Rainbow Flame</option>
+                </select>
+            </div>
+            
+            <button id="clear-btn">Clear Flames</button>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Elements
+            const cursor = document.getElementById('cursor');
+            
+            // Controls
+            const particleCountSlider = document.getElementById('particle-count');
+            const flameSizeSlider = document.getElementById('flame-size');
+            const flameLifeSlider = document.getElementById('flame-life');
+            const flameTypeSelect = document.getElementById('flame-type');
+            const clearBtn = document.getElementById('clear-btn');
+            
+            // Config variables
+            let particleCount = parseInt(particleCountSlider.value);
+            let flameSize = parseInt(flameSizeSlider.value);
+            let flameLife = parseInt(flameLifeSlider.value);
+            let flameType = flameTypeSelect.value;
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            let mouseSpeed = 0;
+            
+            // Mouse pressed
+            let isMouseDown = false;
+            
+            // Particles array
+            let particles = [];
+            
+            // Explosion particles array
+            let explosionParticles = [];
+            
+            // Flames base colors based on type
+            const flameColors = {
+                normal: {
+                    start: [255, 140, 0],   // Orange-red
+                    mid: [255, 80, 0],      // Orange
+                    end: [255, 255, 0]      // Yellow
+                },
+                inferno: {
+                    start: [255, 0, 0],     // Red
+                    mid: [255, 50, 0],      // Deep orange
+                    end: [255, 200, 0]      // Bright orange
+                },
+                blue: {
+                    start: [0, 50, 255],    // Deep blue
+                    mid: [50, 150, 255],    // Blue
+                    end: [150, 200, 255]    // Light blue
+                },
+                ghost: {
+                    start: [30, 200, 170],  // Teal
+                    mid: [100, 220, 230],   // Turquoise
+                    end: [200, 255, 255]    // Light cyan
+                },
+                rainbow: {
+                    start: [255, 0, 0],     // Red
+                    mid: [0, 255, 0],       // Green
+                    end: [0, 0, 255]        // Blue
+                }
+            };
+            
+            // Smoke particle class
+            class SmokeParticle {
+                constructor(x, y, size) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = size * 0.8;
+                    this.initialSize = this.size;
+                    this.life = flameLife * 2;
+                    this.initialLife = this.life;
+                    this.vx = (Math.random() - 0.5) * 0.3;
+                    this.vy = -Math.random() * 1.5 - 0.5;
+                    this.opacity = 0.1 + Math.random() * 0.1;
+                }
+                
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.size += 0.05;
+                    this.opacity -= 0.002;
+                    this.life--;
+                    
+                    return this.life > 0 && this.opacity > 0;
+                }
+                
+                draw(ctx) {
+                    const lifeRatio = this.life / this.initialLife;
+                    ctx.beginPath();
+                    const gradient = ctx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, this.size
+                    );
+                    gradient.addColorStop(0, `rgba(50, 50, 50, ${this.opacity})`);
+                    gradient.addColorStop(1, `rgba(30, 30, 30, 0)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Flame particle class
+            class FlameParticle {
+                constructor(x, y, size, speedFactor = 1) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = size;
+                    this.initialSize = size;
+                    this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.5;
+                    this.speed = (1 + Math.random()) * speedFactor;
+                    
+                    // Random velocity with upward bias
+                    this.vx = Math.cos(this.angle) * this.speed + (Math.random() - 0.5) * 0.5;
+                    this.vy = Math.sin(this.angle) * this.speed - Math.random() * 0.5;
+                    
+                    this.life = flameLife * (0.7 + Math.random() * 0.6);
+                    this.initialLife = this.life;
+                    
+                    // Random color variation
+                    this.colorOffset = Math.random() * 30 - 15;
+                    
+                    // For rainbow flame
+                    this.hue = Math.random() * 360;
+                }
+                
+                update() {
+                    // Update position
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Simulate rising effect
+                    this.vy -= 0.01;
+                    
+                    // Add some horizontal wobble
+                    this.vx += (Math.random() - 0.5) * 0.1;
+                    
+                    // Gradually reduce size
+                    this.size = this.initialSize * (this.life / this.initialLife);
+                    
+                    // Decrease life
+                    this.life--;
+                    
+                    // For rainbow flame, cycle the hue
+                    if (flameType === 'rainbow') {
+                        this.hue = (this.hue + 2) % 360;
+                    }
+                    
+                    // Return true if particle is still alive
+                    return this.life > 0;
+                }
+                
+                draw(ctx) {
+                    if (this.life <= 0) return;
+                    
+                    const lifeRatio = this.life / this.initialLife;
+                    
+                    // Get flame color based on type
+                    let color1, color2, color3;
+                    
+                    if (flameType === 'rainbow') {
+                        // Rainbow flame uses HSL color
+                        color1 = `hsl(${this.hue}, 100%, 50%)`;
+                        color2 = `hsl(${(this.hue + 30) % 360}, 100%, 70%)`;
+                        color3 = `hsl(${(this.hue + 60) % 360}, 100%, 90%)`;
+                    } else {
+                        // Get base colors for this flame type
+                        const baseColors = flameColors[flameType];
+                        
+                        // Interpolate between colors based on life
+                        const midPoint = lifeRatio < 0.5 ? 
+                            interpolateColor(baseColors.start, baseColors.mid, lifeRatio * 2) :
+                            interpolateColor(baseColors.mid, baseColors.end, (lifeRatio - 0.5) * 2);
+                        
+                        // Add some random variation
+                        const r = Math.min(255, Math.max(0, midPoint[0] + this.colorOffset));
+                        const g = Math.min(255, Math.max(0, midPoint[1] + this.colorOffset));
+                        const b = Math.min(255, Math.max(0, midPoint[2] + this.colorOffset));
+                        
+                        color1 = `rgba(${r}, ${g}, ${b}, ${lifeRatio * 0.9})`;
+                        color2 = `rgba(${r}, ${g}, ${b}, ${lifeRatio * 0.5})`;
+                        color3 = `rgba(${r}, ${g}, ${b}, 0)`;
+                    }
+                    
+                    // Draw flame particle with gradient
+                    const gradient = ctx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, this.size
+                    );
+                    
+                    gradient.addColorStop(0, color1);
+                    gradient.addColorStop(0.6, color2);
+                    gradient.addColorStop(1, color3);
+                    
+                    ctx.beginPath();
+                    ctx.fillStyle = gradient;
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Helper function to interpolate between two colors
+            function interpolateColor(color1, color2, factor) {
+                const result = [0, 0, 0];
+                
+                for (let i = 0; i < 3; i++) {
+                    result[i] = Math.round(color1[i] + factor * (color2[i] - color1[i]));
+                }
+                
+                return result;
+            }
+            
+            // Create fire explosion
+            function createExplosion(x, y, size, count) {
+                // Generate explosion particles
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1 + Math.random() * 3;
+                    const distance = size * (0.5 + Math.random() * 3);
+                    
+                    const particle = new FlameParticle(
+                        x, 
+                        y, 
+                        flameSize * (0.8 + Math.random() * 1.5),
+                        speed
+                    );
+                    
+                    // Override standard velocity for explosion
+                    particle.vx = Math.cos(angle) * speed;
+                    particle.vy = Math.sin(angle) * speed;
+                    particle.life = flameLife * (0.7 + Math.random() * 0.5);
+                    particle.initialLife = particle.life;
+                    
+                    explosionParticles.push(particle);
+                }
+                
+                // Add some smoke particles
+                for (let i = 0; i < count / 2; i++) {
+                    const smokeParticle = new SmokeParticle(
+                        x + (Math.random() - 0.5) * size * 2,
+                        y + (Math.random() - 0.5) * size * 2,
+                        flameSize * (1 + Math.random())
+                    );
+                    
+                    particles.push(smokeParticle);
+                }
+            }
+            
+            // Event listeners for controls
+            particleCountSlider.addEventListener('input', () => {
+                particleCount = parseInt(particleCountSlider.value);
+            });
+            
+            flameSizeSlider.addEventListener('input', () => {
+                flameSize = parseInt(flameSizeSlider.value);
+            });
+            
+            flameLifeSlider.addEventListener('input', () => {
+                flameLife = parseInt(flameLifeSlider.value);
+            });
+            
+            flameTypeSelect.addEventListener('change', () => {
+                flameType = flameTypeSelect.value;
+                
+                // Update cursor color based on flame type
+                updateCursorColor();
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                particles = [];
+                explosionParticles = [];
+            });
+            
+            // Update cursor color based on flame type
+            function updateCursorColor() {
+                let color;
+                
+                switch (flameType) {
+                    case 'normal':
+                        color = '#ff6400';
+                        break;
+                    case 'inferno':
+                        color = '#ff2200';
+                        break;
+                    case 'blue':
+                        color = '#3388ff';
+                        break;
+                    case 'ghost':
+                        color = '#1ecea8';
+                        break;
+                    case 'rainbow':
+                        color = '#ff00ff'; // Just a placeholder, will animate
+                        break;
+                    default:
+                        color = '#ff6400';
+                }
+                
+                cursor.style.background = color;
+                cursor.style.boxShadow = `0 0 10px ${color}AA, 0 0 20px ${color}77`;
+            }
+            
+            // Initial cursor color
+            updateCursorColor();
+            
+            // Animate rainbow cursor if selected
+            function animateRainbowCursor(time) {
+                if (flameType === 'rainbow') {
+                    const hue = (time / 20) % 360;
+                    const color = `hsl(${hue}, 100%, 50%)`;
+                    
+                    cursor.style.background = color;
+                    cursor.style.boxShadow = `0 0 10px ${color}AA, 0 0 20px ${color}77`;
+                }
+            }
+            
+            // Handle mouse movement
+            document.addEventListener('mousemove', (e) => {
+                // Calculate mouse speed
+                const dx = e.clientX - mouseX;
+                const dy = e.clientY - mouseY;
+                mouseSpeed = Math.sqrt(dx * dx + dy * dy);
+                
+                // Store previous position
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                
+                // Update current position
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Create flame particles based on speed
+                const speedFactor = Math.min(3, mouseSpeed / 5);
+                const particlesToCreate = Math.ceil(particleCount * speedFactor);
+                
+                for (let i = 0; i < particlesToCreate; i++) {
+                    // Interpolate position between current and previous mouse position
+                    const t = i / particlesToCreate;
+                    const x = prevMouseX + (mouseX - prevMouseX) * t;
+                    const y = prevMouseY + (mouseY - prevMouseY) * t;
+                    
+                    // Add some randomness to position
+                    const randX = x + (Math.random() - 0.5) * flameSize * 0.5;
+                    const randY = y + (Math.random() - 0.5) * flameSize * 0.5;
+                    
+                    // Create flame particle
+                    const particle = new FlameParticle(
+                        randX, 
+                        randY, 
+                        flameSize * (0.5 + Math.random() * 0.5) * (0.5 + speedFactor * 0.5)
+                    );
+                    
+                    particles.push(particle);
+                    
+                    // Occasionally add smoke particles
+                    if (Math.random() < 0.1 * speedFactor) {
+                        const smokeParticle = new SmokeParticle(
+                            randX, 
+                            randY, 
+                            flameSize * (0.5 + Math.random() * 0.5)
+                        );
+                        
+                        particles.push(smokeParticle);
+                    }
+                }
+            });
+            
+            // Handle mouse down
+            document.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                
+                // Create an explosion
+                createExplosion(e.clientX, e.clientY, flameSize, particleCount * 4);
+            });
+            
+            // Handle mouse up
+            document.addEventListener('mouseup', () => {
+                isMouseDown = false;
+            });
+            
+            // Animation loop
+            function animate(time) {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw flame particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const particle = particles[i];
+                    const isAlive = particle.update();
+                    
+                    if (isAlive) {
+                        particle.draw(ctx);
+                    } else {
+                        particles.splice(i, 1);
+                    }
+                }
+                
+                // Update and draw explosion particles
+                for (let i = explosionParticles.length - 1; i >= 0; i--) {
+                    const particle = explosionParticles[i];
+                    const isAlive = particle.update();
+                    
+                    if (isAlive) {
+                        particle.draw(ctx);
+                    } else {
+                        explosionParticles.splice(i, 1);
+                    }
+                }
+                
+                // Animate rainbow cursor if selected
+                animateRainbowCursor(time);
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Start animation
+            animate(0);
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Resize canvas
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        });
+    </script>
+</body>
+</html> 

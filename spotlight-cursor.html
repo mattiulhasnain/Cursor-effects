@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotlight Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+        
+        .spotlight {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Spotlight Cursor Effect</h1>
+        <p>Move your cursor around to see the spotlight effect. This creates an immersive experience where only the area around your cursor is illuminated, and the rest of the page remains in darkness.</p>
+        <p>This effect can be used to create focus on specific parts of your website or to create a more engaging and interactive user experience.</p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            
+            // Create spotlight element
+            const spotlight = document.createElement('div');
+            spotlight.className = 'spotlight';
+            body.appendChild(spotlight);
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Update spotlight and cursor position on mouse move
+            document.addEventListener('mousemove', (e) => {
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
+                
+                // Update spotlight position
+                spotlight.style.left = `${mouseX}px`;
+                spotlight.style.top = `${mouseY}px`;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Change spotlight size on mouse click
+            document.addEventListener('mousedown', () => {
+                spotlight.style.width = '300px';
+                spotlight.style.height = '300px';
+                
+                spotlight.style.background = 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%)';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                spotlight.style.width = '200px';
+                spotlight.style.height = '200px';
+                
+                spotlight.style.background = 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%)';
+            });
+        });
+    </script>
+</body>
+</html> 

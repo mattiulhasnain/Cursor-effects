@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path Drawing Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #1a1a2e;
+            font-family: Arial, sans-serif;
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background-color: #e94560;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #ff6b81;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+            align-items: center;
+        }
+        
+        .color-option {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+        
+        .color-option:hover, .color-option.active {
+            transform: scale(1.2);
+            border-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Path Drawing Cursor Effect</h1>
+        <p>Move your cursor to draw paths. Click to toggle drawing mode. Use the controls below to change colors or clear the canvas.</p>
+    </div>
+    
+    <div class="controls">
+        <button class="btn" id="toggleBtn">Stop Drawing</button>
+        <button class="btn" id="clearBtn">Clear Canvas</button>
+        <div class="color-picker">
+            <div class="color-option active" style="background-color: #e94560;" data-color="#e94560"></div>
+            <div class="color-option" style="background-color: #4facfe;" data-color="#4facfe"></div>
+            <div class="color-option" style="background-color: #43e97b;" data-color="#43e97b"></div>
+            <div class="color-option" style="background-color: #f9d423;" data-color="#f9d423"></div>
+            <div class="color-option" style="background-color: #a742f5;" data-color="#a742f5"></div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Create canvas for drawing
+            const canvas = document.createElement('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            body.appendChild(canvas);
+            
+            const ctx = canvas.getContext('2d');
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 4;
+            
+            // Variables for drawing
+            let isDrawing = true;
+            let lastX = 0;
+            let lastY = 0;
+            let currentColor = '#e94560';
+            let pathPoints = [];
+            let activePath = [];
+            let hue = 0;
+            let direction = true;
+            let rainbow = false;
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            // Handle mouse movements
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                if (isDrawing) {
+                    // Draw to canvas
+                    draw(mouseX, mouseY);
+                    
+                    // Add point to active path
+                    activePath.push({ x: mouseX, y: mouseY, color: getCurrentColor() });
+                } else {
+                    // Reset last position when not drawing
+                    lastX = mouseX;
+                    lastY = mouseY;
+                }
+            });
+            
+            // Toggle drawing with mouse click
+            document.addEventListener('click', (e) => {
+                // Ignore clicks on buttons
+                if (e.target.tagName === 'BUTTON' || e.target.className === 'color-option') {
+                    return;
+                }
+                
+                isDrawing = !isDrawing;
+                cursor.style.borderColor = isDrawing ? currentColor : 'white';
+                
+                // If we just stopped drawing, save the current path
+                if (!isDrawing && activePath.length > 0) {
+                    pathPoints.push([...activePath]);
+                    activePath = [];
+                }
+                
+                // Update button text
+                document.getElementById('toggleBtn').textContent = isDrawing ? 'Stop Drawing' : 'Start Drawing';
+            });
+            
+            // Handle toggle button
+            document.getElementById('toggleBtn').addEventListener('click', () => {
+                isDrawing = !isDrawing;
+                cursor.style.borderColor = isDrawing ? currentColor : 'white';
+                
+                // If we just stopped drawing, save the current path
+                if (!isDrawing && activePath.length > 0) {
+                    pathPoints.push([...activePath]);
+                    activePath = [];
+                }
+                
+                // Update button text
+                document.getElementById('toggleBtn').textContent = isDrawing ? 'Stop Drawing' : 'Start Drawing';
+            });
+            
+            // Handle clear button
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pathPoints = [];
+                activePath = [];
+            });
+            
+            // Handle color options
+            const colorOptions = document.querySelectorAll('.color-option');
+            
+            colorOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    // Deactivate all options
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    
+                    // Activate clicked option
+                    option.classList.add('active');
+                    
+                    // Set current color
+                    currentColor = option.getAttribute('data-color');
+                    cursor.style.borderColor = isDrawing ? currentColor : 'white';
+                    
+                    // Check for special color modes
+                    rainbow = false;
+                    if (currentColor === 'rainbow') {
+                        rainbow = true;
+                    }
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Save current drawing
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Resize canvas
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Restore context properties
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.lineWidth = 4;
+                
+                // Restore drawing
+                ctx.putImageData(imageData, 0, 0);
+            });
+            
+            // Drawing function
+            function draw(x, y) {
+                ctx.strokeStyle = getCurrentColor();
+                
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                lastX = x;
+                lastY = y;
+            }
+            
+            // Get current color (handles rainbow mode)
+            function getCurrentColor() {
+                if (rainbow) {
+                    hue = direction ? hue + 1 : hue - 1;
+                    
+                    if (hue >= 360) {
+                        hue = 359;
+                        direction = false;
+                    }
+                    
+                    if (hue <= 0) {
+                        hue = 1;
+                        direction = true;
+                    }
+                    
+                    return `hsl(${hue}, 100%, 50%)`;
+                }
+                
+                return currentColor;
+            }
+            
+            // Add rainbow color option
+            const colorPicker = document.querySelector('.color-picker');
+            const rainbowOption = document.createElement('div');
+            rainbowOption.className = 'color-option';
+            rainbowOption.style.background = 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)';
+            rainbowOption.setAttribute('data-color', 'rainbow');
+            colorPicker.appendChild(rainbowOption);
+            
+            // Create animation for path replay
+            let animationId;
+            let pathIndex = 0;
+            let pointIndex = 0;
+            
+            function animatePaths() {
+                if (pathIndex < pathPoints.length) {
+                    const path = pathPoints[pathIndex];
+                    
+                    if (pointIndex < path.length - 1) {
+                        const point = path[pointIndex];
+                        const nextPoint = path[pointIndex + 1];
+                        
+                        ctx.strokeStyle = point.color;
+                        ctx.beginPath();
+                        ctx.moveTo(point.x, point.y);
+                        ctx.lineTo(nextPoint.x, nextPoint.y);
+                        ctx.stroke();
+                        
+                        pointIndex++;
+                    } else {
+                        pathIndex++;
+                        pointIndex = 0;
+                    }
+                    
+                    animationId = requestAnimationFrame(animatePaths);
+                } else {
+                    pathIndex = 0;
+                }
+            }
+            
+            // Special key commands
+            document.addEventListener('keydown', (e) => {
+                // Press 'R' to replay all paths
+                if (e.key === 'r' || e.key === 'R') {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    pathIndex = 0;
+                    pointIndex = 0;
+                    
+                    cancelAnimationFrame(animationId);
+                    animationId = requestAnimationFrame(animatePaths);
+                }
+                
+                // Press 'S' to save the drawing
+                if (e.key === 's' || e.key === 'S') {
+                    const link = document.createElement('a');
+                    link.download = 'cursor-drawing.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                }
+            });
+            
+            // Add thickness control
+            const thicknessControl = document.createElement('input');
+            thicknessControl.type = 'range';
+            thicknessControl.min = '1';
+            thicknessControl.max = '20';
+            thicknessControl.value = '4';
+            thicknessControl.style.margin = '0 10px';
+            document.querySelector('.controls').appendChild(thicknessControl);
+            
+            thicknessControl.addEventListener('input', () => {
+                ctx.lineWidth = thicknessControl.value;
+                cursor.style.width = `${thicknessControl.value * 2}px`;
+                cursor.style.height = `${thicknessControl.value * 2}px`;
+            });
+            
+            // Initialize cursor color
+            cursor.style.borderColor = isDrawing ? currentColor : 'white';
+        });
+    </script>
+</body>
+</html> 

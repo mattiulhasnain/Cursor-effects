@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnetic Field Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #151525;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(100, 150, 255, 0.8);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(30, 40, 80, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+        }
+        
+        select {
+            padding: 5px;
+            background-color: rgba(40, 60, 120, 0.5);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button {
+            background-color: rgba(40, 60, 120, 0.5);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        button:hover {
+            background-color: rgba(60, 80, 150, 0.6);
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease;
+        }
+        
+        /* North pole cursor */
+        .cursor.north {
+            background: radial-gradient(circle, rgba(255, 100, 100, 0.3) 0%, transparent 70%);
+            border: 2px solid rgba(255, 100, 100, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 100, 100, 0.5);
+        }
+        
+        .cursor.north::before {
+            content: "N";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 100, 100, 1);
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        /* South pole cursor */
+        .cursor.south {
+            background: radial-gradient(circle, rgba(100, 100, 255, 0.3) 0%, transparent 70%);
+            border: 2px solid rgba(100, 100, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(100, 100, 255, 0.5);
+        }
+        
+        .cursor.south::before {
+            content: "S";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(100, 100, 255, 1);
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        /* Second pole */
+        .second-pole {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .second-pole.visible {
+            opacity: 1;
+        }
+        
+        .second-pole.north {
+            background: radial-gradient(circle, rgba(255, 100, 100, 0.3) 0%, transparent 70%);
+            border: 2px solid rgba(255, 100, 100, 0.8);
+            box-shadow: 0 0 15px rgba(255, 100, 100, 0.5);
+        }
+        
+        .second-pole.north::before {
+            content: "N";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 100, 100, 1);
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .second-pole.south {
+            background: radial-gradient(circle, rgba(100, 100, 255, 0.3) 0%, transparent 70%);
+            border: 2px solid rgba(100, 100, 255, 0.8);
+            box-shadow: 0 0 15px rgba(100, 100, 255, 0.5);
+        }
+        
+        .second-pole.south::before {
+            content: "S";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(100, 100, 255, 1);
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Magnetic Field Cursor Effect</h1>
+        <p>Move your cursor to visualize magnetic field lines. Click to reverse polarity.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="particle-count">Particle Count</label>
+                <input type="range" id="particle-count" min="100" max="2000" step="100" value="800">
+            </div>
+            
+            <div class="control-group">
+                <label for="field-strength">Field Strength</label>
+                <input type="range" id="field-strength" min="50" max="500" step="10" value="150">
+            </div>
+            
+            <div class="control-group">
+                <label for="particle-size">Particle Size</label>
+                <input type="range" id="particle-size" min="1" max="5" step="0.5" value="2">
+            </div>
+            
+            <div class="control-group">
+                <label for="field-color">Field Color</label>
+                <select id="field-color">
+                    <option value="magnetic">Magnetic (Red/Blue)</option>
+                    <option value="electric">Electric (Yellow/Cyan)</option>
+                    <option value="plasma">Plasma (Purple/Green)</option>
+                    <option value="monochrome">Monochrome</option>
+                </select>
+            </div>
+            
+            <button id="second-pole-btn">Toggle Second Pole</button>
+        </div>
+    </div>
+    
+    <!-- Custom cursor -->
+    <div class="cursor north"></div>
+    <div class="second-pole south"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Get cursor element
+            const cursor = document.querySelector('.cursor');
+            const secondPole = document.querySelector('.second-pole');
+            
+            // Controls
+            const particleCountSlider = document.getElementById('particle-count');
+            const fieldStrengthSlider = document.getElementById('field-strength');
+            const particleSizeSlider = document.getElementById('particle-size');
+            const fieldColorSelect = document.getElementById('field-color');
+            const secondPoleBtn = document.getElementById('second-pole-btn');
+            
+            // Config variables
+            let particleCount = parseInt(particleCountSlider.value);
+            let fieldStrength = parseInt(fieldStrengthSlider.value);
+            let particleSize = parseFloat(particleSizeSlider.value);
+            let fieldColor = fieldColorSelect.value;
+            let secondPoleVisible = false;
+            let cursorPolarity = 'north'; // Start with North pole
+            
+            // Particle collection
+            let particles = [];
+            
+            // Mouse position
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            
+            // Second pole position (fixed at first)
+            let secondPoleX = window.innerWidth * 0.75;
+            let secondPoleY = window.innerHeight * 0.5;
+            
+            // Event listeners for controls
+            particleCountSlider.addEventListener('input', () => {
+                const newCount = parseInt(particleCountSlider.value);
+                if (newCount > particleCount) {
+                    // Add more particles
+                    for (let i = 0; i < newCount - particleCount; i++) {
+                        createParticle();
+                    }
+                } else {
+                    // Remove particles
+                    particles = particles.slice(0, newCount);
+                }
+                particleCount = newCount;
+            });
+            
+            fieldStrengthSlider.addEventListener('input', () => {
+                fieldStrength = parseInt(fieldStrengthSlider.value);
+            });
+            
+            particleSizeSlider.addEventListener('input', () => {
+                particleSize = parseFloat(particleSizeSlider.value);
+            });
+            
+            fieldColorSelect.addEventListener('change', () => {
+                fieldColor = fieldColorSelect.value;
+            });
+            
+            secondPoleBtn.addEventListener('click', () => {
+                secondPoleVisible = !secondPoleVisible;
+                secondPole.classList.toggle('visible', secondPoleVisible);
+                
+                // If just activated, position it randomly
+                if (secondPoleVisible) {
+                    secondPoleX = Math.random() * canvas.width;
+                    secondPoleY = Math.random() * canvas.height;
+                    secondPole.style.left = `${secondPoleX}px`;
+                    secondPole.style.top = `${secondPoleY}px`;
+                }
+            });
+            
+            // Track mouse position and update cursor
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Click to change polarity
+            document.addEventListener('mousedown', () => {
+                cursorPolarity = cursorPolarity === 'north' ? 'south' : 'north';
+                cursor.className = `cursor ${cursorPolarity}`;
+            });
+            
+            // Occasionally update second pole position
+            setInterval(() => {
+                if (secondPoleVisible && Math.random() < 0.1) {
+                    // Sometimes change second pole polarity
+                    if (Math.random() < 0.2) {
+                        const newPolarity = secondPole.classList.contains('north') ? 'south' : 'north';
+                        secondPole.className = `second-pole visible ${newPolarity}`;
+                    }
+                    
+                    // Occasionally move the second pole
+                    if (Math.random() < 0.5) {
+                        // Either move randomly or move in a way that creates an interesting field
+                        if (Math.random() < 0.5) {
+                            secondPoleX = Math.random() * canvas.width;
+                            secondPoleY = Math.random() * canvas.height;
+                        } else {
+                            // Move opposite to the cursor to create tension
+                            const dx = mouseX - canvas.width / 2;
+                            const dy = mouseY - canvas.height / 2;
+                            secondPoleX = canvas.width / 2 - dx;
+                            secondPoleY = canvas.height / 2 - dy;
+                        }
+                        
+                        // Move with animation
+                        secondPole.style.transition = 'left 1s ease, top 1s ease';
+                        secondPole.style.left = `${secondPoleX}px`;
+                        secondPole.style.top = `${secondPoleY}px`;
+                    }
+                }
+            }, 3000);
+            
+            // Particle class
+            class Particle {
+                constructor() {
+                    this.reset();
+                    this.size = Math.random() * particleSize + 0.5;
+                    this.initialSize = this.size;
+                    // Spread particles across the canvas initially
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = 0;
+                    this.vy = 0;
+                    this.speed = 0;
+                    this.fieldIntensity = 0;
+                    this.color = this.getColor(0);
+                }
+                
+                reset() {
+                    // Return to a random position if it goes off screen
+                    if (Math.random() < 0.5) {
+                        this.x = 0;
+                        this.y = Math.random() * canvas.height;
+                    } else {
+                        this.x = Math.random() * canvas.width;
+                        this.y = 0;
+                    }
+                    this.ttl = 500 + Math.random() * 500; // Time to live
+                }
+                
+                getColor(intensity) {
+                    // Intensity goes from -1 (south) to 1 (north)
+                    const absIntensity = Math.abs(intensity);
+                    const alpha = Math.min(0.8, 0.2 + absIntensity * 0.6);
+                    
+                    switch (fieldColor) {
+                        case 'magnetic':
+                            if (intensity > 0) {
+                                // North pole - Red
+                                return `rgba(255, ${100 - absIntensity * 50}, ${100 - absIntensity * 50}, ${alpha})`;
+                            } else {
+                                // South pole - Blue
+                                return `rgba(${100 - absIntensity * 50}, ${100 - absIntensity * 50}, 255, ${alpha})`;
+                            }
+                        case 'electric':
+                            if (intensity > 0) {
+                                // Positive - Yellow
+                                return `rgba(255, 255, ${50 + absIntensity * 100}, ${alpha})`;
+                            } else {
+                                // Negative - Cyan
+                                return `rgba(${50 + absIntensity * 100}, 255, 255, ${alpha})`;
+                            }
+                        case 'plasma':
+                            if (intensity > 0) {
+                                // Hot plasma - Purple
+                                return `rgba(${150 + absIntensity * 105}, ${50 + absIntensity * 50}, 255, ${alpha})`;
+                            } else {
+                                // Cool plasma - Green
+                                return `rgba(${50 + absIntensity * 50}, 255, ${150 + absIntensity * 105}, ${alpha})`;
+                            }
+                        case 'monochrome':
+                            const brightness = 150 + absIntensity * 105;
+                            return `rgba(${brightness}, ${brightness}, ${brightness}, ${alpha})`;
+                        default:
+                            return `rgba(255, 255, 255, ${alpha})`;
+                    }
+                }
+                
+                update() {
+                    // Calculate field effect from the cursor
+                    const dx1 = this.x - mouseX;
+                    const dy1 = this.y - mouseY;
+                    const distSq1 = dx1 * dx1 + dy1 * dy1;
+                    const dist1 = Math.sqrt(distSq1);
+                    
+                    // Field direction and strength
+                    let fieldX = 0;
+                    let fieldY = 0;
+                    let fieldTotal = 0;
+                    let fieldDirection = 0;
+                    
+                    // Prevent division by zero
+                    if (dist1 > 1) {
+                        // Field strength decreases with square of distance
+                        const strength1 = fieldStrength / distSq1;
+                        // Direction depends on polarity
+                        const polarity1 = cursorPolarity === 'north' ? 1 : -1;
+                        
+                        fieldX += dx1 / dist1 * strength1 * polarity1;
+                        fieldY += dy1 / dist1 * strength1 * polarity1;
+                        fieldTotal += strength1 * polarity1;
+                    }
+                    
+                    // Second pole effect
+                    if (secondPoleVisible) {
+                        const dx2 = this.x - secondPoleX;
+                        const dy2 = this.y - secondPoleY;
+                        const distSq2 = dx2 * dx2 + dy2 * dy2;
+                        const dist2 = Math.sqrt(distSq2);
+                        
+                        if (dist2 > 1) {
+                            const strength2 = fieldStrength / distSq2;
+                            const polarity2 = secondPole.classList.contains('north') ? 1 : -1;
+                            
+                            fieldX += dx2 / dist2 * strength2 * polarity2;
+                            fieldY += dy2 / dist2 * strength2 * polarity2;
+                            fieldTotal += strength2 * polarity2;
+                        }
+                    }
+                    
+                    // Normalize the field intensity for color
+                    this.fieldIntensity = fieldTotal * 0.01;
+                    
+                    // Apply field effect
+                    this.vx = fieldX;
+                    this.vy = fieldY;
+                    
+                    // Update position
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Update speed for size and alpha
+                    this.speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                    
+                    // Dynamic size based on speed
+                    this.size = this.initialSize * (1 + this.speed * 0.05);
+                    
+                    // Update color based on field
+                    this.color = this.getColor(this.fieldIntensity);
+                    
+                    // Decrease TTL
+                    this.ttl--;
+                    
+                    // Reset if out of bounds or TTL expired
+                    if (this.x < -100 || this.x > canvas.width + 100 || 
+                        this.y < -100 || this.y > canvas.height + 100 || 
+                        this.ttl <= 0) {
+                        this.reset();
+                        return false;
+                    }
+                    
+                    return true;
+                }
+                
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw a line in the direction of motion if moving fast enough
+                    if (this.speed > 2) {
+                        const lineLength = this.speed * 2;
+                        ctx.strokeStyle = this.color;
+                        ctx.lineWidth = this.size * 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(this.x, this.y);
+                        ctx.lineTo(
+                            this.x - (this.vx / this.speed) * lineLength,
+                            this.y - (this.vy / this.speed) * lineLength
+                        );
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Create initial particles
+            function createParticle() {
+                particles.push(new Particle());
+            }
+            
+            for (let i = 0; i < particleCount; i++) {
+                createParticle();
+            }
+            
+            // Animation loop
+            function animate() {
+                // Clear canvas with fade effect
+                ctx.fillStyle = 'rgba(21, 21, 37, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update();
+                    particles[i].draw();
+                }
+                
+                // Draw magnetic field lines (optional)
+                // This would be more complex and performance intensive
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Initialize cursor position
+            cursor.style.left = `${mouseX}px`;
+            cursor.style.top = `${mouseY}px`;
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

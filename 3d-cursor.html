@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Transform Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #121212;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+            perspective: 1000px;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #6e45e2, #88d3ce);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.8);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            mix-blend-mode: difference;
+        }
+        
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            perspective: 1000px;
+            z-index: 1;
+        }
+        
+        .cube {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            transform-style: preserve-3d;
+            transition: transform 0.2s ease-out;
+        }
+        
+        .cube-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            backface-visibility: visible;
+            transition: background-color 0.3s;
+        }
+        
+        .cube-face:nth-child(1) { transform: translateZ(20px); }
+        .cube-face:nth-child(2) { transform: rotateY(180deg) translateZ(20px); }
+        .cube-face:nth-child(3) { transform: rotateY(90deg) translateZ(20px); }
+        .cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(20px); }
+        .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(20px); }
+        .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(20px); }
+    </style>
+</head>
+<body>
+    <div class="scene"></div>
+    
+    <div class="content">
+        <h1>3D Transform Cursor Effect</h1>
+        <p>Move your cursor around to see 3D cubes rotate and transform based on cursor position.</p>
+        <p>The cubes near your cursor will rotate to face your cursor, creating a dynamic 3D effect that adds depth to the page.</p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const scene = document.querySelector('.scene');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'cursor';
+            body.appendChild(cursor);
+            
+            // Mouse position with easing
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let cursorX = mouseX;
+            let cursorY = mouseY;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+            
+            // Create cubes grid
+            const gridSize = 15;
+            const spacing = Math.min(window.innerWidth, window.innerHeight) / gridSize;
+            const cubes = [];
+            const rows = Math.ceil(window.innerHeight / spacing) + 1;
+            const cols = Math.ceil(window.innerWidth / spacing) + 1;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    // Create cube container
+                    const cube = document.createElement('div');
+                    cube.className = 'cube';
+                    
+                    // Position cube
+                    const x = col * spacing;
+                    const y = row * spacing;
+                    cube.style.left = `${x}px`;
+                    cube.style.top = `${y}px`;
+                    
+                    // Create cube faces
+                    for (let i = 0; i < 6; i++) {
+                        const face = document.createElement('div');
+                        face.className = 'cube-face';
+                        
+                        // Set gradient color for each face
+                        const hue = (col + row) * 10 % 360;
+                        face.style.backgroundColor = `hsla(${hue}, 70%, 50%, 0.1)`;
+                        face.style.borderColor = `hsla(${hue}, 70%, 60%, 0.3)`;
+                        
+                        cube.appendChild(face);
+                    }
+                    
+                    scene.appendChild(cube);
+                    
+                    // Store cube data for animation
+                    cubes.push({
+                        element: cube,
+                        x: x,
+                        y: y,
+                        rotationX: 0,
+                        rotationY: 0,
+                        scale: 1
+                    });
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                // Update cursor with easing
+                cursorX += (mouseX - cursorX) * 0.1;
+                cursorY += (mouseY - cursorY) * 0.1;
+                
+                cursor.style.left = `${cursorX}px`;
+                cursor.style.top = `${cursorY}px`;
+                
+                // Update cubes
+                cubes.forEach(cube => {
+                    const dx = cursorX - cube.x;
+                    const dy = cursorY - cube.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const maxDistance = 300;
+                    
+                    if (distance < maxDistance) {
+                        // Calculate influence based on distance (closer = stronger)
+                        const influence = 1 - distance / maxDistance;
+                        
+                        // Calculate rotation based on position relative to cursor
+                        const targetRotationX = dy * 0.1 * influence;
+                        const targetRotationY = -dx * 0.1 * influence;
+                        
+                        // Apply easing to rotation
+                        cube.rotationX += (targetRotationX - cube.rotationX) * 0.1;
+                        cube.rotationY += (targetRotationY - cube.rotationY) * 0.1;
+                        
+                        // Calculate scale (closer = larger)
+                        const targetScale = 1 + influence * 0.5;
+                        cube.scale += (targetScale - cube.scale) * 0.1;
+                        
+                        // Apply transformations
+                        cube.element.style.transform = `
+                            rotateX(${cube.rotationX}deg)
+                            rotateY(${cube.rotationY}deg)
+                            scale(${cube.scale})
+                        `;
+                        
+                        // Highlight cube faces
+                        const faces = cube.element.querySelectorAll('.cube-face');
+                        faces.forEach(face => {
+                            face.style.backgroundColor = `hsla(${(Date.now() / 50) % 360}, 70%, 50%, ${0.1 + influence * 0.2})`;
+                        });
+                    } else {
+                        // Reset cube if out of range
+                        cube.rotationX += (0 - cube.rotationX) * 0.05;
+                        cube.rotationY += (0 - cube.rotationY) * 0.05;
+                        cube.scale += (1 - cube.scale) * 0.05;
+                        
+                        cube.element.style.transform = `
+                            rotateX(${cube.rotationX}deg)
+                            rotateY(${cube.rotationY}deg)
+                            scale(${cube.scale})
+                        `;
+                    }
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle click event
+            document.addEventListener('click', () => {
+                // Expand cursor temporarily
+                cursor.style.transform = 'translate(-50%, -50%) scale(2)';
+                setTimeout(() => {
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 300);
+                
+                // Apply pulse effect to cubes
+                cubes.forEach(cube => {
+                    const dx = cursorX - cube.x;
+                    const dy = cursorY - cube.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const maxDistance = 400;
+                    
+                    if (distance < maxDistance) {
+                        // Calculate delay based on distance
+                        const delay = distance * 1.5;
+                        
+                        // Apply pulse animation
+                        setTimeout(() => {
+                            cube.element.style.transform = `
+                                rotateX(${cube.rotationX + 360}deg)
+                                rotateY(${cube.rotationY + 360}deg)
+                                scale(${cube.scale * 1.5})
+                            `;
+                            
+                            setTimeout(() => {
+                                cube.element.style.transition = 'transform 1s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                                cube.element.style.transform = `
+                                    rotateX(${cube.rotationX}deg)
+                                    rotateY(${cube.rotationY}deg)
+                                    scale(${cube.scale})
+                                `;
+                                
+                                // Reset transition after animation
+                                setTimeout(() => {
+                                    cube.element.style.transition = 'transform 0.2s ease-out';
+                                }, 1000);
+                            }, 300);
+                        }, delay);
+                    }
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                const newSpacing = Math.min(window.innerWidth, window.innerHeight) / gridSize;
+                
+                // Update cube positions
+                cubes.forEach((cube, index) => {
+                    const row = Math.floor(index / cols);
+                    const col = index % cols;
+                    
+                    const x = col * newSpacing;
+                    const y = row * newSpacing;
+                    
+                    cube.x = x;
+                    cube.y = y;
+                    cube.element.style.left = `${x}px`;
+                    cube.element.style.top = `${y}px`;
+                });
+            });
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

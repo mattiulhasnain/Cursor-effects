@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaleidoscope Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #000;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #ff0080, #ff8c00, #ffed00, #00ff80, #00cfff, #cc00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #f0f0f0;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 10px;
+        }
+        
+        .control-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+        
+        input[type="range"] {
+            width: 100px;
+            background: #333;
+            height: 5px;
+            border-radius: 5px;
+            appearance: none;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+        }
+        
+        button {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Kaleidoscope Cursor</h1>
+        <p>Move your cursor to create beautiful symmetrical patterns. Click to change the color palette.</p>
+    </div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <div class="control-label">Segments</div>
+            <input type="range" id="segments-slider" min="3" max="16" value="6" step="1">
+        </div>
+        
+        <div class="control-group">
+            <div class="control-label">Size</div>
+            <input type="range" id="size-slider" min="10" max="100" value="40" step="1">
+        </div>
+        
+        <div class="control-group">
+            <div class="control-label">Fade Speed</div>
+            <input type="range" id="fade-slider" min="0.01" max="0.2" value="0.05" step="0.01">
+        </div>
+        
+        <button id="clear-btn">Clear Canvas</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Controls
+            const segmentsSlider = document.getElementById('segments-slider');
+            const sizeSlider = document.getElementById('size-slider');
+            const fadeSlider = document.getElementById('fade-slider');
+            const clearBtn = document.getElementById('clear-btn');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Set canvas size
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Center point (origin for the kaleidoscope)
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Mouse position
+            let mouseX = centerX;
+            let mouseY = centerY;
+            let prevMouseX = mouseX;
+            let prevMouseY = mouseY;
+            
+            // Kaleidoscope settings
+            let segments = parseInt(segmentsSlider.value);
+            let particleSize = parseInt(sizeSlider.value);
+            let fadeSpeed = parseFloat(fadeSlider.value);
+            
+            // Color palettes
+            const palettes = [
+                ['#FF5722', '#FFC107', '#8BC34A', '#00BCD4', '#3F51B5'],  // Fire
+                ['#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3'],  // Berry
+                ['#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#F44336'],  // Sunset
+                ['#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107'],  // Nature
+                ['#2196F3', '#03A9F4', '#00BCD4', '#009688', '#4CAF50']   // Ocean
+            ];
+            
+            let currentPalette = 0;
+            
+            // Particles array for the kaleidoscope effect
+            const particles = [];
+            const maxParticles = 1000;
+            
+            // Initialize transparency for fading effect
+            let canvasAlpha = 1.0;
+            
+            // Last cursor trail point for smoother drawing
+            let lastTrailPoint = { x: centerX, y: centerY };
+            
+            // Class to represent a particle in the kaleidoscope
+            class KaleidoscopeParticle {
+                constructor(x, y, size, color) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = size;
+                    this.color = color;
+                    this.alpha = 1;
+                    this.fadeSpeed = 0.01 + Math.random() * 0.02;
+                }
+                
+                update() {
+                    this.alpha -= this.fadeSpeed;
+                    
+                    // Return true if the particle is still visible
+                    return this.alpha > 0;
+                }
+                
+                draw(ctx) {
+                    ctx.globalAlpha = this.alpha;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            }
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Create particles along the cursor path for smoother trail
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 5) {
+                    // Number of interpolation points based on distance
+                    const steps = Math.ceil(distance / 5);
+                    
+                    for (let i = 0; i < steps; i++) {
+                        const ratio = i / steps;
+                        const x = prevMouseX + dx * ratio;
+                        const y = prevMouseY + dy * ratio;
+                        
+                        createKaleidoscopePoint(x, y);
+                    }
+                } else {
+                    createKaleidoscopePoint(mouseX, mouseY);
+                }
+            });
+            
+            // Handle click - change color palette
+            document.addEventListener('click', () => {
+                currentPalette = (currentPalette + 1) % palettes.length;
+                
+                // Create a burst effect
+                createBurst(mouseX, mouseY);
+            });
+            
+            // Update segments count
+            segmentsSlider.addEventListener('input', () => {
+                segments = parseInt(segmentsSlider.value);
+            });
+            
+            // Update particle size
+            sizeSlider.addEventListener('input', () => {
+                particleSize = parseInt(sizeSlider.value);
+            });
+            
+            // Update fade speed
+            fadeSlider.addEventListener('input', () => {
+                fadeSpeed = parseFloat(fadeSlider.value);
+            });
+            
+            // Clear canvas button
+            clearBtn.addEventListener('click', () => {
+                particles.length = 0;
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            });
+            
+            // Create burst effect
+            function createBurst(x, y) {
+                const burstCount = 50;
+                const palette = palettes[currentPalette];
+                
+                for (let i = 0; i < burstCount; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 20 + Math.random() * 50;
+                    
+                    const burstX = x + Math.cos(angle) * distance;
+                    const burstY = y + Math.sin(angle) * distance;
+                    
+                    createKaleidoscopePoint(burstX, burstY, true);
+                }
+            }
+            
+            // Create a point and its reflections in the kaleidoscope
+            function createKaleidoscopePoint(x, y, isBurst = false) {
+                // Calculate vector from center to point
+                const vectorX = x - centerX;
+                const vectorY = y - centerY;
+                
+                // Calculate distance from center
+                const distance = Math.sqrt(vectorX * vectorX + vectorY * vectorY);
+                
+                // Calculate angle from center
+                let angle = Math.atan2(vectorY, vectorX);
+                if (angle < 0) angle += Math.PI * 2;
+                
+                // Get random color from current palette
+                const palette = palettes[currentPalette];
+                const colorIndex = Math.floor(Math.random() * palette.length);
+                const color = palette[colorIndex];
+                
+                // Size based on slider or distance if it's a burst
+                const size = isBurst ? 
+                    particleSize * (0.5 + Math.random() * 0.5) : 
+                    particleSize * (0.8 + Math.random() * 0.4);
+                
+                // Create a particle at mouse position
+                particles.push(new KaleidoscopeParticle(x, y, size * 0.5, color));
+                
+                // Create mirrored particles based on number of segments
+                const segmentAngle = (Math.PI * 2) / segments;
+                
+                for (let i = 0; i < segments; i++) {
+                    // Rotate the vector by segment angle
+                    const rotationAngle = segmentAngle * i;
+                    const rotatedVectorX = distance * Math.cos(angle + rotationAngle);
+                    const rotatedVectorY = distance * Math.sin(angle + rotationAngle);
+                    
+                    // Create particle at rotated position
+                    particles.push(
+                        new KaleidoscopeParticle(
+                            centerX + rotatedVectorX,
+                            centerY + rotatedVectorY,
+                            size,
+                            color
+                        )
+                    );
+                    
+                    // Create mirrored particle (reflection)
+                    particles.push(
+                        new KaleidoscopeParticle(
+                            centerX - rotatedVectorX,
+                            centerY - rotatedVectorY,
+                            size,
+                            color
+                        )
+                    );
+                }
+                
+                // Limit total particles
+                while (particles.length > maxParticles) {
+                    particles.shift();
+                }
+            }
+            
+            // Update function
+            function update() {
+                // Update all particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const alive = particles[i].update();
+                    
+                    // Remove dead particles
+                    if (!alive) {
+                        particles.splice(i, 1);
+                    }
+                }
+            }
+            
+            // Drawing function
+            function draw() {
+                // Clear canvas with alpha for fade effect
+                ctx.fillStyle = `rgba(0, 0, 0, ${fadeSpeed})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw all particles
+                particles.forEach(particle => {
+                    particle.draw(ctx);
+                });
+                
+                // Draw center point
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw segment lines (subtle)
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
+                
+                for (let i = 0; i < segments; i++) {
+                    const angle = (i / segments) * Math.PI * 2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.lineTo(
+                        centerX + Math.cos(angle) * canvas.width,
+                        centerY + Math.sin(angle) * canvas.width
+                    );
+                    ctx.stroke();
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                update();
+                draw();
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Update canvas size
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Update center point
+                centerX = canvas.width / 2;
+                centerY = canvas.height / 2;
+            });
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

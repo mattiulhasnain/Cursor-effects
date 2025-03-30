@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Formation Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, #1976D2, #64B5F6);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #f5f5f5;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+        
+        .cloud-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+        
+        .cloud {
+            position: absolute;
+            pointer-events: none;
+            filter: blur(1px);
+        }
+        
+        .cloud-particle {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .sun {
+            position: fixed;
+            top: 50px;
+            right: 100px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at center, rgba(255, 245, 150, 0.8), rgba(255, 215, 0, 0.4));
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
+            z-index: 2;
+        }
+        
+        .background-clouds {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .background-cloud {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(5px);
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .return-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Cloud Formation Cursor Effect</h1>
+        <p>Move your cursor to generate fluffy clouds that drift across the sky. Watch as they form, expand, and evolve with your movements.</p>
+    </div>
+    
+    <div class="background-clouds"></div>
+    <div class="cloud-container"></div>
+    <div class="sun"></div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const cursor = document.querySelector('.cursor');
+            const cloudContainer = document.querySelector('.cloud-container');
+            const backgroundClouds = document.querySelector('.background-clouds');
+            
+            // Create background clouds
+            for (let i = 0; i < 5; i++) {
+                createBackgroundCloud();
+            }
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            
+            // Cloud settings
+            const maxClouds = 20;
+            const clouds = [];
+            const cloudParticleCount = 8; // Base particles per cloud
+            let cloudInterval = 500; // ms between cloud formations
+            let lastCloudTime = 0;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Create a background cloud (large, slow-moving)
+            function createBackgroundCloud() {
+                const cloudElement = document.createElement('div');
+                cloudElement.className = 'background-cloud';
+                
+                // Random position, mostly in upper part of screen
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight * 0.7;
+                
+                // Random size
+                const size = 100 + Math.random() * 200;
+                
+                cloudElement.style.width = `${size}px`;
+                cloudElement.style.height = `${size * 0.6}px`;
+                cloudElement.style.left = `${x}px`;
+                cloudElement.style.top = `${y}px`;
+                cloudElement.style.opacity = 0.3 + Math.random() * 0.4;
+                
+                backgroundClouds.appendChild(cloudElement);
+                
+                // Create background cloud object
+                const cloud = {
+                    element: cloudElement,
+                    x: x,
+                    y: y,
+                    size: size,
+                    speed: 0.2 + Math.random() * 0.3,
+                    removed: false
+                };
+                
+                // Start animation
+                animateBackgroundCloud(cloud);
+                
+                return cloud;
+            }
+            
+            // Animate background cloud
+            function animateBackgroundCloud(cloud) {
+                cloud.x += cloud.speed;
+                
+                // Reset when off screen
+                if (cloud.x > window.innerWidth + cloud.size) {
+                    cloud.x = -cloud.size;
+                    cloud.y = Math.random() * window.innerHeight * 0.7;
+                }
+                
+                cloud.element.style.left = `${cloud.x}px`;
+                
+                if (!cloud.removed) {
+                    requestAnimationFrame(() => animateBackgroundCloud(cloud));
+                }
+            }
+            
+            // Create a cloud at cursor position
+            function createCloud(x, y) {
+                if (clouds.length >= maxClouds) {
+                    // Remove oldest cloud if at max
+                    const oldestCloud = clouds.shift();
+                    if (oldestCloud.element && oldestCloud.element.parentNode) {
+                        oldestCloud.element.parentNode.removeChild(oldestCloud.element);
+                    }
+                }
+                
+                // Create cloud container
+                const cloudElement = document.createElement('div');
+                cloudElement.className = 'cloud';
+                cloudContainer.appendChild(cloudElement);
+                
+                // Random cloud parameters
+                const cloudSize = 40 + Math.random() * 30;
+                const particleCount = cloudParticleCount + Math.floor(Math.random() * 5);
+                const speedX = (Math.random() * 0.8 - 0.4); // Random horizontal drift
+                const speedY = -0.1 - Math.random() * 0.2; // Slight upward drift
+                const expandSpeed = 0.2 + Math.random() * 0.3;
+                const maxExpansion = 1.5 + Math.random() * 0.5;
+                
+                // Create cloud object
+                const cloud = {
+                    element: cloudElement,
+                    x: x,
+                    y: y,
+                    particles: [],
+                    age: 0,
+                    lifespan: 5000 + Math.random() * 5000,
+                    size: cloudSize,
+                    speedX: speedX,
+                    speedY: speedY,
+                    expandSpeed: expandSpeed,
+                    maxExpansion: maxExpansion,
+                    expansionFactor: 1,
+                    expansionDirection: 1, // 1 = expanding, -1 = contracting
+                    removed: false
+                };
+                
+                cloudElement.style.left = `${x}px`;
+                cloudElement.style.top = `${y}px`;
+                
+                // Create cloud particles
+                for (let i = 0; i < particleCount; i++) {
+                    createCloudParticle(cloud);
+                }
+                
+                clouds.push(cloud);
+                return cloud;
+            }
+            
+            // Create a particle within a cloud
+            function createCloudParticle(cloud) {
+                const particleElement = document.createElement('div');
+                particleElement.className = 'cloud-particle';
+                
+                // Random position within cloud bounds
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * cloud.size * 0.5;
+                const offsetX = Math.cos(angle) * distance;
+                const offsetY = Math.sin(angle) * distance;
+                
+                // Particle size and position
+                const size = cloud.size * (0.4 + Math.random() * 0.6);
+                
+                particleElement.style.width = `${size}px`;
+                particleElement.style.height = `${size}px`;
+                particleElement.style.left = `${offsetX}px`;
+                particleElement.style.top = `${offsetY}px`;
+                
+                cloud.element.appendChild(particleElement);
+                
+                // Add particle to cloud
+                cloud.particles.push({
+                    element: particleElement,
+                    offsetX: offsetX,
+                    offsetY: offsetY,
+                    size: size,
+                    originalSize: size,
+                    wobbleSpeed: 0.01 + Math.random() * 0.02,
+                    wobbleOffset: Math.random() * Math.PI * 2,
+                    wobbleAmount: 1 + Math.random() * 2
+                });
+            }
+            
+            // Update function for animation
+            function update() {
+                const currentTime = Date.now();
+                
+                // Create new clouds at intervals when mouse moves
+                const movementDistance = Math.sqrt(
+                    Math.pow(mouseX - prevMouseX, 2) + 
+                    Math.pow(mouseY - prevMouseY, 2)
+                );
+                
+                if (currentTime - lastCloudTime > cloudInterval && movementDistance > 5) {
+                    createCloud(mouseX, mouseY);
+                    lastCloudTime = currentTime;
+                    
+                    // Adjust interval based on movement (faster movement = more clouds)
+                    cloudInterval = Math.max(200, 600 - movementDistance * 5);
+                }
+                
+                // Update clouds
+                for (let i = 0; i < clouds.length; i++) {
+                    const cloud = clouds[i];
+                    cloud.age += 16; // Approximate for 60fps
+                    
+                    // Update cloud position
+                    cloud.x += cloud.speedX;
+                    cloud.y += cloud.speedY;
+                    cloud.element.style.left = `${cloud.x}px`;
+                    cloud.element.style.top = `${cloud.y}px`;
+                    
+                    // Handle cloud expansion/contraction
+                    if (cloud.expansionDirection > 0) {
+                        // Expanding
+                        cloud.expansionFactor += cloud.expandSpeed * 0.01;
+                        if (cloud.expansionFactor >= cloud.maxExpansion) {
+                            cloud.expansionFactor = cloud.maxExpansion;
+                            cloud.expansionDirection = -1;
+                        }
+                    } else {
+                        // Contracting
+                        cloud.expansionFactor -= cloud.expandSpeed * 0.005;
+                        if (cloud.expansionFactor < 1) {
+                            cloud.expansionFactor = 1;
+                            cloud.expansionDirection = 1;
+                        }
+                    }
+                    
+                    // Update cloud particles
+                    for (const particle of cloud.particles) {
+                        // Apply wobble movement to particles
+                        particle.wobbleOffset += particle.wobbleSpeed;
+                        const wobbleX = Math.cos(particle.wobbleOffset) * particle.wobbleAmount;
+                        const wobbleY = Math.sin(particle.wobbleOffset) * particle.wobbleAmount;
+                        
+                        // Update particle position and size with expansion factor
+                        const updatedSize = particle.originalSize * cloud.expansionFactor;
+                        const updatedX = particle.offsetX * cloud.expansionFactor + wobbleX;
+                        const updatedY = particle.offsetY * cloud.expansionFactor + wobbleY;
+                        
+                        particle.element.style.width = `${updatedSize}px`;
+                        particle.element.style.height = `${updatedSize}px`;
+                        particle.element.style.left = `${updatedX - updatedSize/2}px`;
+                        particle.element.style.top = `${updatedY - updatedSize/2}px`;
+                    }
+                    
+                    // Fade out as they age
+                    const lifeProgress = cloud.age / cloud.lifespan;
+                    if (lifeProgress > 0.7) {
+                        const opacity = 1 - (lifeProgress - 0.7) / 0.3;
+                        cloud.element.style.opacity = opacity.toFixed(2);
+                    }
+                    
+                    // Remove if too old or off-screen
+                    if (cloud.age >= cloud.lifespan || 
+                        cloud.x < -cloud.size * 2 || 
+                        cloud.x > window.innerWidth + cloud.size * 2 ||
+                        cloud.y < -cloud.size * 2 || 
+                        cloud.y > window.innerHeight + cloud.size * 2) {
+                        
+                        cloud.element.remove();
+                        clouds.splice(i, 1);
+                        i--;
+                    }
+                }
+                
+                requestAnimationFrame(update);
+            }
+            
+            update();
+        });
+    </script>
+</body>
+</html> 

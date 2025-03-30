@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursor Trail Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #121212;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .trail {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ff3366;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s;
+        }
+        
+        h1 {
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+            padding-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Move Your Mouse - Cursor Trail Effect</h1>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const trailCount = 20;
+            const trails = [];
+            
+            // Create trail elements
+            for (let i = 0; i < trailCount; i++) {
+                const trail = document.createElement('div');
+                trail.className = 'trail';
+                body.appendChild(trail);
+                trails.push(trail);
+                
+                // Set initial position off-screen
+                trail.style.left = '-100px';
+                trail.style.top = '-100px';
+                
+                // Set different colors for each trail dot
+                const hue = (i * 360 / trailCount) % 360;
+                trail.style.backgroundColor = `hsl(${hue}, 100%, 60%)`;
+                
+                // Set different sizes for each trail dot
+                const size = 20 - i * 0.7;
+                trail.style.width = `${size}px`;
+                trail.style.height = `${size}px`;
+                
+                // Set different opacities for each trail dot
+                trail.style.opacity = (trailCount - i) / trailCount;
+            }
+            
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+            
+            // Animation loop
+            function animate() {
+                // Update trail positions with delay
+                let currentX = mouseX;
+                let currentY = mouseY;
+                
+                trails.forEach((trail, index) => {
+                    setTimeout(() => {
+                        trail.style.left = `${currentX}px`;
+                        trail.style.top = `${currentY}px`;
+                    }, index * 40);
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+        });
+    </script>
+</body>
+</html> 

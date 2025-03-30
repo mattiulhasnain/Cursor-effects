@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crystal Ball Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0f1642;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #e6e6e6;
+            text-shadow: 0 0 10px rgba(138, 43, 226, 0.7);
+            animation: glow 3s infinite alternate;
+        }
+        
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px rgba(138, 43, 226, 0.7); }
+            100% { text-shadow: 0 0 20px rgba(138, 43, 226, 1); }
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #cccccc;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(138, 43, 226, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .control-group:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(138, 43, 226, 0.5);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #e6e6e6;
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(138, 43, 226, 0.3);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #8a2be2;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+        }
+        
+        select {
+            width: 120px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            background-color: #16213e;
+            color: #e6e6e6;
+            border: 1px solid #8a2be2;
+        }
+        
+        button {
+            background-color: #8a2be2;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.5s;
+        }
+        
+        button:hover {
+            background-color: #7a1dd1;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.3);
+        }
+        
+        button:hover:after {
+            left: 100%;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .crystal-ball {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6) 0%, rgba(138, 43, 226, 0.2) 50%, rgba(39, 10, 80, 0.5) 80%);
+            box-shadow: 
+                0 0 20px rgba(138, 43, 226, 0.6),
+                inset 5px 5px 15px rgba(255, 255, 255, 0.2),
+                inset -5px -5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28), box-shadow 0.3s ease;
+        }
+        
+        .crystal-stand {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            background: #4a2963;
+            border-radius: 50%;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        .particles-container {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            top: 10px;
+            left: 10px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: transparent;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.6);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .reflection {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            top: 15px;
+            left: 15px;
+            transform: rotate(-30deg);
+            filter: blur(2px);
+        }
+        
+        .mystical-symbol {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 16px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1001;
+        }
+        
+        .prediction-tooltip {
+            position: absolute;
+            background-color: rgba(15, 22, 66, 0.9);
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            max-width: 200px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2000;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: #fff;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle var(--duration, 4s) infinite var(--delay, 0s);
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: var(--brightness, 0.8); }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Crystal Ball</h1>
+        <p>Gaze into the mystical crystal ball. Move your cursor to see swirling particles and visions. Click to reveal mystical symbols and predictions.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="ball-size">Ball Size</label>
+                <input type="range" id="ball-size" min="60" max="150" step="10" value="100">
+            </div>
+            
+            <div class="control-group">
+                <label for="particle-count">Particle Count</label>
+                <input type="range" id="particle-count" min="20" max="200" step="10" value="80">
+            </div>
+            
+            <div class="control-group">
+                <label for="swirl-speed">Swirl Speed</label>
+                <input type="range" id="swirl-speed" min="0.5" max="3" step="0.1" value="1.5">
+            </div>
+            
+            <div class="control-group">
+                <label for="crystal-type">Crystal Type</label>
+                <select id="crystal-type">
+                    <option value="amethyst">Amethyst</option>
+                    <option value="sapphire">Sapphire</option>
+                    <option value="emerald">Emerald</option>
+                    <option value="rainbow">Rainbow Quartz</option>
+                    <option value="celestial">Celestial</option>
+                    <option value="fire">Fire Opal</option>
+                </select>
+            </div>
+            
+            <button id="prediction-btn">Reveal Prediction</button>
+        </div>
+    </div>
+    
+    <div class="crystal-ball" id="crystal-ball">
+        <div class="crystal-stand"></div>
+        <div class="particles-container" id="particles-container"></div>
+        <div class="reflection"></div>
+        <div class="glow" id="glow"></div>
+    </div>
+    
+    <div class="prediction-tooltip" id="prediction-tooltip"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup for background stars
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Elements
+            const crystalBall = document.getElementById('crystal-ball');
+            const glow = document.getElementById('glow');
+            const particlesContainer = document.getElementById('particles-container');
+            const starsContainer = document.getElementById('stars');
+            const predictionTooltip = document.getElementById('prediction-tooltip');
+            
+            // Controls
+            const ballSizeSlider = document.getElementById('ball-size');
+            const particleCountSlider = document.getElementById('particle-count');
+            const swirlSpeedSlider = document.getElementById('swirl-speed');
+            const crystalTypeSelect = document.getElementById('crystal-type');
+            const predictionBtn = document.getElementById('prediction-btn');
+            
+            // Config variables
+            let ballSize = parseInt(ballSizeSlider.value);
+            let particleCount = parseInt(particleCountSlider.value);
+            let swirlSpeed = parseFloat(swirlSpeedSlider.value);
+            let crystalType = crystalTypeSelect.value;
+            
+            // Mouse position
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            
+            // Target position for smooth movement
+            let targetX = mouseX;
+            let targetY = mouseY;
+            
+            // Performance time for animations
+            let time = 0;
+            let lastFrameTime = 0;
+            
+            // Arrays for particles and background stars
+            let particles = [];
+            let stars = [];
+            
+            // Mystical symbols and predictions
+            const mysticalSymbols = ['✧', '⚝', '⚜', '⚛', '☽', '☯', '♆', '⚕', '⍟', '⎈', '❂', '✴', '✺', '✵', '✶', '✷', '✸', '✹', '❋', '❊'];
+            
+            const mysticalPredictions = [
+                "A journey awaits you in the near future.",
+                "Your creativity will lead to unexpected opportunities.",
+                "Trust your intuition, it will guide you correctly.",
+                "A meaningful connection will soon enter your life.",
+                "The answers you seek are within yourself.",
+                "An old friend will bring surprising news.",
+                "Your patience will soon be rewarded.",
+                "The stars align in your favor this week.",
+                "Look beyond the obvious to find the truth.",
+                "Your kindness will return to you tenfold.",
+                "A change in perspective will reveal new pathways.",
+                "The cycle is completing; prepare for renewal.",
+                "Energy flows where attention goes.",
+                "Hidden knowledge will soon be revealed to you.",
+                "Embrace the unexpected and find joy in surprises."
+            ];
+            
+            // Create background stars
+            function createBackgroundStars() {
+                // Clear existing stars
+                starsContainer.innerHTML = '';
+                
+                // Create star elements
+                for (let i = 0; i < 100; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    
+                    // Random position
+                    star.style.left = `${Math.random() * 100}%`;
+                    star.style.top = `${Math.random() * 100}%`;
+                    
+                    // Random size
+                    const size = 1 + Math.random() * 2;
+                    star.style.width = `${size}px`;
+                    star.style.height = `${size}px`;
+                    
+                    // Random animation timing
+                    star.style.setProperty('--duration', `${3 + Math.random() * 5}s`);
+                    star.style.setProperty('--delay', `${Math.random() * 5}s`);
+                    star.style.setProperty('--brightness', `${0.5 + Math.random() * 0.5}`);
+                    
+                    starsContainer.appendChild(star);
+                }
+            }
+            
+            // Particle class
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                
+                reset() {
+                    // Start particles at random positions within the ball
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 30;
+                    
+                    this.x = particlesContainer.clientWidth / 2 + Math.cos(angle) * distance;
+                    this.y = particlesContainer.clientHeight / 2 + Math.sin(angle) * distance;
+                    
+                    // Movement properties
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.radius = 5 + Math.random() * 15;
+                    this.speed = 0.2 + Math.random() * 0.5;
+                    
+                    // Appearance
+                    this.size = 1 + Math.random() * 3;
+                    this.opacity = 0.3 + Math.random() * 0.7;
+                    
+                    // Time offset for individual particle animation
+                    this.timeOffset = Math.random() * 100;
+                    
+                    // Z-depth for 3D-like effect (new)
+                    this.z = Math.random() * 10 - 5;
+                }
+                
+                update(deltaTime) {
+                    // Update angle based on time, radius and speed
+                    this.angle += (0.01 * this.speed * swirlSpeed) * deltaTime;
+                    
+                    // Calculate new position with some wobble
+                    const wobble = Math.sin(time * 0.5 + this.timeOffset) * 3;
+                    
+                    // Calculate new position
+                    this.x = particlesContainer.clientWidth / 2 + Math.cos(this.angle) * (this.radius + wobble);
+                    this.y = particlesContainer.clientHeight / 2 + Math.sin(this.angle) * (this.radius + wobble);
+                    
+                    // Z-position oscillation for 3D effect
+                    this.z = Math.sin(time * 0.3 + this.timeOffset) * 5;
+                    
+                    // Scale based on z-position
+                    this.scale = 1 + (this.z + 5) / 10;
+                    
+                    // Ensure within bounds
+                    const maxRadius = particlesContainer.clientWidth / 2 - this.size;
+                    const distance = Math.sqrt(
+                        Math.pow(this.x - particlesContainer.clientWidth / 2, 2) + 
+                        Math.pow(this.y - particlesContainer.clientHeight / 2, 2)
+                    );
+                    
+                    if (distance > maxRadius) {
+                        // Reset if outside
+                        this.reset();
+                    }
+                }
+                
+                draw(ctx) {
+                    // Get color based on crystal type
+                    const color = getParticleColor(crystalType);
+                    
+                    // Scale size based on z-position
+                    const scaledSize = this.size * this.scale;
+                    
+                    // Draw glow
+                    ctx.beginPath();
+                    const gradient = ctx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, scaledSize * 2
+                    );
+                    gradient.addColorStop(0, color.replace(')', `, ${this.opacity})`));
+                    gradient.addColorStop(1, color.replace(')', ', 0)'));
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.arc(this.x, this.y, scaledSize * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw center
+                    ctx.beginPath();
+                    ctx.fillStyle = color.replace(')', `, ${this.opacity})`);
+                    ctx.arc(this.x, this.y, scaledSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Star class for background
+            class Star {
+                constructor() {
+                    this.reset();
+                }
+                
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = 0.2 + Math.random() * 1.5;
+                    this.opacity = 0.1 + Math.random() * 0.9;
+                    this.blinkSpeed = 0.01 + Math.random() * 0.03;
+                    this.blinkOffset = Math.random() * 100;
+                    this.colorOffset = Math.random() * 60; // For colorful stars
+                }
+                
+                update(deltaTime) {
+                    // Twinkle effect
+                    this.opacity = 0.1 + Math.abs(Math.sin(time * this.blinkSpeed + this.blinkOffset)) * 0.8;
+                }
+                
+                draw(ctx) {
+                    // Basic star
+                    ctx.beginPath();
+                    
+                    // Colored stars for special crystal types
+                    if (crystalType === 'rainbow' || crystalType === 'celestial') {
+                        const hue = (time * 10 + this.colorOffset) % 360;
+                        ctx.fillStyle = `hsla(${hue}, 100%, 70%, ${this.opacity})`;
+                    } else {
+                        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                    }
+                    
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Add occasional rays for twinkle effect
+                    if (Math.sin(time * this.blinkSpeed + this.blinkOffset) > 0.8) {
+                        this.drawStarRays(ctx);
+                    }
+                }
+                
+                drawStarRays(ctx) {
+                    const rayLength = this.size * 3;
+                    const rayCount = 4;
+                    
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(time * this.blinkSpeed * 0.5);
+                    
+                    for (let i = 0; i < rayCount; i++) {
+                        const angle = (i / rayCount) * Math.PI * 2;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(Math.cos(angle) * rayLength, Math.sin(angle) * rayLength);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity * 0.5})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                }
+            }
+            
+            // Function to get particle color based on crystal type
+            function getParticleColor(type) {
+                switch (type) {
+                    case 'amethyst':
+                        return `rgba(${138 + Math.random() * 40}, ${43 + Math.random() * 30}, ${226 + Math.random() * 30}, 1)`;
+                    case 'sapphire':
+                        return `rgba(${15 + Math.random() * 30}, ${82 + Math.random() * 40}, ${186 + Math.random() * 70}, 1)`;
+                    case 'emerald':
+                        return `rgba(${21 + Math.random() * 30}, ${178 + Math.random() * 40}, ${98 + Math.random() * 40}, 1)`;
+                    case 'rainbow':
+                        const hue = Math.random() * 360;
+                        return `hsla(${hue}, 100%, 70%, 1)`;
+                    case 'celestial':
+                        const hueCelestial = 180 + Math.random() * 60; // Blues and cyans
+                        return `hsla(${hueCelestial}, 100%, 70%, 1)`;
+                    case 'fire':
+                        const hueFire = 10 + Math.random() * 40; // Reds and oranges
+                        return `hsla(${hueFire}, 100%, 70%, 1)`;
+                    default:
+                        return `rgba(${138 + Math.random() * 40}, ${43 + Math.random() * 30}, ${226 + Math.random() * 30}, 1)`;
+                }
+            }
+            
+            // Function to get crystal ball color based on crystal type
+            function updateCrystalAppearance() {
+                let bgColor, shadowColor;
+                
+                switch (crystalType) {
+                    case 'amethyst':
+                        bgColor = 'rgba(138, 43, 226, 0.2)';
+                        shadowColor = 'rgba(138, 43, 226, 0.6)';
+                        break;
+                    case 'sapphire':
+                        bgColor = 'rgba(15, 82, 186, 0.2)';
+                        shadowColor = 'rgba(15, 82, 186, 0.6)';
+                        break;
+                    case 'emerald':
+                        bgColor = 'rgba(21, 178, 98, 0.2)';
+                        shadowColor = 'rgba(21, 178, 98, 0.6)';
+                        break;
+                    case 'rainbow':
+                        const hue = (time * 50) % 360;
+                        bgColor = `hsla(${hue}, 100%, 50%, 0.2)`;
+                        shadowColor = `hsla(${hue}, 100%, 50%, 0.6)`;
+                        break;
+                    case 'celestial':
+                        const hueCelestial = (time * 30) % 360;
+                        bgColor = `hsla(${hueCelestial}, 80%, 50%, 0.2)`;
+                        shadowColor = `hsla(${hueCelestial}, 80%, 70%, 0.6)`;
+                        break;
+                    case 'fire':
+                        const hueFire = 10 + Math.sin(time) * 20;
+                        bgColor = `hsla(${hueFire}, 100%, 50%, 0.3)`;
+                        shadowColor = `hsla(${hueFire}, 100%, 60%, 0.7)`;
+                        break;
+                    default:
+                        bgColor = 'rgba(138, 43, 226, 0.2)';
+                        shadowColor = 'rgba(138, 43, 226, 0.6)';
+                }
+                
+                crystalBall.style.background = `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6) 0%, ${bgColor} 50%, rgba(39, 10, 80, 0.5) 80%)`;
+                crystalBall.style.boxShadow = `0 0 20px ${shadowColor}, inset 5px 5px 15px rgba(255, 255, 255, 0.2), inset -5px -5px 15px rgba(0, 0, 0, 0.2)`;
+                
+                // Special effects for certain crystal types
+                if (crystalType === 'fire') {
+                    // Add fiery glow
+                    glow.style.boxShadow = `0 0 40px rgba(255, 100, 0, 0.7)`;
+                    glow.style.opacity = `${0.3 + Math.sin(time) * 0.2}`;
+                } else if (crystalType === 'celestial') {
+                    // Add subtle blue glow
+                    glow.style.boxShadow = `0 0 40px rgba(100, 150, 255, 0.7)`;
+                    glow.style.opacity = `${0.2 + Math.sin(time * 0.5) * 0.2}`;
+                } else {
+                    glow.style.opacity = '0';
+                }
+            }
+            
+            // Create particles
+            function createParticles() {
+                // Clear existing particles
+                particles = [];
+                
+                // Create new particles
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
+            
+            // Create stars for background
+            function createStars() {
+                stars = [];
+                const starCount = 200;
+                
+                for (let i = 0; i < starCount; i++) {
+                    stars.push(new Star());
+                }
+            }
+            
+            // Initialize particles and stars
+            createParticles();
+            createStars();
+            createBackgroundStars();
+            
+            // Set up canvas for particles
+            const particlesCanvas = document.createElement('canvas');
+            particlesCanvas.width = 80;
+            particlesCanvas.height = 80;
+            particlesCanvas.style.borderRadius = '50%';
+            particlesCanvas.style.position = 'absolute';
+            particlesCanvas.style.top = '0';
+            particlesCanvas.style.left = '0';
+            
+            const particlesCtx = particlesCanvas.getContext('2d');
+            
+            // Add canvas to container
+            particlesContainer.appendChild(particlesCanvas);
+            
+            // Update crystal ball size
+            function updateBallSize() {
+                crystalBall.style.width = `${ballSize}px`;
+                crystalBall.style.height = `${ballSize}px`;
+                
+                // Update particles container size
+                const particleAreaSize = ballSize * 0.8;
+                particlesContainer.style.width = `${particleAreaSize}px`;
+                particlesContainer.style.height = `${particleAreaSize}px`;
+                particlesContainer.style.top = `${(ballSize - particleAreaSize) / 2}px`;
+                particlesContainer.style.left = `${(ballSize - particleAreaSize) / 2}px`;
+                
+                // Update canvas size
+                particlesCanvas.width = particleAreaSize;
+                particlesCanvas.height = particleAreaSize;
+                
+                // Update reflection size and position
+                const reflection = crystalBall.querySelector('.reflection');
+                reflection.style.width = `${ballSize * 0.4}px`;
+                reflection.style.height = `${ballSize * 0.2}px`;
+                reflection.style.top = `${ballSize * 0.15}px`;
+                reflection.style.left = `${ballSize * 0.15}px`;
+                
+                // Update stand size and position
+                const stand = crystalBall.querySelector('.crystal-stand');
+                stand.style.width = `${ballSize * 0.4}px`;
+                stand.style.height = `${ballSize * 0.15}px`;
+                stand.style.bottom = `${-ballSize * 0.07}px`;
+            }
+            
+            // Apply initial ball size
+            updateBallSize();
+            
+            // Show prediction tooltip
+            function showPrediction() {
+                const prediction = mysticalPredictions[Math.floor(Math.random() * mysticalPredictions.length)];
+                
+                // Position the tooltip near the crystal ball
+                predictionTooltip.style.left = `${mouseX}px`;
+                predictionTooltip.style.top = `${mouseY - ballSize - 30}px`;
+                predictionTooltip.textContent = prediction;
+                
+                // Show the tooltip with animation
+                predictionTooltip.style.opacity = '1';
+                predictionTooltip.style.transform = 'translateY(0)';
+                
+                // Hide after 5 seconds
+                setTimeout(() => {
+                    predictionTooltip.style.opacity = '0';
+                    predictionTooltip.style.transform = 'translateY(10px)';
+                }, 5000);
+                
+                // Create glow effect
+                glow.style.opacity = '1';
+                setTimeout(() => {
+                    glow.style.opacity = '0';
+                }, 3000);
+                
+                // Create symbols
+                const symbolCount = 3 + Math.floor(Math.random() * 5);
+                for (let i = 0; i < symbolCount; i++) {
+                    setTimeout(() => {
+                        createSymbol();
+                    }, i * 200); // Staggered creation
+                }
+            }
+            
+            // Create a floating mystical symbol
+            function createSymbol() {
+                // Create element
+                const symbol = document.createElement('div');
+                symbol.className = 'mystical-symbol';
+                symbol.textContent = mysticalSymbols[Math.floor(Math.random() * mysticalSymbols.length)];
+                
+                // Set random initial position inside the ball
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * (ballSize / 4);
+                
+                symbol.style.left = `${mouseX + Math.cos(angle) * distance}px`;
+                symbol.style.top = `${mouseY + Math.sin(angle) * distance}px`;
+                
+                // Random size
+                const symbolSize = 16 + Math.floor(Math.random() * 12);
+                symbol.style.fontSize = `${symbolSize}px`;
+                
+                // Random rotation
+                const rotation = -30 + Math.random() * 60;
+                symbol.style.transform = `rotate(${rotation}deg)`;
+                
+                // Add to DOM
+                document.body.appendChild(symbol);
+                
+                // Set animation with JavaScript
+                let opacity = 0;
+                let posX = parseFloat(symbol.style.left);
+                let posY = parseFloat(symbol.style.top);
+                let currentRotation = rotation;
+                
+                // Determine random color based on crystal type
+                let symbolColor;
+                switch (crystalType) {
+                    case 'amethyst':
+                        symbolColor = 'rgba(178, 102, 255, 0.8)';
+                        break;
+                    case 'sapphire':
+                        symbolColor = 'rgba(100, 149, 237, 0.8)';
+                        break;
+                    case 'emerald':
+                        symbolColor = 'rgba(80, 200, 120, 0.8)';
+                        break;
+                    case 'rainbow':
+                        const hue = Math.random() * 360;
+                        symbolColor = `hsla(${hue}, 100%, 70%, 0.8)`;
+                        break;
+                    case 'celestial':
+                        const hueCelestial = 180 + Math.random() * 60;
+                        symbolColor = `hsla(${hueCelestial}, 100%, 70%, 0.8)`;
+                        break;
+                    case 'fire':
+                        const hueFire = 10 + Math.random() * 40;
+                        symbolColor = `hsla(${hueFire}, 100%, 70%, 0.8)`;
+                        break;
+                    default:
+                        symbolColor = 'rgba(255, 255, 255, 0.8)';
+                }
+                
+                symbol.style.color = symbolColor;
+                
+                // Random movement direction
+                const dirX = -2 + Math.random() * 4;
+                const dirY = -4 - Math.random() * 2;
+                
+                // Fade in
+                const fadeIn = setInterval(() => {
+                    opacity += 0.05;
+                    symbol.style.opacity = opacity;
+                    
+                    if (opacity >= 1) {
+                        clearInterval(fadeIn);
+                        
+                        // Float animation
+                        const floatInterval = setInterval(() => {
+                            posX += dirX * 0.5;
+                            posY += dirY * 0.5;
+                            currentRotation += 0.3;
+                            
+                            symbol.style.left = `${posX}px`;
+                            symbol.style.top = `${posY}px`;
+                            symbol.style.transform = `rotate(${currentRotation}deg)`;
+                            
+                            // Fade out after some time
+                            if (posY < mouseY - ballSize * 0.8) {
+                                opacity -= 0.02;
+                                symbol.style.opacity = opacity;
+                                
+                                if (opacity <= 0) {
+                                    clearInterval(floatInterval);
+                                    symbol.remove();
+                                }
+                            }
+                        }, 20);
+                    }
+                }, 30);
+            }
+            
+            // Event listeners for controls
+            ballSizeSlider.addEventListener('input', () => {
+                ballSize = parseInt(ballSizeSlider.value);
+                updateBallSize();
+            });
+            
+            particleCountSlider.addEventListener('input', () => {
+                particleCount = parseInt(particleCountSlider.value);
+                createParticles();
+            });
+            
+            swirlSpeedSlider.addEventListener('input', () => {
+                swirlSpeed = parseFloat(swirlSpeedSlider.value);
+            });
+            
+            crystalTypeSelect.addEventListener('change', () => {
+                crystalType = crystalTypeSelect.value;
+                updateCrystalAppearance();
+            });
+            
+            predictionBtn.addEventListener('click', showPrediction);
+            
+            // Handle mouse movement
+            document.addEventListener('mousemove', (e) => {
+                // Update target position for smooth movement
+                targetX = e.clientX;
+                targetY = e.clientY;
+            });
+            
+            // Handle click - show prediction
+            document.addEventListener('click', showPrediction);
+            
+            // Animation loop
+            function animate(currentTime) {
+                // Calculate time delta for smooth animations
+                const deltaTime = lastFrameTime ? (currentTime - lastFrameTime) / 16.67 : 1;
+                lastFrameTime = currentTime;
+                time = currentTime * 0.001; // Convert to seconds
+                
+                // Smooth movement of crystal ball to mouse position
+                mouseX += (targetX - mouseX) * 0.1;
+                mouseY += (targetY - mouseY) * 0.1;
+                
+                // Update crystal ball position
+                crystalBall.style.left = `${mouseX}px`;
+                crystalBall.style.top = `${mouseY}px`;
+                
+                // Update crystal appearance for special types
+                if (crystalType === 'rainbow' || crystalType === 'celestial' || crystalType === 'fire') {
+                    updateCrystalAppearance();
+                }
+                
+                // Clear background canvas
+                ctx.fillStyle = '#0f1642';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw stars
+                for (const star of stars) {
+                    star.update(deltaTime);
+                    star.draw(ctx);
+                }
+                
+                // Clear particles canvas
+                particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+                
+                // Update and draw particles
+                for (const particle of particles) {
+                    particle.update(deltaTime);
+                    particle.draw(particlesCtx);
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Start animation
+            animate(0);
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Resize canvas
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Reset stars
+                createStars();
+                createBackgroundStars();
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnifying Glass Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://source.unsplash.com/random/1920x1080/?nature');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        
+        .text-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+        
+        .magnifier {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-repeat: no-repeat;
+            border: 3px solid white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 999;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+        }
+        
+        .magnifier-image {
+            position: absolute;
+            background-image: url('https://source.unsplash.com/random/1920x1080/?nature');
+            background-size: cover;
+            background-position: center;
+            width: 100%;
+            height: 100%;
+            transform-origin: center center;
+            transform: scale(1.5);
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+        }
+        
+        .toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+        
+        .toggle-btn:hover {
+            background-color: #555;
+        }
+        
+        .zoom-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+        
+        .zoom-btn:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    
+    <div class="content">
+        <div class="text-content">
+            <h1>Magnifying Glass Cursor Effect</h1>
+            <p>Move your cursor around to see the magnifying glass effect. The magnifier follows your cursor and reveals a zoomed-in view of the background image.</p>
+            <p>Click to toggle between different magnifying glass shapes. Use the controls in the bottom right to adjust the zoom level.</p>
+        </div>
+    </div>
+    
+    <button class="toggle-btn">Change Magnifier Shape</button>
+    
+    <div class="zoom-control">
+        <button class="zoom-btn" id="zoom-in">+</button>
+        <button class="zoom-btn" id="zoom-out">-</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const content = document.querySelector('.content');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Create magnifier
+            const magnifier = document.createElement('div');
+            magnifier.className = 'magnifier';
+            body.appendChild(magnifier);
+            
+            // Create magnifier image
+            const magnifierImage = document.createElement('div');
+            magnifierImage.className = 'magnifier-image';
+            magnifier.appendChild(magnifierImage);
+            
+            // Get and set background image
+            const computedStyle = window.getComputedStyle(content);
+            const backgroundImage = computedStyle.backgroundImage;
+            magnifierImage.style.backgroundImage = backgroundImage;
+            
+            // Variables
+            let mouseX = 0;
+            let mouseY = 0;
+            let zoomLevel = 1.5;
+            let magnifierSize = 150;
+            let magnifierShape = 'circle';
+            let showMagnifier = true;
+            
+            // Mouse move event
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Update magnifier position
+                magnifier.style.left = `${mouseX}px`;
+                magnifier.style.top = `${mouseY}px`;
+                
+                // Calculate background position for magnifier
+                const bgPosX = -(mouseX / window.innerWidth) * 100;
+                const bgPosY = -(mouseY / window.innerHeight) * 100;
+                magnifierImage.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+            });
+            
+            // Toggle button click event
+            const toggleBtn = document.querySelector('.toggle-btn');
+            
+            toggleBtn.addEventListener('click', () => {
+                if (magnifierShape === 'circle') {
+                    magnifierShape = 'square';
+                    magnifier.style.borderRadius = '10px';
+                    toggleBtn.textContent = 'Change to Circle';
+                } else {
+                    magnifierShape = 'circle';
+                    magnifier.style.borderRadius = '50%';
+                    toggleBtn.textContent = 'Change to Square';
+                }
+            });
+            
+            // Zoom control
+            const zoomIn = document.getElementById('zoom-in');
+            const zoomOut = document.getElementById('zoom-out');
+            
+            zoomIn.addEventListener('click', () => {
+                zoomLevel = Math.min(zoomLevel + 0.5, 5);
+                magnifierImage.style.transform = `scale(${zoomLevel})`;
+            });
+            
+            zoomOut.addEventListener('click', () => {
+                zoomLevel = Math.max(zoomLevel - 0.5, 1);
+                magnifierImage.style.transform = `scale(${zoomLevel})`;
+            });
+            
+            // Toggle magnifier on click
+            document.addEventListener('click', (e) => {
+                // Don't toggle when clicking buttons
+                if (e.target.tagName === 'BUTTON') {
+                    return;
+                }
+                
+                showMagnifier = !showMagnifier;
+                magnifier.style.display = showMagnifier ? 'block' : 'none';
+            });
+            
+            // Size control with mouse wheel
+            document.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                
+                // Increase/decrease magnifier size
+                if (e.deltaY < 0) {
+                    magnifierSize = Math.min(magnifierSize + 10, 300);
+                } else {
+                    magnifierSize = Math.max(magnifierSize - 10, 50);
+                }
+                
+                magnifier.style.width = `${magnifierSize}px`;
+                magnifier.style.height = `${magnifierSize}px`;
+            }, { passive: false });
+            
+            // Add keyboard controls
+            document.addEventListener('keydown', (e) => {
+                // Press 'Z' to increase zoom
+                if (e.key === 'z' || e.key === 'Z') {
+                    zoomLevel = Math.min(zoomLevel + 0.5, 5);
+                    magnifierImage.style.transform = `scale(${zoomLevel})`;
+                }
+                
+                // Press 'X' to decrease zoom
+                if (e.key === 'x' || e.key === 'X') {
+                    zoomLevel = Math.max(zoomLevel - 0.5, 1);
+                    magnifierImage.style.transform = `scale(${zoomLevel})`;
+                }
+                
+                // Press 'S' to toggle shape
+                if (e.key === 's' || e.key === 'S') {
+                    if (magnifierShape === 'circle') {
+                        magnifierShape = 'square';
+                        magnifier.style.borderRadius = '10px';
+                        toggleBtn.textContent = 'Change to Circle';
+                    } else {
+                        magnifierShape = 'circle';
+                        magnifier.style.borderRadius = '50%';
+                        toggleBtn.textContent = 'Change to Square';
+                    }
+                }
+                
+                // Press 'H' to toggle magnifier visibility
+                if (e.key === 'h' || e.key === 'H') {
+                    showMagnifier = !showMagnifier;
+                    magnifier.style.display = showMagnifier ? 'block' : 'none';
+                }
+            });
+            
+            // Invert colors with shift key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Shift') {
+                    magnifierImage.style.filter = 'invert(1)';
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.key === 'Shift') {
+                    magnifierImage.style.filter = 'none';
+                }
+            });
+            
+            // Add magnifier info
+            const infoDiv = document.createElement('div');
+            infoDiv.style.position = 'fixed';
+            infoDiv.style.bottom = '20px';
+            infoDiv.style.left = '20px';
+            infoDiv.style.color = 'white';
+            infoDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            infoDiv.style.padding = '10px';
+            infoDiv.style.borderRadius = '5px';
+            infoDiv.style.fontSize = '0.9rem';
+            infoDiv.style.zIndex = '1000';
+            infoDiv.innerHTML = `
+                <strong>Controls:</strong><br>
+                Mouse Wheel: Resize magnifier<br>
+                Click: Toggle magnifier visibility<br>
+                Z/X: Zoom in/out<br>
+                S: Toggle shape<br>
+                Shift: Invert colors
+            `;
+            body.appendChild(infoDiv);
+            
+            // Load a different image as fallback if the first one fails
+            window.addEventListener('error', (e) => {
+                if (e.target.tagName === 'IMG' || e.target.classList.contains('content')) {
+                    content.style.backgroundImage = "url('https://source.unsplash.com/random/1920x1080/?landscape')";
+                    magnifierImage.style.backgroundImage = "url('https://source.unsplash.com/random/1920x1080/?landscape')";
+                }
+            }, true);
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle Swarm Intelligence Cursor - Interactive Swarm Animation</title>
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --accent-light: #ffafcc;
+            --background: #0a0f1d;
+            --card-bg: rgba(28, 42, 57, 0.7);
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            cursor: none;
+        }
+        
+        .content {
+            position: relative;
+            padding: 20px;
+            max-width: 800px;
+            margin: 50px auto;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 15px rgba(255, 126, 185, 0.2);
+        }
+        
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+        }
+        
+        .controls-wrapper {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            pointer-events: all;
+        }
+
+        .shape-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .shape-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text);
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+        }
+        
+        .shape-btn:hover {
+            background: rgba(255, 126, 185, 0.2);
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 126, 185, 0.2);
+        }
+        
+        .shape-btn.active {
+            background: rgba(255, 126, 185, 0.3);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 126, 185, 0.3);
+        }
+        
+        .effect-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .effect-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text);
+            border-radius: 20px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.8rem;
+        }
+        
+        .effect-toggle:hover {
+            background: rgba(102, 178, 255, 0.2);
+            border-color: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 178, 255, 0.2);
+        }
+        
+        .effect-toggle.active {
+            background: rgba(102, 178, 255, 0.3);
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 178, 255, 0.3);
+        }
+        
+        .slider-control {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .slider-control label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .slider-control input {
+            width: 200px;
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .slider-control input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 126, 185, 0.5);
+        }
+        
+        .slider-control input::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .return-link {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 10px 20px;
+            background: rgba(93, 187, 99, 0.2);
+            border-radius: 30px;
+            z-index: 10;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            pointer-events: all;
+        }
+
+        .return-link:hover {
+            background: rgba(93, 187, 99, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 126, 185, 0.7);
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 20px rgba(255, 126, 185, 0.7);
+            transition: width 0.2s, height 0.2s;
+        }
+        
+        .cursor-trail {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgba(255, 126, 185, 0.3);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .performance-stats {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--card-bg);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+        
+        .animation-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 15;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .animation-transition.active {
+            opacity: 1;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        .pulse-ring {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid var(--accent-light);
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .hotkey-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+        
+        .key {
+            display: inline-block;
+            padding: 2px 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 0 3px;
+            color: var(--text);
+            font-family: monospace;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="content">
+        <h1>Particle Swarm Intelligence</h1>
+        <p>Experience an advanced particle system that demonstrates emergent behavior. Watch as particles intelligently organize into various shapes and patterns as they follow your cursor.</p>
+        
+        <div class="controls-wrapper">
+        <div class="shape-controls">
+            <button class="shape-btn active" data-shape="circle">Circle</button>
+            <button class="shape-btn" data-shape="square">Square</button>
+            <button class="shape-btn" data-shape="triangle">Triangle</button>
+            <button class="shape-btn" data-shape="star">Star</button>
+            <button class="shape-btn" data-shape="spiral">Spiral</button>
+            <button class="shape-btn" data-shape="dna">DNA Helix</button>
+            <button class="shape-btn" data-shape="vortex">Vortex</button>
+            <button class="shape-btn" data-shape="infinity">Infinity</button>
+            <button class="shape-btn" data-shape="galaxy">Galaxy</button>
+                <button class="shape-btn" data-shape="heart">Heart</button>
+                <button class="shape-btn" data-shape="text">Text</button>
+            <button class="shape-btn" data-shape="random">Random</button>
+        </div>
+            
+            <div class="slider-control">
+                <label for="particle-count">Particle Count: <span id="particle-count-value">1000</span></label>
+                <input type="range" id="particle-count" min="100" max="3000" step="100" value="1000">
+            </div>
+            
+            <div class="slider-control">
+                <label for="particle-speed">Movement Speed: <span id="particle-speed-value">1.0</span></label>
+                <input type="range" id="particle-speed" min="0.1" max="2" step="0.1" value="1">
+        </div>
+        
+        <div class="effect-controls">
+            <button class="effect-toggle" data-effect="trails">Particle Trails</button>
+            <button class="effect-toggle" data-effect="connections">Connection Lines</button>
+                <button class="effect-toggle" data-effect="glow">Glow Effect</button>
+            <button class="effect-toggle" data-effect="pulsate">Pulse Effect</button>
+                <button class="effect-toggle" data-effect="colorCycle">Color Cycling</button>
+            <button class="effect-toggle" data-effect="colorWave">Color Wave</button>
+            <button class="effect-toggle" data-effect="gravity">Gravity Field</button>
+                <button class="effect-toggle" data-effect="repulsion">Mouse Repulsion</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="cursor"></div>
+    <div id="cursor-trails"></div>
+    
+    <div class="animation-transition">
+        <div class="spinner"></div>
+    </div>
+    
+    <div class="performance-stats">
+        <div>FPS: <span id="fps">0</span></div>
+        <div>Particles: <span id="particle-count-stat">0</span></div>
+    </div>
+    
+    <div class="hotkey-indicator">
+        Press <span class="key">Space</span> to reset &nbsp;|&nbsp; <span class="key">D</span> for demo mode &nbsp;|&nbsp; <span class="key">P</span> for performance stats
+    </div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <canvas id="canvas"></canvas>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d', { alpha: true });
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // DOM elements
+            const cursor = document.querySelector('.cursor');
+            const cursorTrailsContainer = document.getElementById('cursor-trails');
+            const particleCountSlider = document.getElementById('particle-count');
+            const particleCountValue = document.getElementById('particle-count-value');
+            const particleSpeedSlider = document.getElementById('particle-speed');
+            const particleSpeedValue = document.getElementById('particle-speed-value');
+            const fpsCounter = document.getElementById('fps');
+            const particleCountStat = document.getElementById('particle-count-stat');
+            const performanceStats = document.querySelector('.performance-stats');
+            const transitionOverlay = document.querySelector('.animation-transition');
+            
+            // Mouse tracking variables
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let prevMouseX = mouseX;
+            let prevMouseY = mouseY;
+            let targetX = mouseX;
+            let targetY = mouseY;
+            let mouseSpeed = 0;
+            let mouseAngle = 0;
+            let mouseOnScreen = false;
+            let mouseActive = false;
+            let lastMouseMoveTime = 0;
+            
+            // Trail elements for cursor
+            const maxCursorTrails = 10;
+            const cursorTrails = [];
+            
+            // Performance monitoring
+            let lastFrameTime = 0;
+            let fps = 0;
+            let frameCount = 0;
+            let lastFpsUpdateTime = 0;
+            let showPerformance = false;
+            
+            // Animation settings
+            let globalTime = 0;
+            let speedFactor = 1;
+            let demoMode = false;
+            let demoTimeout = null;
+            
+            // Particle system settings
+            let particleCount = parseInt(particleCountSlider.value);
+            let currentShape = 'circle';
+            let previousShape = 'circle';
+            let isTransitioning = false;
+            let transitionProgress = 0;
+            let customText = 'SWARM';
+            
+            // Effects toggles
+            const effects = {
+                trails: false,
+                connections: false,
+                glow: false,
+                pulsate: false,
+                colorCycle: false,
+                colorWave: false,
+                gravity: false,
+                repulsion: false
+            };
+            
+            // Color palettes
+            const colorPalettes = [
+                { name: 'purple', colors: ['#bd93f9', '#ff79c6', '#8be9fd', '#50fa7b'] },
+                { name: 'sunset', colors: ['#ff7eb9', '#ff65a3', '#7afcff', '#feff9c'] },
+                { name: 'ocean', colors: ['#48cae4', '#90e0ef', '#00b4d8', '#0077b6'] },
+                { name: 'forest', colors: ['#52b788', '#95d5b2', '#2d6a4f', '#b7e4c7'] },
+                { name: 'fire', colors: ['#fb8500', '#ffb703', '#fd9e02', '#e85d04'] }
+            ];
+            let currentPalette = colorPalettes[0];
+            let colorCycleSpeed = 0.01;
+            
+            // Initialize cursor trails
+            function createCursorTrail() {
+                const trail = document.createElement('div');
+                trail.className = 'cursor-trail';
+                cursorTrailsContainer.appendChild(trail);
+                
+                cursorTrails.push({
+                    element: trail,
+                    x: mouseX,
+                    y: mouseY,
+                    delay: cursorTrails.length * 40
+                });
+                
+                if (cursorTrails.length > maxCursorTrails) {
+                    const removed = cursorTrails.shift();
+                    cursorTrailsContainer.removeChild(removed.element);
+                }
+            }
+            
+            // Initialize cursor trails
+            for (let i = 0; i < maxCursorTrails; i++) {
+                createCursorTrail();
+            }
+            
+            // Particle class
+            class Particle {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = Math.random() * 3 + 2;
+                    this.baseSize = this.size;
+                    this.targetX = x;
+                    this.targetY = y;
+                    this.speed = (Math.random() * 0.02 + 0.02) * speedFactor;
+                    this.velX = 0;
+                    this.velY = 0;
+                    this.colorIndex = Math.floor(Math.random() * currentPalette.colors.length);
+                    this.color = currentPalette.colors[this.colorIndex];
+                    this.alpha = Math.random() * 0.5 + 0.5;
+                    this.friction = 0.95;
+                    this.distanceFromMouse = 0;
+                    this.oscillationSpeed = Math.random() * 0.02 + 0.01;
+                    this.oscillationDistance = Math.random() * 0.5 + 0.5;
+                    this.oscillationFactor = Math.random() * Math.PI * 2;
+                    this.trails = [];
+                    this.lastTrailTime = 0;
+                    this.pulsePhase = Math.random() * Math.PI * 2;
+                    this.hue = parseInt(this.color.substring(1, 3), 16);
+                }
+                
+                update() {
+                    // Calculate distance from cursor
+                    const dx = mouseX - this.x;
+                    const dy = mouseY - this.y;
+                    this.distanceFromMouse = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Calculate angle to target position
+                    const tx = this.targetX - this.x;
+                    const ty = this.targetY - this.y;
+                    const dist = Math.sqrt(tx * tx + ty * ty);
+                    
+                    // Move towards target position with easing
+                    if (dist > 0.1) {
+                        // Increase speed when far from target for faster shape formation
+                        const adjustedSpeed = this.speed * (1 + dist * 0.01);
+                        this.velX = (this.targetX - this.x) * adjustedSpeed;
+                        this.velY = (this.targetY - this.y) * adjustedSpeed;
+                    } else {
+                        this.velX *= this.friction;
+                        this.velY *= this.friction;
+                    }
+                    
+                    // Add slight oscillation for organic movement
+                    this.oscillationFactor += this.oscillationSpeed;
+                    this.velX += Math.sin(this.oscillationFactor) * this.oscillationDistance;
+                    this.velY += Math.cos(this.oscillationFactor) * this.oscillationDistance;
+                    
+                    // Apply gravity force if enabled
+                    if (effects.gravity && this.distanceFromMouse < 300 && mouseActive) {
+                        const gravityForce = 0.15 * (1 - this.distanceFromMouse / 300);
+                        const angle = Math.atan2(dy, dx);
+                        this.velX += Math.cos(angle) * gravityForce;
+                        this.velY += Math.sin(angle) * gravityForce;
+                    }
+                    
+                    // Apply repulsion force if enabled
+                    if (effects.repulsion && this.distanceFromMouse < 150 && mouseActive) {
+                        const repulsionForce = 0.4 * (1 - this.distanceFromMouse / 150);
+                        const angle = Math.atan2(dy, dx);
+                        this.velX -= Math.cos(angle) * repulsionForce;
+                        this.velY -= Math.sin(angle) * repulsionForce;
+                    }
+                    
+                    // Update position
+                    this.x += this.velX;
+                    this.y += this.velY;
+                    
+                    // Color cycle effect
+                    if (effects.colorCycle) {
+                        const cycleIndex = Math.floor((globalTime * colorCycleSpeed + this.colorIndex) % currentPalette.colors.length);
+                        this.color = currentPalette.colors[cycleIndex];
+                    }
+                    
+                    // Color wave effect
+                    if (effects.colorWave) {
+                        const waveSpeed = 0.5;
+                        const waveDistance = 300;
+                        const wavePhase = globalTime * waveSpeed;
+                        const distancePhase = this.distanceFromMouse / waveDistance * Math.PI * 2;
+                        const waveEffect = Math.sin(wavePhase + distancePhase);
+                        const colorIndex = Math.floor((waveEffect + 1) / 2 * currentPalette.colors.length) % currentPalette.colors.length;
+                        this.color = currentPalette.colors[colorIndex];
+                    }
+                    
+                    // Pulsate size effect
+                    if (effects.pulsate) {
+                        const pulseSpeed = 3;
+                        const pulseAmount = 0.3;
+                        const pulseFactor = Math.sin(globalTime * pulseSpeed + this.pulsePhase);
+                        this.size = this.baseSize * (1 + pulseFactor * pulseAmount);
+                    } else {
+                        this.size = this.baseSize;
+                    }
+                    
+                    // Size and alpha based on speed and distance
+                    const speed = Math.sqrt(this.velX * this.velX + this.velY * this.velY);
+                    this.alpha = Math.min(1, Math.max(0.3, 0.3 + speed * 2));
+                    
+                    // Add particle trail if enabled
+                    if (effects.trails && speed > 0.5) {
+                        const currentTime = Date.now();
+                        if (currentTime - this.lastTrailTime > 60) {
+                            this.addTrail();
+                            this.lastTrailTime = currentTime;
+                        }
+                    }
+                    
+                    // Update trails
+                    this.updateTrails();
+                }
+                
+                addTrail() {
+                    this.trails.push({
+                        x: this.x,
+                        y: this.y,
+                        color: this.color,
+                        size: this.size * 0.7,
+                        alpha: 0.7,
+                        lifetime: 30,
+                        age: 0
+                    });
+                    
+                    // Limit trails count for performance
+                    if (this.trails.length > 5) {
+                        this.trails.shift();
+                    }
+                }
+                
+                updateTrails() {
+                    for (let i = this.trails.length - 1; i >= 0; i--) {
+                        const trail = this.trails[i];
+                        trail.age++;
+                        trail.alpha = 0.7 * (1 - trail.age / trail.lifetime);
+                        trail.size *= 0.95;
+                        
+                        if (trail.age >= trail.lifetime || trail.alpha <= 0) {
+                            this.trails.splice(i, 1);
+                        }
+                    }
+                }
+                
+                draw() {
+                    // Draw trails
+                    for (const trail of this.trails) {
+                        ctx.beginPath();
+                        ctx.arc(trail.x, trail.y, trail.size, 0, Math.PI * 2);
+                        
+                        // Apply transparency to the color
+                        const color = hexToRgba(trail.color, trail.alpha);
+                        ctx.fillStyle = color;
+                        ctx.fill();
+                    }
+                    
+                    // Draw particle
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    
+                    // Apply glow effect
+                    if (effects.glow) {
+                    ctx.shadowBlur = 15;
+                        ctx.shadowColor = this.color;
+                    }
+                    
+                    const color = hexToRgba(this.color, this.alpha);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    
+                    // Reset shadow
+                    if (effects.glow) {
+                        ctx.shadowBlur = 0;
+                    }
+                }
+                
+                drawConnectionTo(particle) {
+                    const dx = this.x - particle.x;
+                    const dy = this.y - particle.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Only draw connections within a certain range
+                    const maxDist = 50;
+                    if (dist < maxDist) {
+                        // Fade opacity based on distance
+                        const opacity = (1 - dist / maxDist) * 0.2;
+                        
+                        // Create a gradient line between particles
+                        const gradient = ctx.createLinearGradient(this.x, this.y, particle.x, particle.y);
+                        gradient.addColorStop(0, hexToRgba(this.color, opacity));
+                        gradient.addColorStop(1, hexToRgba(particle.color, opacity));
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(this.x, this.y);
+                        ctx.lineTo(particle.x, particle.y);
+                        ctx.strokeStyle = gradient;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Create particles array
+            let particles = [];
+            
+            // Helper: Convert hex color to rgba
+            function hexToRgba(hex, alpha) {
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+            
+            // Initialize particles
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    particles.push(new Particle(x, y));
+                }
+                
+                // Update stats
+                particleCountStat.textContent = particles.length;
+            }
+            
+            // Show transition overlay
+            function showTransition(show) {
+                if (show) {
+                    transitionOverlay.classList.add('active');
+                } else {
+                    transitionOverlay.classList.remove('active');
+                }
+            }
+            
+            // Update particle count when slider changes
+            particleCountSlider.addEventListener('input', () => {
+                particleCount = parseInt(particleCountSlider.value);
+                particleCountValue.textContent = particleCount;
+                
+                // Show transition while updating particles
+                showTransition(true);
+                
+                // Use setTimeout to allow the UI to update
+                setTimeout(() => {
+                    initParticles();
+                    showTransition(false);
+                }, 100);
+            });
+            
+            // Update speed factor when slider changes
+            particleSpeedSlider.addEventListener('input', () => {
+                speedFactor = parseFloat(particleSpeedSlider.value);
+                particleSpeedValue.textContent = speedFactor.toFixed(1);
+                
+                // Update particle speeds
+                particles.forEach(particle => {
+                    particle.speed = (Math.random() * 0.02 + 0.02) * speedFactor;
+                });
+            });
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor element
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Calculate mouse speed and angle
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                mouseSpeed = Math.sqrt(dx * dx + dy * dy);
+                mouseAngle = Math.atan2(dy, dx);
+                
+                // Set mouse as active and on screen
+                mouseOnScreen = true;
+                mouseActive = true;
+                lastMouseMoveTime = Date.now();
+                
+                // Cancel demo mode when user moves mouse
+                if (demoMode) {
+                    clearTimeout(demoTimeout);
+                    demoMode = false;
+                }
+                
+                // Update cursor appearance based on speed
+                if (mouseSpeed > 5) {
+                    cursor.style.width = `${20 + mouseSpeed * 0.3}px`;
+                    cursor.style.height = `${20 + mouseSpeed * 0.3}px`;
+                } else {
+                    cursor.style.width = '20px';
+                    cursor.style.height = '20px';
+                }
+                
+                // Create cursor pulse effect on fast movements
+                if (mouseSpeed > 20) {
+                    createPulseRing();
+                }
+            });
+            
+            // Create pulse ring effect
+            function createPulseRing() {
+                const pulseRing = document.createElement('div');
+                pulseRing.className = 'pulse-ring';
+                pulseRing.style.left = `${mouseX}px`;
+                pulseRing.style.top = `${mouseY}px`;
+                document.body.appendChild(pulseRing);
+                
+                // Animate
+                pulseRing.style.animation = 'pulse 0.5s ease-out forwards';
+                
+                // Remove after animation
+                setTimeout(() => {
+                    if (pulseRing.parentNode) {
+                        pulseRing.parentNode.removeChild(pulseRing);
+                    }
+                }, 500);
+            }
+            
+            // Handle mouse leaving the window
+            document.addEventListener('mouseout', () => {
+                mouseOnScreen = false;
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Shape functions
+            const shapes = {
+                circle: (angle, distance, index) => {
+                    return {
+                        x: mouseX + Math.cos(angle) * distance,
+                        y: mouseY + Math.sin(angle) * distance
+                    };
+                },
+                square: (angle, distance, index) => {
+                    // More precise implementation for square
+                    const normalized = angle / (Math.PI * 2); // 0 to 1
+                    const side = Math.floor(normalized * 4); // 0, 1, 2, 3 for top, right, bottom, left
+                    const sidePos = (normalized * 4) % 1; // Position along the side
+                    
+                    const size = distance * 0.8;
+                    
+                    switch(side) {
+                        case 0: // Top side
+                            return { 
+                                x: mouseX - size + sidePos * size * 2, 
+                                y: mouseY - size 
+                            };
+                        case 1: // Right side
+                            return { 
+                                x: mouseX + size, 
+                                y: mouseY - size + sidePos * size * 2 
+                            };
+                        case 2: // Bottom side
+                            return { 
+                                x: mouseX + size - sidePos * size * 2, 
+                                y: mouseY + size 
+                            };
+                        case 3: // Left side
+                            return { 
+                                x: mouseX - size, 
+                                y: mouseY + size - sidePos * size * 2 
+                            };
+                    }
+                },
+                triangle: (angle, distance, index) => {
+                    // Improved triangle calculation
+                    const triangleSize = distance * 1.2;
+                    const sides = 3;
+                    const sideIndex = Math.floor((angle / (Math.PI * 2)) * sides) % sides;
+                    const sidePosition = ((angle / (Math.PI * 2)) * sides) % 1;
+                    
+                    // Define the three vertices of the triangle
+                    const vertices = [
+                        { x: mouseX, y: mouseY - triangleSize }, // Top
+                        { x: mouseX + triangleSize * 0.866, y: mouseY + triangleSize * 0.5 }, // Bottom right
+                        { x: mouseX - triangleSize * 0.866, y: mouseY + triangleSize * 0.5 }  // Bottom left
+                    ];
+                    
+                    const nextVertex = (sideIndex + 1) % sides;
+                    
+                    // Interpolate along the side
+                    return {
+                        x: vertices[sideIndex].x + (vertices[nextVertex].x - vertices[sideIndex].x) * sidePosition,
+                        y: vertices[sideIndex].y + (vertices[nextVertex].y - vertices[sideIndex].y) * sidePosition
+                    };
+                },
+                star: (angle, distance, index) => {
+                    // Enhanced star pattern with clear points
+                    const starPoints = 5;
+                    const fullAngle = angle * starPoints;
+                    const innerRadius = distance * 0.4;
+                    const outerRadius = distance;
+                    
+                    // Calculate whether this point should be an inner or outer part of the star
+                    const modAngle = fullAngle % (Math.PI * 2);
+                    const segmentSize = Math.PI / starPoints;
+                    const isOuter = modAngle % (2 * segmentSize) < segmentSize;
+                    
+                    const radius = isOuter ? outerRadius : innerRadius;
+                    
+                    return {
+                        x: mouseX + Math.cos(fullAngle) * radius,
+                        y: mouseY + Math.sin(fullAngle) * radius
+                    };
+                },
+                spiral: (angle, distance, index) => {
+                    // Improved spiral with more consistent density
+                    const spiralTightness = 0.3;
+                    const normalizedIndex = index / particleCount;
+                    const radiusFactor = 1 - Math.pow(normalizedIndex, 0.5); // Non-linear scaling for better distribution
+                    const baseRadius = 10 + distance * radiusFactor;
+                    const spiralAngle = angle * 10 + index * 0.002;
+                    
+                    return {
+                        x: mouseX + Math.cos(spiralAngle) * baseRadius * spiralAngle * spiralTightness,
+                        y: mouseY + Math.sin(spiralAngle) * baseRadius * spiralAngle * spiralTightness
+                    };
+                },
+                dna: (angle, distance, index) => {
+                    // DNA helix pattern
+                    const strand = index % 2;
+                    const frequency = 0.2;
+                    const axisLength = distance * 2;
+                    const time = globalTime;
+                    
+                    // Position along the axis
+                    const axisPosition = (index / particleCount) * axisLength - axisLength / 2;
+                    
+                    // Rotation angle around the axis
+                    const rotation = angle * 20 + time * 2;
+                    
+                    // DNA strand radius
+                    const radius = distance * 0.3;
+                    
+                    // Calculate position on the helix
+                    if (strand === 0) {
+                        return {
+                            x: mouseX + Math.cos(rotation) * radius,
+                            y: mouseY + axisPosition + Math.sin(rotation) * radius
+                        };
+                    } else {
+                        // Second strand is offset by 180 degrees
+                        return {
+                            x: mouseX + Math.cos(rotation + Math.PI) * radius,
+                            y: mouseY + axisPosition + Math.sin(rotation + Math.PI) * radius
+                        };
+                    }
+                },
+                vortex: (angle, distance, index) => {
+                    // Vortex/black hole effect
+                    const time = globalTime;
+                    const rotationSpeed = 2;
+                    const inwardPull = 0.3;
+                    
+                    // Normalized index for different layers
+                    const normalizedIndex = (index % 100) / 100;
+                    
+                    // Rotation increases as particles get closer to center
+                    const rotationAngle = angle + time * rotationSpeed * (1 - normalizedIndex);
+                    
+                    // Distance decreases over time for a spiraling inward effect
+                    const adjustedDistance = distance * (0.2 + normalizedIndex * 0.8);
+                    
+                    return {
+                        x: mouseX + Math.cos(rotationAngle) * adjustedDistance,
+                        y: mouseY + Math.sin(rotationAngle) * adjustedDistance
+                    };
+                },
+                infinity: (angle, distance, index) => {
+                    // Infinity symbol (∞) pattern
+                    const width = distance * 1.2;
+                    const height = distance * 0.6;
+                    
+                    // Parameter t goes from 0 to 2π
+                    const t = angle;
+                    
+                    // Parametric equation for infinity symbol
+                    return {
+                        x: mouseX + width * Math.sin(t) / (1 + Math.pow(Math.cos(t), 2)),
+                        y: mouseY + height * Math.sin(t) * Math.cos(t) / (1 + Math.pow(Math.cos(t), 2))
+                    };
+                },
+                galaxy: (angle, distance, index) => {
+                    // Spiral galaxy effect
+                    const armCount = 4; // Number of spiral arms
+                    const spiralFactor = 0.3; // How tight the spiral is
+                    const rotation = globalTime * 0.2;
+                    
+                    // Determine which arm this particle belongs to
+                    const arm = index % armCount;
+                    const armOffset = (2 * Math.PI / armCount) * arm;
+                    
+                    // Randomize distance slightly for a more natural look
+                    const randomDistance = distance * (0.8 + Math.random() * 0.4);
+                    
+                    // Logarithmic spiral formula
+                    const spiralAngle = angle * 4 + armOffset + rotation;
+                    const radius = randomDistance * Math.exp(spiralFactor * spiralAngle);
+                    
+                    return {
+                        x: mouseX + Math.cos(spiralAngle) * radius,
+                        y: mouseY + Math.sin(spiralAngle) * radius
+                    };
+                },
+                heart: (angle, distance, index) => {
+                    // Heart shape using parametric equations
+                    // Normalize the angle to 0-1 range
+                    const t = angle / (Math.PI * 2);
+                    const size = distance * 0.8;
+                    
+                    // Heart curve parametric equation
+                    // x = 16 * sin^3(t)
+                    // y = 13 * cos(t) - 5 * cos(2t) - 2 * cos(3t) - cos(4t)
+                    const x = mouseX + size * 16 * Math.pow(Math.sin(t * Math.PI * 2), 3);
+                    const y = mouseY - size * (13 * Math.cos(t * Math.PI * 2) - 
+                                              5 * Math.cos(2 * t * Math.PI * 2) - 
+                                              2 * Math.cos(3 * t * Math.PI * 2) - 
+                                              Math.cos(4 * t * Math.PI * 2));
+                    return { x, y };
+                },
+                text: (angle, distance, index) => {
+                    // Text shape - using a predetermined point array
+                    const points = createTextPoints(customText, particleCount);
+                    const idx = index % points.length;
+                    const point = points[idx];
+                    
+                    // Scale and position the text points
+                    const scale = distance * 0.05;
+                    return {
+                        x: mouseX + point.x * scale,
+                        y: mouseY + point.y * scale
+                    };
+                },
+                random: (angle, distance, index) => {
+                    // Create a field of random formations with more structured patterns
+                    const noiseX = Math.sin(angle * 4 + globalTime) * Math.cos(distance * 0.01 + globalTime);
+                    const noiseY = Math.cos(angle * 4 + globalTime) * Math.sin(distance * 0.01 + globalTime);
+                    
+                    // Create a more visually interesting pattern with multiple frequency components
+                    const pattern = Math.sin(angle * 5) * Math.cos(angle * 2) * Math.sin(globalTime * 0.5);
+                    const patternDist = distance * (0.8 + pattern * 0.2);
+                    
+                    return {
+                        x: mouseX + Math.cos(angle + noiseX) * patternDist,
+                        y: mouseY + Math.sin(angle + noiseY) * patternDist
+                    };
+                }
+            };
+            
+            // Function to create points for text shape
+            function createTextPoints(text, count) {
+                // Use canvas to create text points
+                const textCanvas = document.createElement('canvas');
+                const textCtx = textCanvas.getContext('2d');
+                const fontSize = 100;
+                
+                // Set canvas size
+                textCanvas.width = fontSize * text.length * 0.8;
+                textCanvas.height = fontSize * 1.5;
+                
+                // Draw text
+                textCtx.font = `bold ${fontSize}px Arial`;
+                textCtx.fillStyle = 'white';
+                textCtx.textAlign = 'center';
+                textCtx.textBaseline = 'middle';
+                textCtx.fillText(text, textCanvas.width / 2, textCanvas.height / 2);
+                
+                // Get image data
+                const imageData = textCtx.getImageData(0, 0, textCanvas.width, textCanvas.height);
+                const data = imageData.data;
+                
+                // Extract points from text
+                const points = [];
+                const step = 4; // Skip pixels for performance
+                
+                for (let y = 0; y < textCanvas.height; y += step) {
+                    for (let x = 0; x < textCanvas.width; x += step) {
+                        const i = (y * textCanvas.width + x) * 4;
+                        // If pixel is not transparent
+                        if (data[i + 3] > 0) {
+                            points.push({
+                                x: x - textCanvas.width / 2,
+                                y: y - textCanvas.height / 2
+                            });
+                        }
+                    }
+                }
+                
+                // If not enough points, duplicate them
+                while (points.length < count) {
+                    points.push(...points.slice(0, Math.min(points.length, count - points.length)));
+                }
+                
+                // If too many points, trim them
+                if (points.length > count) {
+                    const stride = Math.floor(points.length / count);
+                    const filteredPoints = [];
+                    for (let i = 0; i < points.length; i += stride) {
+                        filteredPoints.push(points[i]);
+                        if (filteredPoints.length >= count) break;
+                    }
+                    return filteredPoints;
+                }
+                
+                return points;
+            }
+            
+            // Shape selection
+            const shapeButtons = document.querySelectorAll('.shape-btn');
+            shapeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    shapeButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Set previous and current shape for transition
+                    previousShape = currentShape;
+                    currentShape = btn.getAttribute('data-shape');
+                    
+                    // If text shape, prompt for custom text
+                    if (currentShape === 'text') {
+                        const text = prompt('Enter text to display (max 10 characters):', 'SWARM');
+                        if (text) {
+                            customText = text.substring(0, 10).toUpperCase();
+                        }
+                    }
+                    
+                    // Start transition
+                    showTransition(true);
+                    
+                    // Use setTimeout to let the transition screen show before intensive calculation
+                    setTimeout(() => {
+                    isTransitioning = true;
+                    transitionProgress = 0;
+                        showTransition(false);
+                    }, 200);
+                });
+            });
+            
+            // Effect toggles
+            const effectToggles = document.querySelectorAll('.effect-toggle');
+            effectToggles.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const effect = btn.getAttribute('data-effect');
+                    effects[effect] = !effects[effect];
+                    
+                    if (effects[effect]) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Demo mode handler
+            function startDemoMode() {
+                if (demoMode) return;
+                
+                demoMode = true;
+                
+                function cycleShapes() {
+                    if (!demoMode) return;
+                    
+                    // Get all shape buttons
+                    const buttons = Array.from(document.querySelectorAll('.shape-btn'));
+                    const currentIndex = buttons.findIndex(btn => btn.classList.contains('active'));
+                    
+                    // Select next shape
+                    const nextIndex = (currentIndex + 1) % buttons.length;
+                    buttons[nextIndex].click();
+                    
+                    // Schedule next change
+                    demoTimeout = setTimeout(cycleShapes, 6000);
+                }
+                
+                // Activate some effects
+                if (!effects.trails && !effects.colorWave && !effects.glow) {
+                    document.querySelector('[data-effect="trails"]').click();
+                    document.querySelector('[data-effect="colorWave"]').click();
+                    document.querySelector('[data-effect="glow"]').click();
+                }
+                
+                // Start cycling
+                cycleShapes();
+            }
+            
+            // Toggle performance display
+            function togglePerformanceStats() {
+                showPerformance = !showPerformance;
+                performanceStats.style.display = showPerformance ? 'block' : 'none';
+            }
+            
+            // Keyboard commands
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    // Reset particles
+                    showTransition(true);
+                    
+                    setTimeout(() => {
+                        initParticles();
+                        // Force shape transition
+                        isTransitioning = true;
+                        transitionProgress = 0;
+                        showTransition(false);
+                    }, 200);
+                } else if (e.key.toLowerCase() === 'd') {
+                    // Toggle demo mode
+                    if (demoMode) {
+                        clearTimeout(demoTimeout);
+                        demoMode = false;
+                    } else {
+                        startDemoMode();
+                    }
+                } else if (e.key.toLowerCase() === 'p') {
+                    // Toggle performance stats
+                    togglePerformanceStats();
+                }
+            });
+            
+            // Animation loop
+            function animate(timestamp) {
+                // Calculate delta time
+                const deltaTime = lastFrameTime ? timestamp - lastFrameTime : 0;
+                lastFrameTime = timestamp;
+                
+                // Update FPS counter
+                frameCount++;
+                if (timestamp - lastFpsUpdateTime > 1000) {
+                    fps = Math.round(frameCount * 1000 / (timestamp - lastFpsUpdateTime));
+                    frameCount = 0;
+                    lastFpsUpdateTime = timestamp;
+                    
+                    if (showPerformance) {
+                        fpsCounter.textContent = fps;
+                    }
+                }
+                
+                // Increment global time for animations
+                globalTime += 0.01;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Create motion if mouse is not on screen or inactive for some time
+                if (!mouseOnScreen || Date.now() - lastMouseMoveTime > 3000) {
+                    mouseActive = false;
+                    const autoMoveRadius = 100;
+                    const autoMoveSpeed = 0.001;
+                    
+                    targetX = canvas.width / 2 + Math.cos(globalTime * autoMoveSpeed) * autoMoveRadius;
+                    targetY = canvas.height / 2 + Math.sin(globalTime * autoMoveSpeed) * autoMoveRadius;
+                    
+                    mouseX += (targetX - mouseX) * 0.05;
+                    mouseY += (targetY - mouseY) * 0.05;
+                    
+                    // Update cursor position
+                    cursor.style.left = `${mouseX}px`;
+                    cursor.style.top = `${mouseY}px`;
+                }
+                
+                // Update cursor trails
+                cursorTrails.forEach((trail, index) => {
+                    const delay = trail.delay;
+                    const targetX = mouseX;
+                    const targetY = mouseY;
+                    
+                    // Ease toward target with delay
+                    trail.x += (targetX - trail.x) * 0.2;
+                    trail.y += (targetY - trail.y) * 0.2;
+                    
+                    // Update DOM element
+                    trail.element.style.left = `${trail.x}px`;
+                    trail.element.style.top = `${trail.y}px`;
+                    
+                    // Show trails only when mouse is moving
+                    trail.element.style.opacity = mouseSpeed > 5 ? 0.3 - (index * 0.02) : 0;
+                });
+                
+                // Update transition progress
+                if (isTransitioning) {
+                    transitionProgress += 0.02;
+                    if (transitionProgress >= 1) {
+                        isTransitioning = false;
+                        transitionProgress = 0;
+                    }
+                }
+                
+                // Update and draw particles
+                particles.forEach((particle, index) => {
+                    // Calculate angle and distance for shape positioning
+                    const angle = (index / particleCount) * Math.PI * 2;
+                    
+                    // Particles distributed in multiple layers for more defined shape
+                    const layerIndex = index % 10;
+                    const baseDistance = 30 + layerIndex * 10;
+                    const distance = baseDistance + (Math.sin(index * 0.1) * 5); // Add slight variation
+                    
+                    // Get target positions for both shapes during transition
+                    let targetPos;
+                    
+                    if (isTransitioning) {
+                        const prevPos = shapes[previousShape](angle, distance, index);
+                        const nextPos = shapes[currentShape](angle, distance, index);
+                        
+                        // Interpolate between shapes during transition
+                        targetPos = {
+                            x: prevPos.x + (nextPos.x - prevPos.x) * transitionProgress,
+                            y: prevPos.y + (nextPos.y - prevPos.y) * transitionProgress
+                        };
+                    } else {
+                        targetPos = shapes[currentShape](angle, distance, index);
+                    }
+                    
+                    // Set particle target
+                    particle.targetX = targetPos.x;
+                    particle.targetY = targetPos.y;
+                    
+                    // Update particle
+                    particle.update();
+                });
+                
+                // Draw connection lines BEFORE particles for better visual effect
+                if (effects.connections) {
+                    // Skip some particles for performance
+                    const connectionStep = 5;
+                    for (let i = 0; i < particles.length; i += connectionStep) {
+                        const particle = particles[i];
+                        for (let j = i + connectionStep; j < particles.length; j += connectionStep * 2) {
+                            if (j < particles.length) {
+                            particle.drawConnectionTo(particles[j]);
+                            }
+                        }
+                    }
+                }
+                
+                // Draw particles AFTER connections
+                particles.forEach(particle => {
+                    particle.draw();
+                });
+                
+                // Render cursor glow effect based on mouse speed
+                if (mouseSpeed > 5 && mouseOnScreen) {
+                    const glowSize = Math.min(100, mouseSpeed * 4);
+                    const gradient = ctx.createRadialGradient(
+                        mouseX, mouseY, 0,
+                        mouseX, mouseY, glowSize
+                    );
+                    gradient.addColorStop(0, 'rgba(255, 126, 185, 0.3)');
+                    gradient.addColorStop(1, 'rgba(255, 126, 185, 0)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(mouseX, mouseY, glowSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Continue animation
+                requestAnimationFrame(animate);
+            }
+            
+            // Add click effects
+            canvas.addEventListener('click', () => {
+                // Visual feedback on click - particles momentarily scatter
+                particles.forEach(particle => {
+                    const dx = particle.x - mouseX;
+                    const dy = particle.y - mouseY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx);
+                    
+                    // Add outward force
+                    if (dist < 200) {
+                        const force = 5 * (1 - dist / 200);
+                        particle.velX += Math.cos(angle) * force;
+                        particle.velY += Math.sin(angle) * force;
+                    }
+                });
+                
+                // Create pulse ring effect
+                createPulseRing();
+                
+                // Cycle through color palettes
+                currentPalette = colorPalettes[(colorPalettes.indexOf(currentPalette) + 1) % colorPalettes.length];
+            });
+            
+            // Initialize and start animation
+            initParticles();
+            animate(0);
+            
+            // Show initial shape formation
+            setTimeout(() => {
+                isTransitioning = true;
+                transitionProgress = 0;
+            }, 100);
+            
+            // Auto-activate demo mode after some inactivity
+            setTimeout(() => {
+                if (!mouseOnScreen && !demoMode) {
+                    startDemoMode();
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html> 

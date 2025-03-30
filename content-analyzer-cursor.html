@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Content Analyzer Cursor Effect - Hover over text to see word count, reading time, and content analysis with a smart tooltip display">
+    <title>Content Analyzer Cursor Effect - Interactive Cursor Animation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --background: #0a192f;
+            --card-bg: rgba(28, 42, 57, 0.7);
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+            --tooltip-bg: rgba(10, 25, 47, 0.95);
+            --tooltip-border: rgba(93, 187, 99, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            cursor: none; /* Hide default cursor */
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zm20.97 0l9.315 9.314-1.414 1.414L34.828 0h2.83zM22.344 0L13.03 9.314l1.414 1.414L25.172 0h-2.83zM32 0l12.142 12.142-1.414 1.414L30 2.828 17.272 15.556l-1.414-1.414L28 0h4zM.284 0l28 28-1.414 1.414L0 2.544V0h.284zM0 5.373l25.456 25.455-1.414 1.415L0 8.2V5.374zm0 5.656l22.627 22.627-1.414 1.414L0 13.86v-2.83zm0 5.656l19.8 19.8-1.415 1.413L0 19.514v-2.83zm0 5.657l16.97 16.97-1.414 1.415L0 25.172v-2.83zM0 28l14.142 14.142-1.414 1.414L0 30.828V28zm0 5.657L11.314 44.97 9.9 46.386l-9.9-9.9v-2.828zm0 5.657L8.485 47.8 7.07 49.214 0 42.143v-2.83zm0 5.657l5.657 5.657-1.414 1.415L0 47.8v-2.83zm0 5.657l2.828 2.83-1.414 1.413L0 53.456v-2.83zM54.627 60L30 35.373 5.373 60H8.2L30 38.2 51.8 60h2.827zm-5.656 0L30 41.03 11.03 60h2.828L30 43.858 46.142 60h2.83zm-5.656 0L30 46.686 16.686 60h2.83L30 49.515 40.485 60h2.83zm-5.657 0L30 52.343 22.344 60h2.83L30 55.172 34.828 60h2.83zM32 60l-2-2-2 2h4zM59.716 0l-28 28 1.414 1.414L60 2.544V0h-.284zM60 5.373L34.544 30.828l1.414 1.415L60 8.2V5.374zm0 5.656L37.373 33.656l1.414 1.414L60 13.86v-2.83zm0 5.656l-19.8 19.8 1.415 1.413L60 19.514v-2.83zm0 5.657l-16.97 16.97 1.414 1.415L60 25.172v-2.83zM60 28L45.858 42.142l1.414 1.414L60 30.828V28zm0 5.657L48.686 44.97l1.415 1.415 9.9-9.9v-2.828zm0 5.657L51.515 47.8l1.414 1.414L60 42.143v-2.83zm0 5.657l-5.657 5.657 1.414 1.415L60 47.8v-2.83zm0 5.657l-2.828 2.83 1.414 1.413L60 53.456v-2.83zM39.9 16.385l1.414-1.414L30 3.658 18.686 14.97l1.415 1.415 9.9-9.9 9.9 9.9zm-2.83 2.828l1.415-1.414L30 9.313 21.515 17.8l1.414 1.413L30 11.8l7.07 7.414v-.002zm-2.827 2.83l1.414-1.416L30 14.97l-5.657 5.657 1.414 1.415L30 17.8l4.243 4.242zm-2.83 2.827l1.415-1.414L30 20.626l-2.828 2.83 1.414 1.414L30 23.456l1.414 1.414zM56.87 59.414L58.284 58 30 29.716 1.716 58l1.414 1.414L30 32.544l26.87 26.87z' fill='rgba(93, 187, 99, 0.05)' fill-rule='evenodd'/%3E%3C/svg%3E"),
+                radial-gradient(circle at 30% 10%, rgba(93, 187, 99, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 70% 90%, rgba(102, 178, 255, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .description {
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--background);
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .back-button:hover::before {
+            opacity: 1;
+        }
+
+        /* Content sections */
+        .content-area {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .article-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 3rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .article-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .article-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-light);
+        }
+
+        .article-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .paragraph {
+            background: rgba(10, 25, 47, 0.3);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(93, 187, 99, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .paragraph:hover {
+            border-color: rgba(93, 187, 99, 0.3);
+            background: rgba(10, 25, 47, 0.5);
+        }
+
+        .paragraph p {
+            line-height: 1.8;
+            color: var(--text-muted);
+            margin-bottom: 0;
+        }
+
+        .controls {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .controls h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-light);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .control-item {
+            background: rgba(10, 25, 47, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(93, 187, 99, 0.1);
+        }
+
+        .control-item h4 {
+            margin-bottom: 0.5rem;
+            color: var(--secondary-light);
+        }
+
+        .control-item p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Custom cursor */
+        .cursor {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            background-color: transparent;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+
+        .cursor::before {
+            content: '🔍';
+            position: absolute;
+            font-size: 16px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor.active {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(93, 187, 99, 0.1);
+            border-color: var(--primary-light);
+        }
+
+        /* Content analyzer tooltip */
+        .analyzer-tooltip {
+            position: fixed;
+            background-color: var(--tooltip-bg);
+            color: var(--text);
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 9998;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--tooltip-border);
+            width: 280px;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .analyzer-tooltip.visible {
+            display: block;
+        }
+
+        .analyzer-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: var(--primary-light);
+            border-bottom: 1px solid rgba(93, 187, 99, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--secondary-light);
+        }
+
+        .sentiment-meter {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sentiment-value {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .sentiment-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .readability-meter {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .readability-value {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .readability-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .keyword-section {
+            margin-top: 1rem;
+        }
+
+        .keyword-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .keyword-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .keyword-tag {
+            background-color: rgba(93, 187, 99, 0.2);
+            color: var(--primary-light);
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+
+        /* Reading highlighter effect */
+        .reading-highlight {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: rgba(93, 187, 99, 0.05);
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: -1;
+            transform-origin: center;
+            animation: pulseHighlight 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseHighlight {
+            0%, 100% { opacity: 0.05; }
+            50% { opacity: 0.15; }
+        }
+
+        /* Mode toggle */
+        .mode-toggle {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--tooltip-bg);
+            border: 1px solid var(--primary-dark);
+            color: var(--text);
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            font-weight: 500;
+            z-index: 100;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .mode-toggle:hover {
+            background: rgba(10, 25, 47, 1);
+        }
+
+        .mode-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            .article-container {
+                padding: 1.5rem;
+            }
+
+            .analyzer-tooltip {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Content Analyzer Cursor</h1>
+            <p class="description">
+                This interactive cursor transforms your browsing experience by providing real-time content analysis as you hover over text blocks. Get instant insights into word count, reading time, text sentiment, and key phrases without interrupting your reading flow.
+            </p>
+            <a href="index.html" class="back-button">← Back to All Effects</a>
+        </header>
+
+        <div class="controls">
+            <h3>How to Use</h3>
+            <div class="controls-grid">
+                <div class="control-item">
+                    <h4>Hover Analysis</h4>
+                    <p>Hover over any paragraph to see detailed metrics about its content, including word count, reading time, and sentiment.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Smart Focus</h4>
+                    <p>The cursor intelligently detects text content and automatically activates the analysis feature when over readable text.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Keyword Extraction</h4>
+                    <p>The analyzer will identify and display key phrases and important terms from the text you're hovering over.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Toggle Display Mode</h4>
+                    <p>Use the button in the bottom right to switch between detailed and simplified analysis view modes.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="article-container">
+                <h2 class="article-title">Climate Change and Global Ecosystems</h2>
+                <div class="article-content">
+                    <div class="paragraph" data-readability="85" data-sentiment="70">
+                        <p>Climate change represents one of the most significant challenges facing our global ecosystem in the modern era. Rising temperatures, shifting precipitation patterns, and increasing frequency of extreme weather events are disrupting ecological balances that have evolved over millennia. Scientists have observed accelerating changes in both terrestrial and marine environments, with cascading effects through food webs and ecosystem services. The Intergovernmental Panel on Climate Change (IPCC) has concluded with high confidence that human activities, particularly greenhouse gas emissions, are the dominant cause of observed warming since the mid-20th century.</p>
+                    </div>
+                    
+                    <div class="paragraph" data-readability="78" data-sentiment="40">
+                        <p>The consequences of climate change for biodiversity are profound and increasingly well-documented. Many species are experiencing range shifts toward the poles or to higher elevations as they track suitable climate conditions. However, not all species can migrate quickly enough to keep pace with climate velocity, leading to population declines and elevated extinction risks. A landmark meta-analysis published in Nature Climate Change estimated that one in six species globally could face extinction due to climate change if current emission trends continue. Particularly vulnerable are specialist species with narrow ecological niches, limited dispersal abilities, or those already facing additional stressors such as habitat fragmentation.</p>
+                    </div>
+                    
+                    <div class="paragraph" data-readability="65" data-sentiment="30">
+                        <p>Marine ecosystems face compounding challenges from climate change. Ocean warming and acidification, both direct consequences of increased atmospheric CO2, are causing widespread coral bleaching events and threatening calcifying organisms like corals, mollusks, and certain plankton species. The Great Barrier Reef has experienced multiple mass bleaching events since 2016, affecting thousands of kilometers of reef systems. Meanwhile, changing ocean circulation patterns are altering nutrient availability and oxygen levels, with potentially devastating impacts on marine food webs. Models project that without significant mitigation efforts, many tropical coral reef ecosystems may collapse within the coming decades.</p>
+                    </div>
+                    
+                    <div class="paragraph" data-readability="72" data-sentiment="45">
+                        <p>Arctic regions are experiencing climate change at approximately twice the global average rate, a phenomenon known as Arctic amplification. This accelerated warming is driving rapid sea ice loss, permafrost thaw, and ecosystem transitions. The ripple effects extend far beyond polar regions, influencing global atmospheric and oceanic circulation patterns. Indigenous communities in the Arctic, whose cultural practices and food security are intimately connected to sea ice and traditional hunting, are experiencing profound disruptions to their way of life. Scientists have documented significant changes in the timing of seasonal events (phenology), creating mismatches between predators and prey and disrupting ecological interactions that have evolved over long time periods.</p>
+                    </div>
+                    
+                    <div class="paragraph" data-readability="90" data-sentiment="85">
+                        <p>Despite these challenges, there are reasons for cautious optimism. Renewable energy technologies have advanced rapidly and become increasingly cost-competitive with fossil fuels. Many countries and corporations have pledged ambitious emissions reduction targets. Natural climate solutions—conserving, restoring, and improving land management to increase carbon storage or avoid greenhouse gas emissions—could potentially provide up to one-third of the emission reductions needed by 2030 to keep global warming below 2°C. Conservation strategies are increasingly incorporating climate change considerations, focusing on preserving biodiversity, ecological functions, and evolutionary potential rather than maintaining historical conditions. By building ecosystem resilience and establishing habitat corridors, conservation efforts can help facilitate species' adaptation to changing conditions.</p>
+                    </div>
+                    
+                    <div class="paragraph" data-readability="82" data-sentiment="60">
+                        <p>Addressing climate change requires coordinated global action across multiple sectors. The 2015 Paris Agreement established a framework for countries to implement nationally determined contributions toward reducing emissions, with the goal of limiting global warming to well below 2°C above pre-industrial levels while pursuing efforts to limit warming to 1.5°C. Scientific assessments indicate that meeting these targets would substantially reduce the risks and impacts of climate change on ecosystems. Complementary approaches include protecting carbon-rich ecosystems like forests and wetlands, promoting sustainable agriculture and forestry practices, and developing technological solutions for carbon dioxide removal from the atmosphere. Education and community engagement remain essential components of climate action, fostering the social and political will necessary for systemic change.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom cursor elements -->
+    <div class="cursor"></div>
+    <div class="analyzer-tooltip">
+        <div class="analyzer-title">Content Analysis</div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-label">Word Count</span>
+                <span class="stat-value" id="word-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Reading Time</span>
+                <span class="stat-value" id="reading-time">0 min</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Characters</span>
+                <span class="stat-value" id="char-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Sentences</span>
+                <span class="stat-value" id="sentence-count">0</span>
+            </div>
+        </div>
+        
+        <div class="sentiment-section">
+            <span class="stat-label">Sentiment Analysis</span>
+            <div class="sentiment-meter">
+                <div class="sentiment-value" id="sentiment-value"></div>
+            </div>
+            <div class="sentiment-label">
+                <span>Negative</span>
+                <span>Positive</span>
+            </div>
+        </div>
+        
+        <div class="readability-section">
+            <span class="stat-label">Readability Score</span>
+            <div class="readability-meter">
+                <div class="readability-value" id="readability-value"></div>
+            </div>
+            <div class="readability-label">
+                <span>Complex</span>
+                <span>Simple</span>
+            </div>
+        </div>
+        
+        <div class="keyword-section">
+            <div class="keyword-title">Key Phrases</div>
+            <div class="keyword-list" id="keyword-list"></div>
+        </div>
+    </div>
+
+    <div class="mode-toggle">
+        <span class="mode-icon">📊</span>
+        <span class="mode-text">Toggle Analysis Detail</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elements
+            const cursor = document.querySelector('.cursor');
+            const analyzerTooltip = document.querySelector('.analyzer-tooltip');
+            const paragraphs = document.querySelectorAll('.paragraph');
+            const modeToggle = document.querySelector('.mode-toggle');
+            
+            // State variables
+            let isDetailedMode = true;
+            let currentParagraph = null;
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            // Update cursor position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                if (analyzerTooltip.classList.contains('visible')) {
+                    updateTooltipPosition();
+                }
+            });
+            
+            // Add hover effect for paragraphs
+            paragraphs.forEach(paragraph => {
+                paragraph.addEventListener('mouseenter', () => {
+                    cursor.classList.add('active');
+                    currentParagraph = paragraph;
+                    
+                    // Add reading highlight effect
+                    const highlight = document.createElement('div');
+                    highlight.classList.add('reading-highlight');
+                    paragraph.appendChild(highlight);
+                    
+                    // Show and update tooltip
+                    showTooltip();
+                    updateTooltipData(paragraph);
+                });
+                
+                paragraph.addEventListener('mouseleave', () => {
+                    cursor.classList.remove('active');
+                    currentParagraph = null;
+                    
+                    // Remove highlight effect
+                    const highlight = paragraph.querySelector('.reading-highlight');
+                    if (highlight) {
+                        highlight.remove();
+                    }
+                    
+                    // Hide tooltip
+                    hideTooltip();
+                });
+            });
+            
+            // Toggle display mode
+            modeToggle.addEventListener('click', () => {
+                isDetailedMode = !isDetailedMode;
+                
+                if (isDetailedMode) {
+                    analyzerTooltip.querySelector('.sentiment-section').style.display = 'block';
+                    analyzerTooltip.querySelector('.readability-section').style.display = 'block';
+                    analyzerTooltip.querySelector('.keyword-section').style.display = 'block';
+                    modeToggle.querySelector('.mode-text').textContent = 'Switch to Simple View';
+                } else {
+                    analyzerTooltip.querySelector('.sentiment-section').style.display = 'none';
+                    analyzerTooltip.querySelector('.readability-section').style.display = 'none';
+                    analyzerTooltip.querySelector('.keyword-section').style.display = 'none';
+                    modeToggle.querySelector('.mode-text').textContent = 'Switch to Detailed View';
+                }
+                
+                // Update tooltip if currently visible
+                if (currentParagraph) {
+                    updateTooltipPosition();
+                }
+            });
+            
+            // Show tooltip
+            function showTooltip() {
+                analyzerTooltip.classList.add('visible');
+                updateTooltipPosition();
+            }
+            
+            // Hide tooltip
+            function hideTooltip() {
+                analyzerTooltip.classList.remove('visible');
+            }
+            
+            // Update tooltip position
+            function updateTooltipPosition() {
+                // Position based on available space
+                const tooltipRect = analyzerTooltip.getBoundingClientRect();
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                
+                // Default position to the right of cursor
+                let left = mouseX + 20;
+                let top = mouseY - tooltipRect.height / 2;
+                
+                // Check if too close to right edge
+                if (left + tooltipRect.width > windowWidth - 20) {
+                    left = mouseX - tooltipRect.width - 20;
+                }
+                
+                // Check if too close to bottom edge
+                if (top + tooltipRect.height > windowHeight - 20) {
+                    top = windowHeight - tooltipRect.height - 20;
+                }
+                
+                // Check if too close to top edge
+                if (top < 20) {
+                    top = 20;
+                }
+                
+                analyzerTooltip.style.left = `${left}px`;
+                analyzerTooltip.style.top = `${top}px`;
+            }
+            
+            // Update tooltip data based on paragraph content
+            function updateTooltipData(paragraph) {
+                const text = paragraph.querySelector('p').textContent;
+                
+                // Basic metrics
+                const wordCount = countWords(text);
+                const charCount = text.length;
+                const sentenceCount = countSentences(text);
+                const readingTimeMin = Math.ceil(wordCount / 200); // Average reading speed
+                
+                // Update tooltip values
+                document.getElementById('word-count').textContent = wordCount;
+                document.getElementById('char-count').textContent = charCount;
+                document.getElementById('sentence-count').textContent = sentenceCount;
+                document.getElementById('reading-time').textContent = `${readingTimeMin} min`;
+                
+                // Get sentiment and readability from data attributes
+                const sentimentScore = parseInt(paragraph.dataset.sentiment);
+                const readabilityScore = parseInt(paragraph.dataset.readability);
+                
+                document.getElementById('sentiment-value').style.width = `${sentimentScore}%`;
+                document.getElementById('readability-value').style.width = `${readabilityScore}%`;
+                
+                // Extract keywords
+                const keywords = extractKeywords(text);
+                displayKeywords(keywords);
+            }
+            
+            // Count words in text
+            function countWords(text) {
+                return text.split(/\s+/).filter(word => word.length > 0).length;
+            }
+            
+            // Count sentences in text
+            function countSentences(text) {
+                return text.split(/[.!?]+/).filter(sentence => sentence.trim().length > 0).length;
+            }
+            
+            // Extract keywords (simplified algorithm for demo)
+            function extractKeywords(text) {
+                // Remove common words and split into words
+                const commonWords = ['the', 'and', 'a', 'to', 'of', 'in', 'that', 'is', 'are', 'with', 'for', 'as', 'an', 'on', 'by', 'this', 'these', 'those', 'from'];
+                const words = text.toLowerCase().match(/\b[a-z]{3,}\b/g) || [];
+                
+                // Count word frequency
+                const wordCounts = {};
+                words.forEach(word => {
+                    if (!commonWords.includes(word)) {
+                        wordCounts[word] = (wordCounts[word] || 0) + 1;
+                    }
+                });
+                
+                // Find phrases (pairs of words that occur together)
+                const phrases = [];
+                const textWords = text.toLowerCase().match(/\b[a-z]{3,}\b/g) || [];
+                for (let i = 0; i < textWords.length - 1; i++) {
+                    if (!commonWords.includes(textWords[i]) && !commonWords.includes(textWords[i + 1])) {
+                        const phrase = `${textWords[i]} ${textWords[i + 1]}`;
+                        phrases.push(phrase);
+                    }
+                }
+                
+                // Get top words and phrases
+                const topWords = Object.entries(wordCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(entry => entry[0]);
+                
+                // Extract known domain-specific keywords based on text content
+                const domainKeywords = [
+                    'climate change', 'global warming', 'ecosystem', 'biodiversity', 
+                    'carbon emissions', 'greenhouse gas', 'species extinction', 
+                    'ocean acidification', 'arctic', 'paris agreement'
+                ];
+                
+                const foundDomainKeywords = domainKeywords.filter(keyword => 
+                    text.toLowerCase().includes(keyword)
+                );
+                
+                // Combine domain keywords with top words for variety
+                return [...foundDomainKeywords.slice(0, 3), ...topWords.filter(word => 
+                    !foundDomainKeywords.some(k => k.includes(word))
+                )].slice(0, 5);
+            }
+            
+            // Display keywords in tooltip
+            function displayKeywords(keywords) {
+                const keywordList = document.getElementById('keyword-list');
+                keywordList.innerHTML = '';
+                
+                keywords.forEach(keyword => {
+                    const tag = document.createElement('span');
+                    tag.classList.add('keyword-tag');
+                    tag.textContent = keyword;
+                    keywordList.appendChild(tag);
+                });
+            }
+            
+            // Set initial mode
+            modeToggle.querySelector('.mode-text').textContent = 'Switch to Simple View';
+        });
+    </script>
+</body>
+</html> 

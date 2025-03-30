@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lightning Strike Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0a0a1a;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #e0e0e0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(125, 249, 255, 0.8);
+        }
+        
+        .lightning {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 5;
+            transform-origin: top;
+        }
+        
+        .flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0);
+            pointer-events: none;
+            z-index: 1;
+            transition: background-color 0.1s ease;
+        }
+        
+        .thunder-sound {
+            display: none;
+        }
+        
+        .cloud {
+            position: fixed;
+            opacity: 0.4;
+            filter: brightness(0.7);
+            z-index: 1;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .return-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Lightning Strike Cursor Effect</h1>
+        <p>Move your cursor to generate powerful lightning bolts that follow your movements. Experience the electrifying visual effect as lightning strikes across the screen.</p>
+    </div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    <div class="flash"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const cursor = document.querySelector('.cursor');
+            const flash = document.querySelector('.flash');
+            
+            // Create background clouds
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.width = `${100 + Math.random() * 150}px`;
+                cloud.style.height = `${80 + Math.random() * 50}px`;
+                cloud.style.left = `${Math.random() * window.innerWidth}px`;
+                cloud.style.top = `${Math.random() * 300}px`;
+                
+                // Create cloud shape with SVG
+                cloud.innerHTML = `
+                    <svg width="100%" height="100%" viewBox="0 0 100 60" fill="rgba(100, 100, 120, 0.3)">
+                        <path d="M 10 40 Q 0 30 10 20 Q 20 5 40 10 Q 55 -5 70 10 Q 90 0 90 20 Q 100 30 90 40 Q 80 50 60 45 Q 40 55 30 45 Q 15 50 10 40 Z" />
+                    </svg>
+                `;
+                
+                body.appendChild(cloud);
+            }
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            let targetX = 0;
+            let targetY = 0;
+            
+            // Settings
+            const lightningFrequency = 700; // ms between potential strikes
+            const lightningProbability = 0.3; // probability of strike on each check
+            const boltLifetime = 200; // ms
+            const lightningWidth = 3; // px
+            const segmentLength = 15; // px
+            
+            let lastLightningTime = 0;
+            let activeLightnings = [];
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Create a lightning bolt
+            function createLightning(startX, startY, targetX, targetY) {
+                const points = [];
+                let currX = startX;
+                let currY = startY;
+                const dx = targetX - startX;
+                const dy = targetY - startY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const numSegments = Math.ceil(distance / segmentLength);
+                const directionX = dx / distance;
+                const directionY = dy / distance;
+                
+                points.push({ x: currX, y: currY });
+                
+                for (let i = 0; i < numSegments; i++) {
+                    const segmentLength = distance / numSegments;
+                    currX += directionX * segmentLength + (Math.random() * 2 - 1) * segmentLength * 0.5;
+                    currY += directionY * segmentLength + (Math.random() * 2 - 1) * segmentLength * 0.5;
+                    points.push({ x: currX, y: currY });
+                }
+                
+                // Create lightning SVG
+                const svgNS = "http://www.w3.org/2000/svg";
+                const lightningElement = document.createElementNS(svgNS, "svg");
+                lightningElement.setAttribute("width", window.innerWidth);
+                lightningElement.setAttribute("height", window.innerHeight);
+                lightningElement.classList.add("lightning");
+                
+                // Create path for lightning
+                const pathElement = document.createElementNS(svgNS, "path");
+                let pathData = `M ${points[0].x} ${points[0].y}`;
+                
+                for (let i = 1; i < points.length; i++) {
+                    pathData += ` L ${points[i].x} ${points[i].y}`;
+                }
+                
+                pathElement.setAttribute("d", pathData);
+                pathElement.setAttribute("stroke", "#7df9ff");
+                pathElement.setAttribute("stroke-width", lightningWidth);
+                pathElement.setAttribute("fill", "none");
+                pathElement.setAttribute("stroke-linecap", "round");
+                pathElement.setAttribute("stroke-linejoin", "round");
+                
+                // Add glow effect
+                const glowFilter = document.createElementNS(svgNS, "filter");
+                glowFilter.setAttribute("id", `glow-${Date.now()}`);
+                glowFilter.innerHTML = `
+                    <feGaussianBlur stdDeviation="4" result="blur"/>
+                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                `;
+                lightningElement.appendChild(glowFilter);
+                pathElement.setAttribute("filter", `url(#${glowFilter.id})`);
+                
+                lightningElement.appendChild(pathElement);
+                body.appendChild(lightningElement);
+                
+                // Create branch lightning (with probability)
+                if (points.length > 3) {
+                    for (let i = 1; i < points.length - 1; i++) {
+                        if (Math.random() < 0.3) { // 30% chance for a branch
+                            const branchLength = distance * 0.3 * Math.random();
+                            const branchAngle = Math.random() * Math.PI - Math.PI / 2;
+                            const branchX = points[i].x + Math.cos(branchAngle) * branchLength;
+                            const branchY = points[i].y + Math.sin(branchAngle) * branchLength;
+                            
+                            const branchPath = document.createElementNS(svgNS, "path");
+                            branchPath.setAttribute("d", `M ${points[i].x} ${points[i].y} L ${branchX} ${branchY}`);
+                            branchPath.setAttribute("stroke", "#7df9ff");
+                            branchPath.setAttribute("stroke-width", lightningWidth * 0.7);
+                            branchPath.setAttribute("fill", "none");
+                            branchPath.setAttribute("stroke-linecap", "round");
+                            branchPath.setAttribute("filter", `url(#${glowFilter.id})`);
+                            lightningElement.appendChild(branchPath);
+                        }
+                    }
+                }
+                
+                // Flash effect when lightning appears
+                flash.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+                setTimeout(() => {
+                    flash.style.backgroundColor = "rgba(255, 255, 255, 0)";
+                }, 50);
+                
+                // Schedule lightning removal
+                setTimeout(() => {
+                    lightningElement.remove();
+                    activeLightnings = activeLightnings.filter(l => l !== lightningElement);
+                }, boltLifetime);
+                
+                return lightningElement;
+            }
+            
+            function update() {
+                const currentTime = Date.now();
+                
+                // Create new lightning at random intervals
+                if (currentTime - lastLightningTime > lightningFrequency) {
+                    if (Math.random() < lightningProbability) {
+                        // Choose source point (top of screen, random X)
+                        const sourceX = Math.random() * window.innerWidth;
+                        const sourceY = Math.random() * 100;
+                        
+                        // Target is near mouse cursor
+                        targetX = mouseX + (Math.random() * 100 - 50);
+                        targetY = mouseY + (Math.random() * 100 - 50);
+                        
+                        // Create lightning bolt from sky to near cursor
+                        const lightning = createLightning(sourceX, sourceY, targetX, targetY);
+                        activeLightnings.push(lightning);
+                        
+                        // Random follow-up strikes
+                        if (Math.random() < 0.4) {
+                            setTimeout(() => {
+                                const followupLightning = createLightning(
+                                    sourceX + (Math.random() * 50 - 25),
+                                    sourceY + (Math.random() * 30 - 15),
+                                    targetX + (Math.random() * 80 - 40),
+                                    targetY + (Math.random() * 80 - 40)
+                                );
+                                activeLightnings.push(followupLightning);
+                            }, 100 + Math.random() * 200);
+                        }
+                    }
+                    
+                    lastLightningTime = currentTime;
+                }
+                
+                requestAnimationFrame(update);
+            }
+            
+            update();
+        });
+    </script>
+</body>
+</html> 

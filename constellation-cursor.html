@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constellation Cursor</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0c0f22;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            cursor: none;
+            color: white;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #e6c8fe, #5d7ce6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            pointer-events: all;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover, .control-btn.active {
+            background: rgba(230, 200, 254, 0.3);
+            border-color: #e6c8fe;
+            transform: translateY(-2px);
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            pointer-events: all;
+            z-index: 10;
+        }
+        
+        .return-link:hover {
+            background: rgba(230, 200, 254, 0.3);
+            border-color: #e6c8fe;
+            transform: translateY(-2px);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: rgba(230, 200, 254, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(230, 200, 254, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Constellation Cursor</h1>
+        <p>Create your own constellations in the night sky. Stars appear as you move, and constellation patterns connect between them based on astronomical mapping principles.</p>
+        
+        <div class="controls">
+            <button class="control-btn active" data-mode="auto">Auto Connect</button>
+            <button class="control-btn" data-mode="manual">Manual Connect</button>
+            <button class="control-btn" data-mode="drawing">Draw Constellations</button>
+            <button class="control-btn" data-action="clear">Clear Stars</button>
+        </div>
+    </div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <canvas id="canvas"></canvas>
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Full screen canvas
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                renderBackground();
+            }
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Cursor
+            const cursor = document.querySelector('.cursor');
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let prevMouseX = mouseX;
+            let prevMouseY = mouseY;
+            
+            // Track mouse movement
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Create stars while moving in drawing mode
+                if (activeMode === 'drawing' && Math.random() < 0.1) {
+                    createStar(mouseX, mouseY);
+                }
+            });
+            
+            // Constellation modes
+            let activeMode = 'auto';
+            let isDrawing = false;
+            let previousDrawPoint = null;
+            
+            // Control elements
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (btn.dataset.action === 'clear') {
+                        // Clear all stars
+                        stars = [];
+                        connections = [];
+                        return;
+                    }
+                    
+                    document.querySelectorAll('.control-btn[data-mode]').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    
+                    if (btn.dataset.mode) {
+                        btn.classList.add('active');
+                        activeMode = btn.dataset.mode;
+                    }
+                });
+            });
+            
+            // Star class
+            class Star {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = Math.random() * 2 + 1; // Random size
+                    this.brightness = Math.random() * 0.5 + 0.5; // Random brightness
+                    this.color = this.getRandomStarColor();
+                    this.twinkleSpeed = Math.random() * 0.03 + 0.01;
+                    this.twinklePhase = Math.random() * Math.PI * 2;
+                    this.connections = []; // Track connections to other stars
+                    this.orbitRadius = Math.random() * 0.2 + 0.1;
+                    this.orbitSpeed = Math.random() * 0.0005 + 0.0001;
+                    this.orbitPhase = Math.random() * Math.PI * 2;
+                    this.id = Date.now() + Math.random(); // Unique ID
+                }
+                
+                getRandomStarColor() {
+                    // Star colors based on spectral classification (O, B, A, F, G, K, M)
+                    const colors = [
+                        '#a2c5fc', // Blue-white
+                        '#d8e9fc', // White
+                        '#fcf6e3', // Yellow-white
+                        '#ffe096', // Yellow
+                        '#ffcc7a', // Orange
+                        '#ff9b75', // Red-orange
+                        '#ff776b'  // Red
+                    ];
+                    
+                    return colors[Math.floor(Math.random() * colors.length)];
+                }
+                
+                update(time) {
+                    // Make star twinkle
+                    this.brightness = 0.5 + 0.5 * Math.sin(this.twinklePhase + time * this.twinkleSpeed);
+                    
+                    // Slight orbital movement
+                    const orbitX = Math.cos(this.orbitPhase + time * this.orbitSpeed) * this.orbitRadius;
+                    const orbitY = Math.sin(this.orbitPhase + time * this.orbitSpeed) * this.orbitRadius;
+                    
+                    this.renderX = this.x + orbitX;
+                    this.renderY = this.y + orbitY;
+                }
+                
+                draw() {
+                    // Star glow
+                    ctx.beginPath();
+                    ctx.arc(this.renderX, this.renderY, this.size * 3, 0, Math.PI * 2);
+                    const gradient = ctx.createRadialGradient(
+                        this.renderX, this.renderY, 0,
+                        this.renderX, this.renderY, this.size * 3
+                    );
+                    gradient.addColorStop(0, this.color);
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.globalAlpha = 0.3 * this.brightness;
+                    ctx.fill();
+                    
+                    // Star center
+                    ctx.beginPath();
+                    ctx.arc(this.renderX, this.renderY, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.globalAlpha = this.brightness;
+                    ctx.fill();
+                    
+                    ctx.globalAlpha = 1;
+                }
+                
+                distanceTo(otherStar) {
+                    const dx = this.renderX - otherStar.renderX;
+                    const dy = this.renderY - otherStar.renderY;
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+            }
+            
+            // Connection class
+            class Connection {
+                constructor(star1, star2) {
+                    this.star1 = star1;
+                    this.star2 = star2;
+                    this.age = 0;
+                    this.maxAge = 500 + Math.random() * 500;
+                    this.color = this.getConnectionColor();
+                    this.thickness = 1 + Math.random() * 0.5;
+                    this.pulseSpeed = Math.random() * 0.02 + 0.01;
+                    this.pulsePhase = Math.random() * Math.PI * 2;
+                }
+                
+                getConnectionColor() {
+                    // Subtle constellation colors
+                    const colors = [
+                        'rgba(230, 200, 254, 0.3)', // Purple
+                        'rgba(93, 124, 230, 0.3)', // Blue
+                        'rgba(130, 200, 243, 0.3)', // Light blue
+                        'rgba(254, 200, 216, 0.3)'  // Pink
+                    ];
+                    
+                    return colors[Math.floor(Math.random() * colors.length)];
+                }
+                
+                update(time) {
+                    this.age++;
+                    this.brightness = 0.7 + 0.3 * Math.sin(this.pulsePhase + time * this.pulseSpeed);
+                }
+                
+                draw() {
+                    // If stars are too far, don't draw
+                    const distance = this.star1.distanceTo(this.star2);
+                    if (distance > 200) return;
+                    
+                    // Connection line
+                    ctx.beginPath();
+                    ctx.moveTo(this.star1.renderX, this.star1.renderY);
+                    ctx.lineTo(this.star2.renderX, this.star2.renderY);
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = this.thickness * (1 - (distance / 200)) * this.brightness;
+                    ctx.stroke();
+                    
+                    // Draw pulse along line
+                    const pulsePosition = ((Date.now() / 2000) % 1);
+                    const pulsePosX = this.star1.renderX + (this.star2.renderX - this.star1.renderX) * pulsePosition;
+                    const pulsePosY = this.star1.renderY + (this.star2.renderY - this.star1.renderY) * pulsePosition;
+                    
+                    ctx.beginPath();
+                    ctx.arc(pulsePosX, pulsePosY, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fill();
+                }
+                
+                isExpired() {
+                    return this.age > this.maxAge;
+                }
+            }
+            
+            // Arrays to store stars and connections
+            let stars = [];
+            let connections = [];
+            const maxStars = 100;
+            
+            // Create a new star at position
+            function createStar(x, y) {
+                const newStar = new Star(x, y);
+                stars.push(newStar);
+                
+                // Remove oldest star if too many
+                if (stars.length > maxStars) {
+                    const removedStar = stars.shift();
+                    // Remove connections with the removed star
+                    connections = connections.filter(conn => 
+                        conn.star1.id !== removedStar.id && conn.star2.id !== removedStar.id
+                    );
+                }
+                
+                // In auto mode, connect to nearby stars
+                if (activeMode === 'auto') {
+                    stars.forEach(star => {
+                        if (star !== newStar && Math.random() < 0.3 && newStar.distanceTo(star) < 150) {
+                            createConnection(newStar, star);
+                        }
+                    });
+                }
+                
+                return newStar;
+            }
+            
+            // Create a connection between two stars
+            function createConnection(star1, star2) {
+                // Check if connection already exists
+                const connectionExists = connections.some(conn => 
+                    (conn.star1.id === star1.id && conn.star2.id === star2.id) ||
+                    (conn.star1.id === star2.id && conn.star2.id === star1.id)
+                );
+                
+                if (!connectionExists) {
+                    const connection = new Connection(star1, star2);
+                    connections.push(connection);
+                    star1.connections.push(star2.id);
+                    star2.connections.push(star1.id);
+                }
+            }
+            
+            // Handle clicks for manual star creation and connection
+            document.addEventListener('mousedown', (e) => {
+                if (activeMode === 'drawing') {
+                    isDrawing = true;
+                    previousDrawPoint = { x: mouseX, y: mouseY };
+                    return;
+                }
+                
+                const clickedStar = createStar(mouseX, mouseY);
+                
+                if (activeMode === 'manual') {
+                    // Find nearest star to connect to
+                    let nearestStar = null;
+                    let minDistance = Infinity;
+                    
+                    stars.forEach(star => {
+                        if (star !== clickedStar) {
+                            const distance = clickedStar.distanceTo(star);
+                            if (distance < minDistance && distance < 200) {
+                                minDistance = distance;
+                                nearestStar = star;
+                            }
+                        }
+                    });
+                    
+                    if (nearestStar) {
+                        createConnection(clickedStar, nearestStar);
+                    }
+                }
+            });
+            
+            // Handle mouse up for drawing mode
+            document.addEventListener('mouseup', () => {
+                isDrawing = false;
+                previousDrawPoint = null;
+            });
+            
+            // Create stars for drawing mode
+            document.addEventListener('mousemove', (e) => {
+                if (isDrawing && activeMode === 'drawing' && previousDrawPoint) {
+                    const currentPoint = { x: mouseX, y: mouseY };
+                    
+                    // Calculate distance from previous point
+                    const dx = currentPoint.x - previousDrawPoint.x;
+                    const dy = currentPoint.y - previousDrawPoint.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Create stars along the path
+                    if (distance > 30) {
+                        const star = createStar(currentPoint.x, currentPoint.y);
+                        
+                        // Connect to previous star
+                        if (previousDrawPoint.star) {
+                            createConnection(previousDrawPoint.star, star);
+                        }
+                        
+                        previousDrawPoint = { 
+                            x: currentPoint.x, 
+                            y: currentPoint.y,
+                            star: star
+                        };
+                    }
+                }
+            });
+            
+            // Generate background stars
+            function generateBackgroundStars() {
+                const bgStars = [];
+                const starCount = 300;
+                
+                for (let i = 0; i < starCount; i++) {
+                    bgStars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 1.5,
+                        opacity: Math.random() * 0.8 + 0.2
+                    });
+                }
+                
+                return bgStars;
+            }
+            
+            const backgroundStars = generateBackgroundStars();
+            
+            // Render starry background
+            function renderBackground() {
+                // Gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#0c0f22');
+                gradient.addColorStop(1, '#1a1a2e');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw static background stars
+                backgroundStars.forEach(star => {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                    ctx.fill();
+                });
+            }
+            
+            // Animation loop
+            function animate() {
+                // Clear canvas with background
+                renderBackground();
+                
+                const time = Date.now() * 0.001;
+                
+                // Update and draw connections
+                for (let i = connections.length - 1; i >= 0; i--) {
+                    connections[i].update(time);
+                    connections[i].draw();
+                    
+                    // Remove expired connections
+                    if (connections[i].isExpired()) {
+                        const conn = connections[i];
+                        // Remove from stars' connection lists
+                        const idx1 = conn.star1.connections.indexOf(conn.star2.id);
+                        if (idx1 > -1) conn.star1.connections.splice(idx1, 1);
+                        
+                        const idx2 = conn.star2.connections.indexOf(conn.star1.id);
+                        if (idx2 > -1) conn.star2.connections.splice(idx2, 1);
+                        
+                        connections.splice(i, 1);
+                    }
+                }
+                
+                // Update and draw stars
+                stars.forEach(star => {
+                    star.update(time);
+                    star.draw();
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            // Create initial stars
+            for (let i = 0; i < 10; i++) {
+                createStar(
+                    Math.random() * canvas.width,
+                    Math.random() * canvas.height
+                );
+            }
+        });
+    </script>
+</body>
+</html> 

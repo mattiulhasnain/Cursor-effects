@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glowing Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0a192f;
+            color: #f0f8ff;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        h1 {
+            text-align: center;
+            padding-top: 30px;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #5dbb63;
+        }
+        
+        .description {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+            color: rgba(240, 248, 255, 0.7);
+        }
+        
+        .content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 70vh;
+        }
+        
+        .text-container {
+            max-width: 700px;
+            padding: 20px;
+            text-align: center;
+            line-height: 1.8;
+            z-index: 1;
+            letter-spacing: 0.5px;
+        }
+        
+        .glow-cursor {
+            position: fixed;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(93, 187, 99, 0.5) 0%, 
+                rgba(93, 187, 99, 0.3) 20%, 
+                rgba(93, 187, 99, 0.1) 50%, 
+                transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.8;
+            mix-blend-mode: screen;
+        }
+        
+        .cursor-dot {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background-color: #5dbb63;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(93, 187, 99, 0.8);
+        }
+        
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.8; }
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            color: #5dbb63;
+            text-decoration: none;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+        
+        .return-link:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Glowing Cursor Effect</h1>
+    <p class="description">Move your cursor around to create a soft glowing light that illuminates the dark background.</p>
+    
+    <div class="stars" id="stars"></div>
+    
+    <div class="content">
+        <div class="text-container">
+            <p>The gentle glow of your cursor illuminates the dark space around it, creating a soft and ethereal atmosphere. As you move your cursor, the light follows, revealing hidden stars in the night sky.</p>
+            <p>This effect can be used to create an immersive experience on websites with dark themes, guiding the user's attention and adding a touch of magic to the interaction.</p>
+        </div>
+    </div>
+    
+    <div class="glow-cursor" id="glowCursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const glowCursor = document.getElementById('glowCursor');
+            const cursorDot = document.getElementById('cursorDot');
+            const starsContainer = document.getElementById('stars');
+            
+            // Create stars
+            function createStars() {
+                const numStars = 100;
+                
+                for (let i = 0; i < numStars; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    
+                    // Random position
+                    const posX = Math.random() * 100;
+                    const posY = Math.random() * 100;
+                    star.style.left = `${posX}%`;
+                    star.style.top = `${posY}%`;
+                    
+                    // Random size
+                    const size = Math.random() * 3;
+                    star.style.width = `${size}px`;
+                    star.style.height = `${size}px`;
+                    
+                    // Random delay for twinkling
+                    const delay = Math.random() * 4;
+                    star.style.animationDelay = `${delay}s`;
+                    
+                    starsContainer.appendChild(star);
+                }
+            }
+            
+            createStars();
+            
+            // Track mouse movement
+            document.addEventListener('mousemove', (e) => {
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
+                
+                // Update cursor position
+                glowCursor.style.left = `${mouseX}px`;
+                glowCursor.style.top = `${mouseY}px`;
+                
+                cursorDot.style.left = `${mouseX}px`;
+                cursorDot.style.top = `${mouseY}px`;
+                
+                // Illuminate stars based on cursor proximity
+                const stars = document.querySelectorAll('.star');
+                stars.forEach(star => {
+                    const rect = star.getBoundingClientRect();
+                    const starX = rect.left + rect.width / 2;
+                    const starY = rect.top + rect.height / 2;
+                    
+                    const distance = Math.sqrt(
+                        Math.pow(mouseX - starX, 2) + 
+                        Math.pow(mouseY - starY, 2)
+                    );
+                    
+                    // Increase opacity of stars near the cursor
+                    if (distance < 150) {
+                        const opacity = 1 - distance / 150;
+                        star.style.opacity = Math.max(0.2, opacity);
+                    } else {
+                        star.style.opacity = '';  // Reset to animation default
+                    }
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Clear and recreate stars when window is resized
+                starsContainer.innerHTML = '';
+                createStars();
+            });
+            
+            // Animate glow size
+            function animateGlow() {
+                let scale = 1;
+                let growing = false;
+                
+                setInterval(() => {
+                    if (growing) {
+                        scale += 0.01;
+                        if (scale >= 1.1) growing = false;
+                    } else {
+                        scale -= 0.01;
+                        if (scale <= 0.9) growing = true;
+                    }
+                    
+                    glowCursor.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                }, 50);
+            }
+            
+            animateGlow();
+        });
+    </script>
+</body>
+</html> 

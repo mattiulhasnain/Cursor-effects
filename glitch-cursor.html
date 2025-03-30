@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Glitch Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0a0a0a;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 100;
+            mix-blend-mode: difference;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::before, h1::after {
+            content: 'DIGITAL GLITCH CURSOR';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+        
+        h1::before {
+            color: #0ff;
+            z-index: -1;
+            transform: translateX(-5px);
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+            animation: glitch 3s infinite alternate;
+        }
+        
+        h1::after {
+            color: #f0f;
+            z-index: -2;
+            transform: translateX(5px);
+            clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+            animation: glitch 2s infinite alternate 1s;
+        }
+        
+        @keyframes glitch {
+            0%, 5% { transform: translateX(-5px) skew(10deg); }
+            10%, 15% { transform: translateX(5px) skew(-10deg); }
+            20%, 80% { transform: translateX(0) skew(0deg); }
+            85%, 90% { transform: translateX(-3px) skew(-5deg); }
+            95%, 100% { transform: translateX(3px) skew(5deg); }
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            opacity: 0.7;
+        }
+        
+        .glitch-cursor {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            mix-blend-mode: exclusion;
+        }
+        
+        .cursor-element {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 2px solid #fff;
+            transform: translate(-50%, -50%);
+        }
+        
+        .cursor-element::before {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: #fff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .cursor-glitch {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .glitch-block {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+        
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAABmJLR0QA/wD/AP+gvaeTAAAARklEQVRoge3PAQ3AMAzAsH78Ofck7FIoFAFzp6Wzp6tVNgthFsIshFkIsxBmIcxCmIUwC2EWwiyEWQizEGYhzEKYhTALYQ9yFSI3NIFguQAAAABJRU5ErkJggg==');
+            background-repeat: repeat;
+            mix-blend-mode: overlay;
+            opacity: 0.05;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .terminal {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 300px;
+            height: 200px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #0f0;
+            overflow: hidden;
+            z-index: 100;
+            opacity: 0.9;
+        }
+        
+        .terminal-content {
+            height: 100%;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .terminal-line {
+            margin: 2px 0;
+            white-space: nowrap;
+            animation: type 0.5s steps(40, end);
+        }
+        
+        @keyframes type {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        .terminal-prompt::before {
+            content: 'system> ';
+            color: #0a0;
+        }
+        
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise"></div>
+    
+    <div class="content">
+        <h1>Digital Glitch Cursor</h1>
+        <p>Move your cursor around to create digital glitch effects that distort the screen. The effect intensity varies based on cursor movement and clicks.</p>
+    </div>
+    
+    <div class="terminal">
+        <div class="terminal-content" id="terminal-content">
+            <div class="terminal-line terminal-prompt">Initializing glitch system...</div>
+            <div class="terminal-line terminal-prompt">Loading visual artifacts...</div>
+            <div class="terminal-line terminal-prompt">Glitch effects activated</div>
+        </div>
+    </div>
+    
+    <div class="cursor-glitch" id="glitch-container"></div>
+    
+    <div class="glitch-cursor" id="cursor">
+        <div class="cursor-element"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get elements
+            const cursor = document.getElementById('cursor');
+            const cursorElement = cursor.querySelector('.cursor-element');
+            const glitchContainer = document.getElementById('glitch-container');
+            const terminal = document.getElementById('terminal-content');
+            
+            // Create RGB split cursors
+            const redCursor = document.createElement('div');
+            redCursor.className = 'cursor-element';
+            redCursor.style.borderColor = '#ff0000';
+            redCursor.style.transform = 'translate(-48%, -52%)';
+            redCursor.style.mixBlendMode = 'screen';
+            redCursor.style.zIndex = 1001;
+            cursor.appendChild(redCursor);
+            
+            const blueCursor = document.createElement('div');
+            blueCursor.className = 'cursor-element';
+            blueCursor.style.borderColor = '#0000ff';
+            blueCursor.style.transform = 'translate(-52%, -48%)';
+            blueCursor.style.mixBlendMode = 'screen';
+            blueCursor.style.zIndex = 1001;
+            cursor.appendChild(blueCursor);
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            let lastX = 0;
+            let lastY = 0;
+            let glitchIntensity = 0;
+            let staticIntensity = 0.05;
+            let isClicking = false;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                // Calculate mouse velocity
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                const speed = Math.sqrt(dx * dx + dy * dy);
+                
+                // Update positions
+                lastX = mouseX;
+                lastY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor positions
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Calculate RGB split based on speed and direction
+                const maxOffset = Math.min(speed / 2, 15);
+                const angleRad = Math.atan2(dy, dx);
+                
+                redCursor.style.transform = `translate(${-50 + Math.cos(angleRad) * maxOffset/2}%, ${-50 + Math.sin(angleRad) * maxOffset/2}%)`;
+                blueCursor.style.transform = `translate(${-50 - Math.cos(angleRad) * maxOffset/2}%, ${-50 - Math.sin(angleRad) * maxOffset/2}%)`;
+                
+                // Increase glitch intensity based on mouse speed
+                glitchIntensity = Math.min(speed / 30, 1);
+                
+                // Create glitch at cursor position when moving fast
+                if (speed > 10) {
+                    createGlitchBlock(mouseX, mouseY, speed);
+                    logEvent(`Cursor velocity: ${Math.round(speed)} px/frame`);
+                }
+                
+                // Update static intensity based on cursor position
+                staticIntensity = 0.05 + (glitchIntensity * 0.1);
+                document.querySelector('.noise').style.opacity = staticIntensity;
+            });
+            
+            // Mouse click effect
+            document.addEventListener('mousedown', () => {
+                isClicking = true;
+                
+                // Expand cursors
+                cursorElement.style.width = '40px';
+                cursorElement.style.height = '40px';
+                redCursor.style.width = '44px';
+                redCursor.style.height = '44px';
+                blueCursor.style.width = '38px';
+                blueCursor.style.height = '38px';
+                
+                // Create major glitch effect
+                createMajorGlitch();
+                logEvent("Critical system error detected");
+                
+                // Increase static
+                staticIntensity = 0.2;
+                document.querySelector('.noise').style.opacity = staticIntensity;
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isClicking = false;
+                
+                // Reset cursors
+                cursorElement.style.width = '30px';
+                cursorElement.style.height = '30px';
+                redCursor.style.width = '30px';
+                redCursor.style.height = '30px';
+                blueCursor.style.width = '30px';
+                blueCursor.style.height = '30px';
+                
+                // Decrease static
+                staticIntensity = 0.05;
+                document.querySelector('.noise').style.opacity = staticIntensity;
+            });
+            
+            // Create glitch block
+            function createGlitchBlock(x, y, speed) {
+                const block = document.createElement('div');
+                block.className = 'glitch-block';
+                
+                // Random size based on speed
+                const size = 20 + speed * 2 + Math.random() * 50;
+                
+                // Random position near cursor
+                const offsetX = (Math.random() - 0.5) * 200;
+                const offsetY = (Math.random() - 0.5) * 200;
+                
+                // Set block properties
+                block.style.width = `${size}px`;
+                block.style.height = `${Math.random() * 20 + 5}px`;
+                block.style.left = `${x + offsetX}px`;
+                block.style.top = `${y + offsetY}px`;
+                
+                // Random color and opacity
+                const colors = ['#0ff', '#f0f', '#ff0', '#fff'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                block.style.backgroundColor = color;
+                block.style.opacity = Math.random() * 0.7 + 0.1;
+                
+                // Random mix-blend-mode
+                const blendModes = ['exclusion', 'difference', 'screen', 'lighten'];
+                block.style.mixBlendMode = blendModes[Math.floor(Math.random() * blendModes.length)];
+                
+                // Add to container
+                glitchContainer.appendChild(block);
+                
+                // Remove after short duration
+                setTimeout(() => {
+                    block.style.opacity = 0;
+                    setTimeout(() => {
+                        block.remove();
+                    }, 300);
+                }, 100 + Math.random() * 200);
+            }
+            
+            // Create major glitch effect
+            function createMajorGlitch() {
+                // Create multiple horizontal glitch blocks
+                const blockCount = 10 + Math.floor(Math.random() * 10);
+                
+                for (let i = 0; i < blockCount; i++) {
+                    const block = document.createElement('div');
+                    block.className = 'glitch-block';
+                    
+                    // Set block properties
+                    const height = Math.random() * 30 + 5;
+                    const y = Math.random() * window.innerHeight;
+                    
+                    block.style.width = '100%';
+                    block.style.height = `${height}px`;
+                    block.style.left = '0';
+                    block.style.top = `${y}px`;
+                    
+                    // Random transform
+                    const translateX = (Math.random() - 0.5) * 50;
+                    block.style.transform = `translateX(${translateX}px)`;
+                    
+                    // Random color and opacity
+                    const colors = ['#0ff', '#f0f', '#ff0', '#fff'];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    block.style.backgroundColor = color;
+                    block.style.opacity = Math.random() * 0.7 + 0.1;
+                    
+                    // Random mix-blend-mode
+                    const blendModes = ['exclusion', 'difference', 'screen', 'lighten'];
+                    block.style.mixBlendMode = blendModes[Math.floor(Math.random() * blendModes.length)];
+                    
+                    // Add to container
+                    glitchContainer.appendChild(block);
+                    
+                    // Remove after short duration
+                    setTimeout(() => {
+                        block.style.opacity = 0;
+                        setTimeout(() => {
+                            block.remove();
+                        }, 300);
+                    }, 100 + Math.random() * 500);
+                }
+                
+                // Create text distortion effect
+                distortPage();
+            }
+            
+            // Create text distortion effect
+            function distortPage() {
+                const content = document.querySelector('.content');
+                
+                // Apply glitch filter
+                content.style.filter = 'hue-rotate(90deg) contrast(2)';
+                content.style.transform = 'translate(-50%, -50%) skew(5deg, 3deg)';
+                
+                // Reset after a short duration
+                setTimeout(() => {
+                    content.style.filter = '';
+                    content.style.transform = 'translate(-50%, -50%)';
+                }, 300);
+            }
+            
+            // Log events to terminal
+            function logEvent(message) {
+                if (Math.random() > 0.3) return; // Only log some events
+                
+                const line = document.createElement('div');
+                line.className = 'terminal-line terminal-prompt';
+                line.textContent = message;
+                
+                terminal.appendChild(line);
+                
+                // Scroll to bottom
+                terminal.scrollTop = terminal.scrollHeight;
+                
+                // Limit lines
+                if (terminal.children.length > 20) {
+                    terminal.removeChild(terminal.children[0]);
+                }
+            }
+            
+            // Add occasional random glitches
+            function randomGlitch() {
+                if (Math.random() > 0.7 || isClicking) {
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight;
+                    const speed = Math.random() * 30 + 10;
+                    
+                    createGlitchBlock(x, y, speed);
+                    
+                    // Sometimes add text glitch
+                    if (Math.random() > 0.8) {
+                        logEvent("Unexpected artifact detected");
+                        distortPage();
+                    }
+                }
+                
+                // Schedule next glitch
+                setTimeout(randomGlitch, Math.random() * 2000 + 500);
+            }
+            
+            // Start random glitches
+            randomGlitch();
+            
+            // Simulate typing in terminal periodically
+            function addRandomTerminalMessage() {
+                const messages = [
+                    "Scanning for anomalies...",
+                    "Rendering visual artifacts...",
+                    "Frame buffer corrupted",
+                    "Memory fragmentation detected",
+                    "Signal interference at " + Math.floor(Math.random() * 100) + "%",
+                    "Resyncing data blocks...",
+                    "Visual distortion algorithm active",
+                    "CAUTION: Reality integrity compromised",
+                    "ERROR 0x" + Math.floor(Math.random() * 1000).toString(16).toUpperCase(),
+                    "Sensory input recalibrated"
+                ];
+                
+                logEvent(messages[Math.floor(Math.random() * messages.length)]);
+                
+                // Schedule next message
+                setTimeout(addRandomTerminalMessage, Math.random() * 5000 + 3000);
+            }
+            
+            // Start terminal messages
+            addRandomTerminalMessage();
+            
+            // Create retro scan effect
+            const scanLine = document.createElement('div');
+            scanLine.style.position = 'fixed';
+            scanLine.style.left = '0';
+            scanLine.style.width = '100%';
+            scanLine.style.height = '2px';
+            scanLine.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            scanLine.style.pointerEvents = 'none';
+            scanLine.style.zIndex = '2';
+            document.body.appendChild(scanLine);
+            
+            // Animate scan line
+            let scanPos = 0;
+            function animateScanLine() {
+                scanPos = (scanPos + 1) % window.innerHeight;
+                scanLine.style.top = scanPos + 'px';
+                requestAnimationFrame(animateScanLine);
+            }
+            animateScanLine();
+            
+            // Handle key press for extra effect
+            document.addEventListener('keydown', (e) => {
+                // Space key for major glitch
+                if (e.code === 'Space') {
+                    createMajorGlitch();
+                    logEvent("MANUAL OVERRIDE: Forcing system glitch");
+                }
+                
+                // Any key creates small glitches
+                createGlitchBlock(Math.random() * window.innerWidth, Math.random() * window.innerHeight, 20);
+                
+                // Add random terminal message
+                if (Math.random() > 0.7) {
+                    logEvent("Key input: 0x" + e.keyCode.toString(16).toUpperCase());
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

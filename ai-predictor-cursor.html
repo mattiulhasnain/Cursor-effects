@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Predictor Cursor Effect - Interactive Movement Prediction</title>
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --background: #0a192f;
+            --card-bg: rgba(28, 42, 57, 0.7);
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            cursor: none;
+        }
+
+        .content {
+            position: relative;
+            padding: 20px;
+            max-width: 800px;
+            margin: 50px auto;
+            text-align: center;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+        }
+
+        .return-link {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 10px 20px;
+            background: rgba(93, 187, 99, 0.2);
+            border-radius: 30px;
+            z-index: 10;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+        }
+
+        .return-link:hover {
+            background: rgba(93, 187, 99, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(93, 187, 99, 0.7);
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 20px rgba(93, 187, 99, 0.7);
+        }
+
+        .prediction-cursor {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 126, 185, 0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.7;
+        }
+
+        .canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .stats {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 10;
+            font-size: 0.9rem;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+        }
+        
+        .stats p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .control-btn {
+            background: rgba(93, 187, 99, 0.2);
+            color: var(--text);
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(93, 187, 99, 0.4);
+        }
+
+        .control-btn.active {
+            background: rgba(93, 187, 99, 0.6);
+        }
+
+        .node {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(102, 178, 255, 0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connection {
+            position: absolute;
+            height: 2px;
+            background-color: rgba(93, 187, 99, 0.3);
+            transform-origin: left center;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .debug-point {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: rgba(255, 126, 185, 0.5);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 2;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="content">
+        <h1>AI Predictor Cursor</h1>
+        <p>An intelligent cursor that learns from your movement patterns to predict where you'll move next. Watch as it builds a neural model of your behavior in real-time.</p>
+    </div>
+    
+    <div class="controls">
+        <button class="control-btn active" data-mode="learn">Learning Mode</button>
+        <button class="control-btn" data-mode="predict">Prediction Mode</button>
+        <button class="control-btn" data-mode="visualize">Visualize Model</button>
+        <button class="control-btn" data-mode="reset">Reset Model</button>
+    </div>
+    
+    <div class="stats">
+        <p>Accuracy: <span id="accuracy">0%</span></p>
+        <p>Data Points: <span id="data-points">0</span></p>
+        <p>Prediction Range: <span id="prediction-range">0px</span></p>
+        <p>Learning Rate: <span id="learning-rate">0.05</span></p>
+    </div>
+    
+    <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    <div class="prediction-cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Elements
+            const cursor = document.querySelector('.cursor');
+            const predictionCursor = document.querySelector('.prediction-cursor');
+            const canvasContainer = document.querySelector('.canvas-container');
+            const controlBtns = document.querySelectorAll('.control-btn');
+            
+            // Stats elements
+            const accuracyEl = document.getElementById('accuracy');
+            const dataPointsEl = document.getElementById('data-points');
+            const predictionRangeEl = document.getElementById('prediction-range');
+            const learningRateEl = document.getElementById('learning-rate');
+            
+            // Mouse tracking
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            let mouseHistory = [];
+            const maxHistoryLength = 100;
+            
+            // Prediction model
+            let mode = 'learn'; // 'learn', 'predict', 'visualize'
+            let dataPoints = [];
+            const maxDataPoints = 500;
+            let learningRate = 0.05;
+            let predictionRange = 100; // px
+            let accuracy = 0;
+            
+            // Neural network
+            const nn = {
+                weights: {
+                    x: [0.1, 0.2, 0.1],  // Weights for x prediction (from x, y, distance)
+                    y: [0.2, 0.1, 0.1]   // Weights for y prediction (from x, y, distance)
+                },
+                bias: {
+                    x: 0,
+                    y: 0
+                },
+                
+                // Forward pass to predict next position
+                predict: function(x, y, distance) {
+                    const normX = x / window.innerWidth;
+                    const normY = y / window.innerHeight;
+                    const normDist = Math.min(1, distance / 200);
+                    
+                    // Simple linear model (weighted sum + bias)
+                    const predictedX = this.weights.x[0] * normX + 
+                                      this.weights.x[1] * normY + 
+                                      this.weights.x[2] * normDist + 
+                                      this.bias.x;
+                    
+                    const predictedY = this.weights.y[0] * normX + 
+                                      this.weights.y[1] * normY + 
+                                      this.weights.y[2] * normDist + 
+                                      this.bias.y;
+                    
+                    return {
+                        x: predictedX * window.innerWidth,
+                        y: predictedY * window.innerHeight
+                    };
+                },
+                
+                // Train the model with new data
+                train: function(input, target) {
+                    const normInputX = input.x / window.innerWidth;
+                    const normInputY = input.y / window.innerHeight;
+                    const normInputDist = Math.min(1, input.distance / 200);
+                    
+                    const normTargetX = target.x / window.innerWidth;
+                    const normTargetY = target.y / window.innerHeight;
+                    
+                    // Current prediction
+                    const prediction = this.predict(input.x, input.y, input.distance);
+                    const normPredX = prediction.x / window.innerWidth;
+                    const normPredY = prediction.y / window.innerHeight;
+                    
+                    // Calculate error
+                    const errorX = normTargetX - normPredX;
+                    const errorY = normTargetY - normPredY;
+                    
+                    // Update weights and bias using gradient descent
+                    this.weights.x[0] += learningRate * errorX * normInputX;
+                    this.weights.x[1] += learningRate * errorX * normInputY;
+                    this.weights.x[2] += learningRate * errorX * normInputDist;
+                    this.bias.x += learningRate * errorX;
+                    
+                    this.weights.y[0] += learningRate * errorY * normInputX;
+                    this.weights.y[1] += learningRate * errorY * normInputY;
+                    this.weights.y[2] += learningRate * errorY * normInputDist;
+                    this.bias.y += learningRate * errorY;
+                    
+                    // Return error magnitude for accuracy calculation
+                    return Math.sqrt(errorX * errorX + errorY * errorY);
+                }
+            };
+            
+            // Visualization elements
+            const nodes = [];
+            const connections = [];
+            const debugPoints = [];
+            
+            // Add mouse movement to history
+            function addMousePosition(x, y) {
+                const now = Date.now();
+                
+                // Calculate speed and distance
+                const dx = x - prevMouseX;
+                const dy = y - prevMouseY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const speed = distance; // Simplistic calculation
+                
+                mouseHistory.push({
+                    x: x,
+                    y: y,
+                    dx: dx,
+                    dy: dy,
+                    distance: distance,
+                    speed: speed,
+                    timestamp: now
+                });
+                
+                // Limit history length
+                if (mouseHistory.length > maxHistoryLength) {
+                    mouseHistory.shift();
+                }
+                
+                // If we have enough history, add to training data
+                if (mouseHistory.length >= 2 && mode === 'learn') {
+                    const current = mouseHistory[mouseHistory.length - 2];
+                    const next = mouseHistory[mouseHistory.length - 1];
+                    
+                    // Add training data point
+                    addDataPoint(current, next);
+                }
+                
+                prevMouseX = x;
+                prevMouseY = y;
+            }
+            
+            // Add data point for training
+            function addDataPoint(input, target) {
+                dataPoints.push({
+                    input: {
+                        x: input.x,
+                        y: input.y,
+                        distance: input.distance
+                    },
+                    target: {
+                        x: target.x,
+                        y: target.y
+                    }
+                });
+                
+                // Limit data points
+                if (dataPoints.length > maxDataPoints) {
+                    dataPoints.shift();
+                }
+                
+                dataPointsEl.textContent = dataPoints.length;
+            }
+            
+            // Train model with current data
+            function trainModel() {
+                if (dataPoints.length < 10) return;
+                
+                let totalError = 0;
+                
+                // Use random data points for training (stochastic gradient descent)
+                const trainSamples = Math.min(10, dataPoints.length);
+                for (let i = 0; i < trainSamples; i++) {
+                    const randomIndex = Math.floor(Math.random() * dataPoints.length);
+                    const sample = dataPoints[randomIndex];
+                    
+                    const error = nn.train(sample.input, sample.target);
+                    totalError += error;
+                }
+                
+                // Update accuracy (1 - normalized error)
+                const avgError = totalError / trainSamples;
+                accuracy = Math.max(0, 1 - avgError * 5); // Scale up error for better visualization
+                accuracyEl.textContent = `${Math.round(accuracy * 100)}%`;
+            }
+            
+            // Make prediction for current mouse position
+            function makePrediction() {
+                if (dataPoints.length < 10) return null;
+                
+                // Use current mouse position to predict next position
+                const prediction = nn.predict(mouseX, mouseY, mouseHistory.length > 0 ? mouseHistory[mouseHistory.length - 1].distance : 0);
+                
+                // Update prediction cursor
+                predictionCursor.style.left = `${prediction.x}px`;
+                predictionCursor.style.top = `${prediction.y}px`;
+                
+                return prediction;
+            }
+            
+            // Draw visualization of the model
+            function visualizeModel() {
+                // Clear old visualization
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                if (mode !== 'visualize') return;
+                
+                // Draw data points (recent mouse positions)
+                const pointsToShow = Math.min(100, mouseHistory.length);
+                for (let i = mouseHistory.length - pointsToShow; i < mouseHistory.length; i++) {
+                    if (i < 0) continue;
+                    
+                    const point = mouseHistory[i];
+                    const alpha = (i - (mouseHistory.length - pointsToShow)) / pointsToShow;
+                    
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(102, 178, 255, ${alpha * 0.5})`;
+                    ctx.fill();
+                }
+                
+                // Draw grid of predictions
+                const gridSize = 20;
+                const cellSize = Math.max(canvas.width, canvas.height) / gridSize;
+                
+                for (let x = 0; x <= gridSize; x++) {
+                    for (let y = 0; y <= gridSize; y++) {
+                        const posX = x * cellSize;
+                        const posY = y * cellSize;
+                        
+                        // Calculate distance from current position
+                        const dx = posX - mouseX;
+                        const dy = posY - mouseY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Only show predictions within relevant range
+                        if (distance > predictionRange * 3) continue;
+                        
+                        // Make prediction for this position
+                        const prediction = nn.predict(posX, posY, distance);
+                        
+                        // Draw vector from position to prediction
+                        const vectorLength = Math.min(50, Math.sqrt(
+                            Math.pow(prediction.x - posX, 2) + 
+                            Math.pow(prediction.y - posY, 2)
+                        ));
+                        
+                        if (vectorLength < 5) continue; // Skip tiny vectors
+                        
+                        const angle = Math.atan2(prediction.y - posY, prediction.x - posX);
+                        
+                        // Draw prediction vector
+                        ctx.beginPath();
+                        ctx.moveTo(posX, posY);
+                        ctx.lineTo(
+                            posX + Math.cos(angle) * vectorLength,
+                            posY + Math.sin(angle) * vectorLength
+                        );
+                        
+                        // Color based on confidence/magnitude
+                        const confidence = vectorLength / 50;
+                        ctx.strokeStyle = `rgba(255, 126, 185, ${confidence * 0.7})`;
+                        ctx.lineWidth = 1 + confidence;
+                        ctx.stroke();
+                        
+                        // Draw arrowhead
+                        ctx.beginPath();
+                        ctx.arc(
+                            posX + Math.cos(angle) * vectorLength,
+                            posY + Math.sin(angle) * vectorLength,
+                            2 + confidence * 2, 0, Math.PI * 2
+                        );
+                        ctx.fillStyle = `rgba(255, 126, 185, ${confidence * 0.7})`;
+                        ctx.fill();
+                    }
+                }
+                
+                // Draw prediction for current position
+                const currentPrediction = nn.predict(mouseX, mouseY, mouseHistory.length > 0 ? mouseHistory[mouseHistory.length - 1].distance : 0);
+                
+                ctx.beginPath();
+                ctx.moveTo(mouseX, mouseY);
+                ctx.lineTo(currentPrediction.x, currentPrediction.y);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw network weights visualization
+                drawNetworkWeights();
+            }
+            
+            // Draw visualization of neural network weights
+            function drawNetworkWeights() {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const radius = 100;
+                
+                // Draw input nodes
+                const inputLabels = ['Mouse X', 'Mouse Y', 'Speed'];
+                const inputAngles = [Math.PI * 0.8, Math.PI * 1.2, Math.PI * 1.5];
+                
+                // Draw output nodes
+                const outputLabels = ['Pred X', 'Pred Y'];
+                const outputAngles = [Math.PI * 0.2, Math.PI * 0.4];
+                
+                // Draw nodes
+                ctx.font = '12px Poppins';
+                ctx.textAlign = 'center';
+                
+                // Input nodes
+                for (let i = 0; i < inputLabels.length; i++) {
+                    const x = centerX + Math.cos(inputAngles[i]) * radius;
+                    const y = centerY + Math.sin(inputAngles[i]) * radius;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 15, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(102, 178, 255, 0.7)';
+                    ctx.fill();
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(inputLabels[i], x, y + 25);
+                }
+                
+                // Output nodes
+                for (let i = 0; i < outputLabels.length; i++) {
+                    const x = centerX + Math.cos(outputAngles[i]) * radius;
+                    const y = centerY + Math.sin(outputAngles[i]) * radius;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 15, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 126, 185, 0.7)';
+                    ctx.fill();
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(outputLabels[i], x, y + 25);
+                }
+                
+                // Draw connections with weight visualization
+                for (let i = 0; i < inputLabels.length; i++) {
+                    const inputX = centerX + Math.cos(inputAngles[i]) * radius;
+                    const inputY = centerY + Math.sin(inputAngles[i]) * radius;
+                    
+                    // Connections to X output
+                    const outXx = centerX + Math.cos(outputAngles[0]) * radius;
+                    const outXy = centerY + Math.sin(outputAngles[0]) * radius;
+                    const weightX = nn.weights.x[i];
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(inputX, inputY);
+                    ctx.lineTo(outXx, outXy);
+                    ctx.strokeStyle = weightX >= 0 ? 
+                        `rgba(93, 187, 99, ${Math.abs(weightX)})` : 
+                        `rgba(255, 126, 185, ${Math.abs(weightX)})`;
+                    ctx.lineWidth = Math.max(1, Math.abs(weightX) * 5);
+                    ctx.stroke();
+                    
+                    // Connections to Y output
+                    const outYx = centerX + Math.cos(outputAngles[1]) * radius;
+                    const outYy = centerY + Math.sin(outputAngles[1]) * radius;
+                    const weightY = nn.weights.y[i];
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(inputX, inputY);
+                    ctx.lineTo(outYx, outYy);
+                    ctx.strokeStyle = weightY >= 0 ? 
+                        `rgba(93, 187, 99, ${Math.abs(weightY)})` : 
+                        `rgba(255, 126, 185, ${Math.abs(weightY)})`;
+                    ctx.lineWidth = Math.max(1, Math.abs(weightY) * 5);
+                    ctx.stroke();
+                }
+                
+                // Add bias visualization
+                ctx.fillStyle = 'white';
+                ctx.fillText(`Bias X: ${nn.bias.x.toFixed(3)}`, centerX, centerY - 20);
+                ctx.fillText(`Bias Y: ${nn.bias.y.toFixed(3)}`, centerX, centerY);
+            }
+            
+            // Update mouse position and cursor
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor element
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Add to history
+                addMousePosition(mouseX, mouseY);
+                
+                // If in prediction mode, show prediction
+                if (mode === 'predict' && dataPoints.length >= 10) {
+                    predictionCursor.style.display = 'block';
+                    makePrediction();
+                } else {
+                    predictionCursor.style.display = 'none';
+                }
+            });
+            
+            // Control buttons
+            controlBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const newMode = btn.dataset.mode;
+                    
+                    if (newMode === 'reset') {
+                        // Reset the model
+                        nn.weights = {
+                            x: [0.1, 0.2, 0.1],
+                            y: [0.2, 0.1, 0.1]
+                        };
+                        nn.bias = { x: 0, y: 0 };
+                        dataPoints = [];
+                        mouseHistory = [];
+                        accuracy = 0;
+                        
+                        accuracyEl.textContent = '0%';
+                        dataPointsEl.textContent = '0';
+                        
+                        // Clear visualization
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        
+                        return;
+                    }
+                    
+                    // Update mode
+                    mode = newMode;
+                    
+                    // Update active button
+                    controlBtns.forEach(b => {
+                        if (b.dataset.mode !== 'reset') {
+                            b.classList.remove('active');
+                        }
+                    });
+                    btn.classList.add('active');
+                    
+                    // Handle mode-specific actions
+                    if (mode === 'predict') {
+                        predictionCursor.style.display = 'block';
+                    } else {
+                        predictionCursor.style.display = 'none';
+                    }
+                    
+                    // Clear canvas if switching from visualize mode
+                    if (mode !== 'visualize') {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                });
+            });
+            
+            // Animation loop
+            function animate() {
+                // Train model in learn mode
+                if (mode === 'learn' && dataPoints.length >= 10) {
+                    trainModel();
+                }
+                
+                // Update visualization
+                if (mode === 'visualize') {
+                    visualizeModel();
+                }
+                
+                // Update stats
+                predictionRangeEl.textContent = `${predictionRange}px`;
+                learningRateEl.textContent = learningRate.toFixed(2);
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

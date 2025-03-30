@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sketch Artist Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #f5f5f5;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #555;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+        }
+        
+        select {
+            width: 120px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        button {
+            background-color: #4a4a4a;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #333;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cursor {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-10px, -10px);
+            width: 32px;
+            height: 32px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>');
+            transition: transform 0.1s;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Sketch Artist</h1>
+        <p>Move your cursor to create beautiful pencil sketches. Click to switch between drawing styles.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="pencil-size">Pencil Size</label>
+                <input type="range" id="pencil-size" min="1" max="20" step="1" value="3">
+            </div>
+            
+            <div class="control-group">
+                <label for="sketch-style">Sketch Style</label>
+                <select id="sketch-style">
+                    <option value="pencil">Pencil Sketch</option>
+                    <option value="charcoal">Charcoal</option>
+                    <option value="hatching">Cross Hatching</option>
+                    <option value="scribble">Scribble</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="paper-texture">Paper Texture</label>
+                <select id="paper-texture">
+                    <option value="smooth">Smooth</option>
+                    <option value="rough">Rough</option>
+                    <option value="canvas">Canvas</option>
+                    <option value="vintage">Vintage</option>
+                </select>
+            </div>
+            
+            <button id="clear-btn">Clear Canvas</button>
+            <button id="save-btn">Save Artwork</button>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Custom cursor element
+            const cursor = document.getElementById('cursor');
+            
+            // Controls
+            const pencilSizeSlider = document.getElementById('pencil-size');
+            const sketchStyleSelect = document.getElementById('sketch-style');
+            const paperTextureSelect = document.getElementById('paper-texture');
+            const clearBtn = document.getElementById('clear-btn');
+            const saveBtn = document.getElementById('save-btn');
+            
+            // Config variables
+            let pencilSize = parseInt(pencilSizeSlider.value);
+            let sketchStyle = sketchStyleSelect.value;
+            let paperTexture = paperTextureSelect.value;
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+            let hue = 0;
+            let pressure = 0.5;
+            let currentPath = [];
+            
+            // Apply paper texture to canvas
+            applyPaperTexture();
+            
+            // Event listeners for controls
+            pencilSizeSlider.addEventListener('input', () => {
+                pencilSize = parseInt(pencilSizeSlider.value);
+                updateCursor();
+            });
+            
+            sketchStyleSelect.addEventListener('change', () => {
+                sketchStyle = sketchStyleSelect.value;
+                updateCursor();
+            });
+            
+            paperTextureSelect.addEventListener('change', () => {
+                paperTexture = paperTextureSelect.value;
+                applyPaperTexture();
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                // Save the paper texture
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Reapply the paper texture
+                applyPaperTexture();
+            });
+            
+            saveBtn.addEventListener('click', () => {
+                // Create a temporary link
+                const link = document.createElement('a');
+                link.download = 'sketch-artwork.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+            
+            // Apply paper texture to canvas
+            function applyPaperTexture() {
+                // Reset canvas
+                ctx.fillStyle = '#f5f5f5'; // Default white paper
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Apply selected texture
+                switch (paperTexture) {
+                    case 'smooth':
+                        // Just a clean white paper
+                        ctx.fillStyle = '#f5f5f5';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        break;
+                    case 'rough':
+                        // Create a rough paper texture with noise
+                        createNoiseTexture(10, '#e8e8e8', '#f5f5f5');
+                        break;
+                    case 'canvas':
+                        // Create a canvas-like texture with grid pattern
+                        createCanvasTexture();
+                        break;
+                    case 'vintage':
+                        // Create a vintage paper texture
+                        createVintageTexture();
+                        break;
+                }
+            }
+            
+            // Create noise texture
+            function createNoiseTexture(density, color1, color2) {
+                ctx.fillStyle = color2;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = color1;
+                
+                for (let x = 0; x < canvas.width; x += density) {
+                    for (let y = 0; y < canvas.height; y += density) {
+                        if (Math.random() > 0.5) {
+                            ctx.fillRect(x, y, density / 2, density / 2);
+                        }
+                    }
+                }
+            }
+            
+            // Create canvas texture
+            function createCanvasTexture() {
+                ctx.fillStyle = '#f0eee0';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add grid pattern
+                ctx.strokeStyle = '#e0ddc0';
+                ctx.lineWidth = 0.5;
+                
+                // Horizontal lines
+                for (let y = 0; y < canvas.height; y += 10) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                
+                // Vertical lines
+                for (let x = 0; x < canvas.width; x += 10) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+            }
+            
+            // Create vintage texture
+            function createVintageTexture() {
+                // Base color
+                ctx.fillStyle = '#f0e6d2';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add noise
+                createNoiseTexture(5, '#e6d8bf', '#f0e6d2');
+                
+                // Add some coffee stains
+                for (let i = 0; i < 3; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    const radius = Math.random() * 100 + 50;
+                    
+                    // Create a radial gradient for the stain
+                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                    gradient.addColorStop(0, 'rgba(160, 82, 45, 0.1)');
+                    gradient.addColorStop(0.7, 'rgba(160, 82, 45, 0.05)');
+                    gradient.addColorStop(1, 'rgba(160, 82, 45, 0)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Update cursor appearance based on sketch style
+            function updateCursor() {
+                let cursorImage;
+                
+                switch (sketchStyle) {
+                    case 'pencil':
+                        cursorImage = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>`;
+                        break;
+                    case 'charcoal':
+                        cursorImage = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><line x1="8" y1="2" x2="8" y2="4"></line><line x1="16" y1="2" x2="16" y2="4"></line><line x1="8" y1="20" x2="8" y2="22"></line><line x1="16" y1="20" x2="16" y2="22"></line></svg>`;
+                        break;
+                    case 'hatching':
+                        cursorImage = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="20"></line><line x1="4" y1="20" x2="20" y2="4"></line></svg>`;
+                        break;
+                    case 'scribble':
+                        cursorImage = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4c0 0 8 7 16 7M4 12c0 0 8 7 16 7"></path></svg>`;
+                        break;
+                }
+                
+                cursor.style.backgroundImage = `url('data:image/svg+xml;utf8,${cursorImage}')`;
+                cursor.style.width = `${Math.max(32, pencilSize * 8)}px`;
+                cursor.style.height = `${Math.max(32, pencilSize * 8)}px`;
+            }
+            
+            // Initialize cursor
+            updateCursor();
+            
+            // Handle mouse movement
+            document.addEventListener('mousemove', (e) => {
+                // Update cursor position
+                cursor.style.left = `${e.clientX}px`;
+                cursor.style.top = `${e.clientY}px`;
+                
+                if (isDrawing) {
+                    // Calculate drawing properties
+                    const x = e.clientX;
+                    const y = e.clientY;
+                    
+                    // Calculate line properties based on speed
+                    const dx = x - lastX;
+                    const dy = y - lastY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Vary pressure based on speed (faster = lighter)
+                    pressure = Math.max(0.2, Math.min(1, 1 - distance / 100));
+                    
+                    // Add point to current path
+                    currentPath.push({ x, y, pressure });
+                    
+                    // Draw based on style
+                    switch (sketchStyle) {
+                        case 'pencil':
+                            drawPencilLine(lastX, lastY, x, y, pressure);
+                            break;
+                        case 'charcoal':
+                            drawCharcoalLine(lastX, lastY, x, y, pressure);
+                            break;
+                        case 'hatching':
+                            drawHatchingLine(lastX, lastY, x, y, pressure);
+                            break;
+                        case 'scribble':
+                            drawScribbleLine(lastX, lastY, x, y, pressure);
+                            break;
+                    }
+                    
+                    lastX = x;
+                    lastY = y;
+                }
+            });
+            
+            // Handle mouse down
+            document.addEventListener('mousedown', (e) => {
+                isDrawing = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                currentPath = [{ x: lastX, y: lastY, pressure }];
+                
+                // Rotate cursor slightly on mouse down
+                cursor.style.transform = 'translate(-10px, -10px) rotate(15deg)';
+            });
+            
+            // Handle mouse up
+            document.addEventListener('mouseup', () => {
+                isDrawing = false;
+                
+                // Reset cursor rotation
+                cursor.style.transform = 'translate(-10px, -10px) rotate(0deg)';
+                
+                // Add finishing touches based on sketch style
+                if (currentPath.length > 2) {
+                    if (sketchStyle === 'pencil') {
+                        // Add some random dots around the path
+                        addPencilTexture(currentPath);
+                    } else if (sketchStyle === 'charcoal') {
+                        // Add smudges
+                        addCharcoalSmudges(currentPath);
+                    }
+                }
+                
+                currentPath = [];
+            });
+            
+            // Handle mouse leave
+            document.addEventListener('mouseleave', () => {
+                isDrawing = false;
+                currentPath = [];
+            });
+            
+            // Pencil drawing function
+            function drawPencilLine(x1, y1, x2, y2, pressure) {
+                ctx.lineWidth = pencilSize * pressure;
+                ctx.strokeStyle = `rgba(30, 30, 30, ${0.2 + pressure * 0.8})`;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                
+                // Add some variation with small lines
+                if (Math.random() > 0.7) {
+                    const angle = Math.atan2(y2 - y1, x2 - x1);
+                    const length = Math.random() * 5;
+                    const perpAngle = angle + Math.PI / 2;
+                    
+                    const offsetX = Math.cos(perpAngle) * (Math.random() * 2 - 1) * pencilSize / 2;
+                    const offsetY = Math.sin(perpAngle) * (Math.random() * 2 - 1) * pencilSize / 2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x2 + offsetX, y2 + offsetY);
+                    ctx.lineTo(
+                        x2 + offsetX + Math.cos(angle) * length, 
+                        y2 + offsetY + Math.sin(angle) * length
+                    );
+                    ctx.lineWidth = pencilSize * pressure * 0.5;
+                    ctx.globalAlpha = 0.3;
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                }
+            }
+            
+            // Charcoal drawing function
+            function drawCharcoalLine(x1, y1, x2, y2, pressure) {
+                // Create a soft, thick line with random texture
+                ctx.lineWidth = pencilSize * 2 * pressure;
+                ctx.strokeStyle = `rgba(10, 10, 10, ${0.1 + pressure * 0.3})`;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                // Draw multiple slightly offset lines for texture
+                for (let i = 0; i < 3; i++) {
+                    const offsetX = (Math.random() - 0.5) * pencilSize;
+                    const offsetY = (Math.random() - 0.5) * pencilSize;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1 + offsetX, y1 + offsetY);
+                    ctx.lineTo(x2 + offsetX, y2 + offsetY);
+                    ctx.stroke();
+                }
+                
+                // Add some random dots around the line
+                for (let i = 0; i < 5; i++) {
+                    const t = Math.random();
+                    const x = x1 + (x2 - x1) * t + (Math.random() - 0.5) * pencilSize * 3;
+                    const y = y1 + (y2 - y1) * t + (Math.random() - 0.5) * pencilSize * 3;
+                    const size = Math.random() * pencilSize * pressure;
+                    
+                    ctx.fillStyle = `rgba(10, 10, 10, ${Math.random() * 0.2})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Cross-hatching drawing function
+            function drawHatchingLine(x1, y1, x2, y2, pressure) {
+                const lineLength = pencilSize * 3;
+                const angle = Math.atan2(y2 - y1, x2 - x1);
+                const perpAngle1 = angle + Math.PI / 4;  // 45 degrees
+                const perpAngle2 = angle - Math.PI / 4;  // -45 degrees
+                
+                // Calculate distance between x1,y1 and x2,y2
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Draw hatching lines along the path
+                const steps = Math.max(1, Math.floor(distance / (lineLength / 2)));
+                
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const x = x1 + dx * t;
+                    const y = y1 + dy * t;
+                    
+                    // Alternate between the two directions
+                    const currentAngle = i % 2 === 0 ? perpAngle1 : perpAngle2;
+                    
+                    // Calculate endpoints
+                    const x3 = x + Math.cos(currentAngle) * lineLength * pressure;
+                    const y3 = y + Math.sin(currentAngle) * lineLength * pressure;
+                    
+                    // Draw the hatching line
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x3, y3);
+                    ctx.lineWidth = pencilSize * 0.8 * pressure;
+                    ctx.strokeStyle = `rgba(30, 30, 30, ${0.3 + pressure * 0.5})`;
+                    ctx.stroke();
+                }
+            }
+            
+            // Scribble drawing function
+            function drawScribbleLine(x1, y1, x2, y2, pressure) {
+                ctx.lineWidth = pencilSize * 0.8 * pressure;
+                ctx.strokeStyle = `rgba(30, 30, 30, ${0.3 + pressure * 0.7})`;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                // Calculate main line
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                
+                // Create a path with randomness
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                
+                // Add random control points along the line
+                const numPoints = Math.max(2, Math.floor(distance / 10));
+                
+                for (let i = 1; i <= numPoints; i++) {
+                    const t = i / numPoints;
+                    
+                    // Calculate point along line
+                    const x = x1 + dx * t;
+                    const y = y1 + dy * t;
+                    
+                    // Add randomness perpendicular to line
+                    const perpAngle = angle + Math.PI / 2;
+                    const randomOffset = (Math.random() - 0.5) * pencilSize * 2;
+                    const offsetX = Math.cos(perpAngle) * randomOffset;
+                    const offsetY = Math.sin(perpAngle) * randomOffset;
+                    
+                    // Add point
+                    if (i === numPoints) {
+                        ctx.lineTo(x2, y2);
+                    } else {
+                        ctx.lineTo(x + offsetX, y + offsetY);
+                    }
+                }
+                
+                ctx.stroke();
+            }
+            
+            // Add pencil texture
+            function addPencilTexture(path) {
+                if (path.length < 2) return;
+                
+                // Get bounding box of the path
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                
+                path.forEach(point => {
+                    minX = Math.min(minX, point.x);
+                    minY = Math.min(minY, point.y);
+                    maxX = Math.max(maxX, point.x);
+                    maxY = Math.max(maxY, point.y);
+                });
+                
+                // Add margin
+                const margin = pencilSize * 5;
+                minX -= margin;
+                minY -= margin;
+                maxX += margin;
+                maxY += margin;
+                
+                // Add random dots around the path
+                for (let i = 0; i < path.length * 2; i++) {
+                    const x = minX + Math.random() * (maxX - minX);
+                    const y = minY + Math.random() * (maxY - minY);
+                    
+                    // Check if point is near any segment of the path
+                    let isNearPath = false;
+                    
+                    for (let j = 0; j < path.length - 1; j++) {
+                        const point1 = path[j];
+                        const point2 = path[j + 1];
+                        
+                        // Calculate distance to line segment
+                        const distance = distanceToLineSegment(x, y, point1.x, point1.y, point2.x, point2.y);
+                        
+                        if (distance < pencilSize * 3) {
+                            isNearPath = true;
+                            break;
+                        }
+                    }
+                    
+                    if (isNearPath) {
+                        const size = Math.random() * pencilSize * 0.3;
+                        ctx.fillStyle = `rgba(30, 30, 30, ${Math.random() * 0.1})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+            
+            // Add charcoal smudges
+            function addCharcoalSmudges(path) {
+                if (path.length < 2) return;
+                
+                // Select random segments of the path
+                for (let i = 0; i < path.length - 1; i += 3) {
+                    if (Math.random() > 0.7) {
+                        const point = path[i];
+                        
+                        // Create a smudge
+                        const radius = pencilSize * (1 + Math.random() * 3);
+                        
+                        // Create a radial gradient
+                        const gradient = ctx.createRadialGradient(
+                            point.x, point.y, 0,
+                            point.x, point.y, radius
+                        );
+                        
+                        gradient.addColorStop(0, `rgba(10, 10, 10, ${0.05 * point.pressure})`);
+                        gradient.addColorStop(1, 'rgba(10, 10, 10, 0)');
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+            
+            // Helper function to calculate distance from point to line segment
+            function distanceToLineSegment(x, y, x1, y1, x2, y2) {
+                const A = x - x1;
+                const B = y - y1;
+                const C = x2 - x1;
+                const D = y2 - y1;
+                
+                const dot = A * C + B * D;
+                const len_sq = C * C + D * D;
+                let param = -1;
+                
+                if (len_sq !== 0) {
+                    param = dot / len_sq;
+                }
+                
+                let xx, yy;
+                
+                if (param < 0) {
+                    xx = x1;
+                    yy = y1;
+                } else if (param > 1) {
+                    xx = x2;
+                    yy = y2;
+                } else {
+                    xx = x1 + param * C;
+                    yy = y1 + param * D;
+                }
+                
+                const dx = x - xx;
+                const dy = y - yy;
+                
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Save the current canvas content
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Resize canvas
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Reapply the paper texture
+                applyPaperTexture();
+                
+                // Restore the drawing (centered)
+                ctx.putImageData(imageData, 0, 0);
+            });
+        });
+    </script>
+</body>
+</html> 

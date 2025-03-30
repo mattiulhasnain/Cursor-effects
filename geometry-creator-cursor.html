@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry Creator Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #111133;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #f0f0f0;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #ccccff;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Geometry Creator Cursor</h1>
+        <p>Move your cursor to create geometric shapes. The shapes form and morph around your cursor, creating a trail of dynamic geometric patterns.</p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Set canvas size
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let prevMouseX = mouseX;
+            let prevMouseY = mouseY;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Geometry shapes class
+            class Shape {
+                constructor(x, y, type) {
+                    this.x = x;
+                    this.y = y;
+                    this.type = type; // 'triangle', 'square', 'circle', 'hexagon'
+                    this.size = 10 + Math.random() * 15;
+                    this.rotation = Math.random() * Math.PI * 2;
+                    this.rotationSpeed = (Math.random() - 0.5) * 0.05;
+                    this.opacity = 1.0;
+                    this.hue = Math.random() * 60 + 180; // Blue to cyan hue range
+                    this.saturation = 80 + Math.random() * 20;
+                    this.lightness = 50 + Math.random() * 30;
+                    this.targetSize = this.size * (1.5 + Math.random());
+                    this.growthRate = Math.random() * 0.5 + 0.5;
+                    this.points = this.generatePoints();
+                }
+                
+                generatePoints() {
+                    const points = [];
+                    
+                    switch (this.type) {
+                        case 'triangle':
+                            for (let i = 0; i < 3; i++) {
+                                const angle = (i / 3) * Math.PI * 2 + this.rotation;
+                                points.push({
+                                    x: Math.cos(angle),
+                                    y: Math.sin(angle)
+                                });
+                            }
+                            break;
+                            
+                        case 'square':
+                            for (let i = 0; i < 4; i++) {
+                                const angle = (i / 4) * Math.PI * 2 + Math.PI / 4 + this.rotation;
+                                points.push({
+                                    x: Math.cos(angle),
+                                    y: Math.sin(angle)
+                                });
+                            }
+                            break;
+                            
+                        case 'pentagon':
+                            for (let i = 0; i < 5; i++) {
+                                const angle = (i / 5) * Math.PI * 2 + this.rotation;
+                                points.push({
+                                    x: Math.cos(angle),
+                                    y: Math.sin(angle)
+                                });
+                            }
+                            break;
+                            
+                        case 'hexagon':
+                            for (let i = 0; i < 6; i++) {
+                                const angle = (i / 6) * Math.PI * 2 + this.rotation;
+                                points.push({
+                                    x: Math.cos(angle),
+                                    y: Math.sin(angle)
+                                });
+                            }
+                            break;
+                    }
+                    
+                    return points;
+                }
+                
+                update() {
+                    // Rotate the shape
+                    this.rotation += this.rotationSpeed;
+                    
+                    // Grow the shape
+                    if (this.size < this.targetSize) {
+                        this.size += this.growthRate;
+                    }
+                    
+                    // Fade out over time
+                    this.opacity -= 0.01;
+                    
+                    // Return true if still alive
+                    return this.opacity > 0;
+                }
+                
+                draw(ctx) {
+                    ctx.save();
+                    
+                    // Draw shape
+                    ctx.translate(this.x, this.y);
+                    
+                    // Set color
+                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity})`;
+                    ctx.strokeStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness + 20}%, ${this.opacity})`;
+                    ctx.lineWidth = 2;
+                    
+                    // Draw based on shape type
+                    if (this.type === 'circle') {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    } else {
+                        // Draw polygon
+                        ctx.beginPath();
+                        
+                        for (let i = 0; i < this.points.length; i++) {
+                            const point = this.points[i];
+                            const x = point.x * this.size;
+                            const y = point.y * this.size;
+                            
+                            if (i === 0) {
+                                ctx.moveTo(x, y);
+                            } else {
+                                ctx.lineTo(x, y);
+                            }
+                        }
+                        
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                }
+            }
+            
+            // Array of active shapes
+            const shapes = [];
+            const shapeTypes = ['triangle', 'square', 'circle', 'pentagon', 'hexagon'];
+            let shapesCreationThreshold = 5; // Pixels moved before creating a new shape
+            
+            // Create a new shape
+            function createShape() {
+                const randomType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+                shapes.push(new Shape(mouseX, mouseY, randomType));
+            }
+            
+            // Connect shapes with lines
+            function connectShapes(ctx) {
+                const maxDistance = 100;
+                
+                for (let i = 0; i < shapes.length; i++) {
+                    const shape1 = shapes[i];
+                    
+                    for (let j = i + 1; j < shapes.length; j++) {
+                        const shape2 = shapes[j];
+                        
+                        const dx = shape1.x - shape2.x;
+                        const dy = shape1.y - shape2.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < maxDistance) {
+                            // Draw line with opacity based on distance and shapes' opacity
+                            const opacity = (1 - distance / maxDistance) * shape1.opacity * shape2.opacity * 0.5;
+                            
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(shape1.x, shape1.y);
+                            ctx.lineTo(shape2.x, shape2.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            
+            // Update all shapes
+            function updateShapes() {
+                // Create new shapes based on mouse movement
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance >= shapesCreationThreshold) {
+                    createShape();
+                    prevMouseX = mouseX;
+                    prevMouseY = mouseY;
+                }
+                
+                // Limit number of shapes
+                if (shapes.length > 100) {
+                    shapes.shift();
+                }
+                
+                // Update existing shapes and remove dead ones
+                for (let i = shapes.length - 1; i >= 0; i--) {
+                    const alive = shapes[i].update();
+                    
+                    if (!alive) {
+                        shapes.splice(i, 1);
+                    }
+                }
+            }
+            
+            // Draw all shapes
+            function drawShapes() {
+                // Clear canvas with a semi-transparent background for trail effect
+                ctx.fillStyle = 'rgba(17, 17, 51, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Connect shapes with lines
+                connectShapes(ctx);
+                
+                // Draw shapes
+                shapes.forEach(shape => {
+                    shape.draw(ctx);
+                });
+            }
+            
+            // Animation loop
+            function animate() {
+                updateShapes();
+                drawShapes();
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Handle clicks - create shape burst
+            document.addEventListener('click', () => {
+                // Create multiple shapes in a burst
+                for (let i = 0; i < 10; i++) {
+                    const randomType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+                    
+                    // Position with slight offset
+                    const offsetX = (Math.random() - 0.5) * 40;
+                    const offsetY = (Math.random() - 0.5) * 40;
+                    
+                    const shape = new Shape(mouseX + offsetX, mouseY + offsetY, randomType);
+                    
+                    // Larger shapes for click burst
+                    shape.targetSize *= 1.5;
+                    
+                    shapes.push(shape);
+                }
+            });
+            
+            // Initialize and start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

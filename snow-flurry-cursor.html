@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snow Flurry Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, #2c3e50, #34495e);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #e0e0e0;
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .snowflake {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+            filter: blur(0.5px);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+            transition: transform 0.1s ease;
+        }
+        
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.5));
+            z-index: 2;
+        }
+        
+        .mountain {
+            position: absolute;
+            bottom: 55px;
+            width: 0;
+            height: 0;
+            border-left: 200px solid transparent;
+            border-right: 200px solid transparent;
+            border-bottom: 250px solid rgba(255, 255, 255, 0.15);
+            z-index: 1;
+        }
+        
+        .mountain:nth-child(1) {
+            left: -100px;
+            transform: scale(0.8);
+        }
+        
+        .mountain:nth-child(2) {
+            left: 250px;
+            transform: scale(1.2);
+        }
+        
+        .mountain:nth-child(3) {
+            right: -50px;
+            transform: scale(0.9);
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .return-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Snow Flurry Cursor Effect</h1>
+        <p>Move your cursor to generate beautiful snowflakes that drift down naturally. Watch as the winter wonderland grows with each movement of your cursor.</p>
+    </div>
+    
+    <div class="mountain"></div>
+    <div class="mountain"></div>
+    <div class="mountain"></div>
+    <div class="ground"></div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const cursor = document.querySelector('.cursor');
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            
+            // Settings
+            const snowflakeInterval = 30; // ms between flakes
+            const maxSnowflakes = 300; // Maximum snowflakes on screen
+            const snowflakeBaseSize = 6; // Base size of snowflake (will be randomized)
+            
+            let lastSnowflakeTime = 0;
+            let snowflakes = [];
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Scale cursor based on movement speed
+                const speed = Math.sqrt(
+                    Math.pow(mouseX - prevMouseX, 2) + 
+                    Math.pow(mouseY - prevMouseY, 2)
+                );
+                
+                const scale = Math.min(1 + speed * 0.01, 1.5);
+                cursor.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            });
+            
+            // Create snowflake
+            function createSnowflake(x, y) {
+                if (snowflakes.length >= maxSnowflakes) {
+                    const oldestSnowflake = snowflakes.shift();
+                    oldestSnowflake.element.remove();
+                }
+                
+                const size = (Math.random() * snowflakeBaseSize) + 2;
+                const opacity = 0.3 + Math.random() * 0.7;
+                
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.style.left = `${x}px`;
+                snowflake.style.top = `${y}px`;
+                snowflake.style.width = `${size}px`;
+                snowflake.style.height = `${size}px`;
+                snowflake.style.opacity = opacity;
+                body.appendChild(snowflake);
+                
+                return {
+                    element: snowflake,
+                    x: x,
+                    y: y,
+                    size: size,
+                    speedY: 0.5 + Math.random() * 2,
+                    speedX: Math.random() * 2 - 1, // Random horizontal drift
+                    wobbleSpeed: 0.3 + Math.random() * 0.5,
+                    wobbleFactor: Math.random() * 2,
+                    wobbleOffset: Math.random() * Math.PI * 2,
+                    removed: false
+                };
+            }
+            
+            function update() {
+                const currentTime = Date.now();
+                
+                // Create new snowflakes at intervals when mouse moves
+                if (currentTime - lastSnowflakeTime > snowflakeInterval) {
+                    const movementDistance = Math.sqrt(
+                        Math.pow(mouseX - prevMouseX, 2) + 
+                        Math.pow(mouseY - prevMouseY, 2)
+                    );
+                    
+                    if (movementDistance > 3) {
+                        const offsetX = (Math.random() - 0.5) * 50;
+                        const offsetY = (Math.random() - 0.5) * 20;
+                        snowflakes.push(createSnowflake(mouseX + offsetX, mouseY + offsetY));
+                        lastSnowflakeTime = currentTime;
+                    }
+                }
+                
+                // Update snowflakes
+                for (let i = 0; i < snowflakes.length; i++) {
+                    const flake = snowflakes[i];
+                    if (flake.removed) continue;
+                    
+                    // Update position with natural drifting motion
+                    flake.y += flake.speedY;
+                    
+                    // Add gentle wobble effect for horizontal movement
+                    flake.wobbleOffset += flake.wobbleSpeed * 0.05;
+                    flake.x += Math.sin(flake.wobbleOffset) * flake.wobbleFactor * 0.2 + flake.speedX * 0.2;
+                    
+                    flake.element.style.top = `${flake.y}px`;
+                    flake.element.style.left = `${flake.x}px`;
+                    
+                    // Slowly fade out as they fall
+                    const fallProgress = Math.min(flake.y / window.innerHeight, 1);
+                    const fadeOutFactor = 1 - Math.pow(fallProgress, 2) * 0.5;
+                    flake.element.style.opacity = fadeOutFactor * (0.3 + Math.random() * 0.7);
+                    
+                    // Remove if off-screen
+                    if (flake.y > window.innerHeight || flake.x < -50 || flake.x > window.innerWidth + 50) {
+                        flake.element.remove();
+                        flake.removed = true;
+                    }
+                }
+                
+                // Clean up removed snowflakes
+                snowflakes = snowflakes.filter(flake => !flake.removed);
+                
+                requestAnimationFrame(update);
+            }
+            
+            update();
+        });
+    </script>
+</body>
+</html> 

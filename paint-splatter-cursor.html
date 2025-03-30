@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paint Splatter Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #fcfcfc;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #555;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .color-option {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .color-option:hover, .color-option.active {
+            transform: scale(1.2);
+            border-color: #333;
+        }
+        
+        button {
+            background-color: #4a4a4a;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #333;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cursor {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease;
+        }
+        
+        .cursor-inner {
+            width: 8px;
+            height: 8px;
+            background-color: #333;
+            border-radius: 50%;
+        }
+        
+        .cursor-outer {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .brush-preview {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.5;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Paint Splatter Cursor Effect</h1>
+        <p>Move your cursor to create drips and paint trails. Click to create paint splatters!</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="splatter-size">Splatter Size</label>
+                <input type="range" id="splatter-size" min="10" max="100" step="5" value="40">
+            </div>
+            
+            <div class="control-group">
+                <label for="drip-chance">Drip Chance</label>
+                <input type="range" id="drip-chance" min="0" max="100" step="5" value="30">
+            </div>
+            
+            <div class="control-group">
+                <label>Paint Color</label>
+                <div class="color-picker" id="color-picker">
+                    <div class="color-option active" style="background-color: #e74c3c;" data-color="#e74c3c"></div>
+                    <div class="color-option" style="background-color: #3498db;" data-color="#3498db"></div>
+                    <div class="color-option" style="background-color: #2ecc71;" data-color="#2ecc71"></div>
+                    <div class="color-option" style="background-color: #f39c12;" data-color="#f39c12"></div>
+                    <div class="color-option" style="background-color: #9b59b6;" data-color="#9b59b6"></div>
+                    <div class="color-option" style="background-color: #1abc9c;" data-color="#1abc9c"></div>
+                </div>
+            </div>
+            
+            <button id="clear-btn">Clear Canvas</button>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor">
+        <div class="cursor-inner"></div>
+        <div class="cursor-outer"></div>
+    </div>
+    
+    <div class="brush-preview" id="brush-preview"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Custom cursor elements
+            const cursor = document.getElementById('cursor');
+            const brushPreview = document.getElementById('brush-preview');
+            
+            // Controls
+            const splatterSizeSlider = document.getElementById('splatter-size');
+            const dripChanceSlider = document.getElementById('drip-chance');
+            const colorOptions = document.querySelectorAll('.color-option');
+            const clearBtn = document.getElementById('clear-btn');
+            
+            // Config variables
+            let splatterSize = parseInt(splatterSizeSlider.value);
+            let dripChance = parseInt(dripChanceSlider.value);
+            let paintColor = '#e74c3c'; // Default red color
+            let isMouseDown = false;
+            let lastMouseX = 0;
+            let lastMouseY = 0;
+            let mouseX = 0;
+            let mouseY = 0;
+            let mouseVelocity = 0;
+            
+            // Event listeners for controls
+            splatterSizeSlider.addEventListener('input', () => {
+                splatterSize = parseInt(splatterSizeSlider.value);
+                updateBrushPreview();
+            });
+            
+            dripChanceSlider.addEventListener('input', () => {
+                dripChance = parseInt(dripChanceSlider.value);
+            });
+            
+            colorOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    // Remove active class from all options
+                    colorOptions.forEach(op => op.classList.remove('active'));
+                    // Add active class to selected option
+                    option.classList.add('active');
+                    // Update paint color
+                    paintColor = option.getAttribute('data-color');
+                    // Update brush preview color
+                    updateBrushPreview();
+                });
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                // Clear the canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+            
+            // Update mouse position and create paint trail
+            document.addEventListener('mousemove', (e) => {
+                // Calculate mouse velocity
+                const prevMouseX = mouseX;
+                const prevMouseY = mouseY;
+                
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                mouseVelocity = Math.sqrt(dx * dx + dy * dy);
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Update brush preview position
+                brushPreview.style.left = `${mouseX}px`;
+                brushPreview.style.top = `${mouseY}px`;
+                
+                // Create paint trail based on velocity
+                if (mouseVelocity > 5) {
+                    const trailSize = Math.min(splatterSize * 0.5, mouseVelocity * 0.5);
+                    createPaintDrop(mouseX, mouseY, trailSize);
+                    
+                    // Possibly create drips
+                    if (Math.random() * 100 < dripChance && mouseVelocity > 15) {
+                        createDrip(mouseX, mouseY);
+                    }
+                }
+            });
+            
+            // Handle mouse click for splatters
+            document.addEventListener('mousedown', () => {
+                isMouseDown = true;
+                lastMouseX = mouseX;
+                lastMouseY = mouseY;
+                
+                // Create paint splatter
+                createSplatter(mouseX, mouseY);
+                
+                // Scale cursor down on click
+                cursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isMouseDown = false;
+                
+                // Reset cursor scale
+                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
+            
+            // Create continuous splatters while dragging
+            setInterval(() => {
+                if (isMouseDown && mouseVelocity > 10) {
+                    // Create paint splatter between last position and current
+                    const distance = Math.sqrt(
+                        Math.pow(mouseX - lastMouseX, 2) + 
+                        Math.pow(mouseY - lastMouseY, 2)
+                    );
+                    
+                    if (distance > 50) {
+                        createSplatter(mouseX, mouseY, splatterSize * 0.7);
+                        lastMouseX = mouseX;
+                        lastMouseY = mouseY;
+                    }
+                }
+            }, 100);
+            
+            // Update brush preview based on current settings
+            function updateBrushPreview() {
+                brushPreview.style.width = `${splatterSize}px`;
+                brushPreview.style.height = `${splatterSize}px`;
+                brushPreview.style.backgroundColor = paintColor;
+            }
+            
+            // Initialize brush preview
+            updateBrushPreview();
+            
+            // Create a paint drop
+            function createPaintDrop(x, y, size) {
+                ctx.beginPath();
+                ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+                ctx.fillStyle = paintColor;
+                ctx.fill();
+            }
+            
+            // Create a paint drip
+            function createDrip(x, y) {
+                // Drips mostly go down
+                const dripLength = Math.random() * 100 + 20;
+                const dripWidth = Math.random() * 8 + 2;
+                const controlX = x + (Math.random() * 20 - 10);
+                
+                // Draw drip using a quadratic curve
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.quadraticCurveTo(controlX, y + dripLength * 0.6, x, y + dripLength);
+                ctx.lineWidth = dripWidth;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = paintColor;
+                ctx.stroke();
+                
+                // Add drip end (teardrop shape)
+                ctx.beginPath();
+                ctx.arc(x, y + dripLength, dripWidth * 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = paintColor;
+                ctx.fill();
+            }
+            
+            // Create a paint splatter
+            function createSplatter(x, y, customSize = null) {
+                const size = customSize || splatterSize;
+                const splatCount = Math.floor(size / 5) + 5;
+                
+                // Main splatter blob
+                ctx.beginPath();
+                ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+                ctx.fillStyle = paintColor;
+                ctx.fill();
+                
+                // Create splatter droplets around main blob
+                for (let i = 0; i < splatCount; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * size + size / 2;
+                    const dropSize = Math.random() * (size / 3) + 2;
+                    
+                    const dropX = x + Math.cos(angle) * distance;
+                    const dropY = y + Math.sin(angle) * distance;
+                    
+                    ctx.beginPath();
+                    
+                    // Randomize between circles and ellipses for variety
+                    if (Math.random() > 0.5) {
+                        // Circle
+                        ctx.arc(dropX, dropY, dropSize / 2, 0, Math.PI * 2);
+                    } else {
+                        // Ellipse
+                        const radiusX = dropSize * (Math.random() * 0.5 + 0.5);
+                        const radiusY = dropSize * (Math.random() * 0.5 + 0.5);
+                        const rotation = Math.random() * Math.PI * 2;
+                        
+                        ctx.ellipse(dropX, dropY, radiusX, radiusY, rotation, 0, Math.PI * 2);
+                    }
+                    
+                    ctx.fillStyle = paintColor;
+                    ctx.fill();
+                    
+                    // Occasionally add drips from droplets
+                    if (Math.random() < 0.2) {
+                        createDrip(dropX, dropY);
+                    }
+                }
+                
+                // Create connecting "bridges" between main blob and some droplets
+                for (let i = 0; i < splatCount / 3; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * (size / 2) + size / 2;
+                    
+                    const endX = x + Math.cos(angle) * distance;
+                    const endY = y + Math.sin(angle) * distance;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(endX, endY);
+                    ctx.lineWidth = Math.random() * 4 + 1;
+                    ctx.strokeStyle = paintColor;
+                    ctx.stroke();
+                }
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Save current canvas content
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                tempCtx.drawImage(canvas, 0, 0);
+                
+                // Resize canvas
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Restore canvas content
+                ctx.drawImage(tempCanvas, 0, 0);
+            });
+        });
+    </script>
+</body>
+</html> 

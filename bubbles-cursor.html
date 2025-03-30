@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubbles Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #0c2b5b 0%, #173d7a 50%, #2a5298 100%);
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+        }
+        
+        select {
+            padding: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 15px 2px rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
+        }
+        
+        .cursor::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .cursor.active {
+            transform: translate(-50%, -50%) scale(1.5);
+            transition: transform 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Bubbles Cursor Effect</h1>
+        <p>Move your cursor to create floating bubbles. Click to generate a burst of bubbles!</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="bubble-size">Bubble Size</label>
+                <input type="range" id="bubble-size" min="5" max="30" step="1" value="15">
+            </div>
+            
+            <div class="control-group">
+                <label for="bubble-density">Bubble Density</label>
+                <input type="range" id="bubble-density" min="5" max="50" step="5" value="20">
+            </div>
+            
+            <div class="control-group">
+                <label for="bubble-style">Bubble Style</label>
+                <select id="bubble-style">
+                    <option value="simple">Simple</option>
+                    <option value="soap">Soap Bubble</option>
+                    <option value="glass">Glass</option>
+                    <option value="colorful">Colorful</option>
+                    <option value="neon">Neon</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="float-speed">Float Speed</label>
+                <input type="range" id="float-speed" min="0.5" max="3" step="0.1" value="1.2">
+            </div>
+            
+            <button id="pop-sound-btn">Pop Sound: Off</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'cursor';
+            document.body.appendChild(cursor);
+            
+            // Controls
+            const bubbleSizeSlider = document.getElementById('bubble-size');
+            const bubbleDensitySlider = document.getElementById('bubble-density');
+            const bubbleStyleSelect = document.getElementById('bubble-style');
+            const floatSpeedSlider = document.getElementById('float-speed');
+            const popSoundBtn = document.getElementById('pop-sound-btn');
+            
+            // Config variables
+            let bubbleSize = parseInt(bubbleSizeSlider.value);
+            let bubbleDensity = parseInt(bubbleDensitySlider.value);
+            let bubbleStyle = bubbleStyleSelect.value;
+            let floatSpeed = parseFloat(floatSpeedSlider.value);
+            let popSoundEnabled = false;
+            
+            // Event listeners for controls
+            bubbleSizeSlider.addEventListener('input', () => {
+                bubbleSize = parseInt(bubbleSizeSlider.value);
+            });
+            
+            bubbleDensitySlider.addEventListener('input', () => {
+                bubbleDensity = parseInt(bubbleDensitySlider.value);
+            });
+            
+            bubbleStyleSelect.addEventListener('change', () => {
+                bubbleStyle = bubbleStyleSelect.value;
+            });
+            
+            floatSpeedSlider.addEventListener('input', () => {
+                floatSpeed = parseFloat(floatSpeedSlider.value);
+            });
+            
+            popSoundBtn.addEventListener('click', () => {
+                popSoundEnabled = !popSoundEnabled;
+                popSoundBtn.textContent = `Pop Sound: ${popSoundEnabled ? 'On' : 'Off'}`;
+                
+                // Initialize audio if enabled
+                if (popSoundEnabled) {
+                    initAudio();
+                }
+            });
+            
+            // Mouse variables
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            let mouseSpeed = 0;
+            let isMouseDown = false;
+            
+            // Audio context for pop sounds
+            let audioContext;
+            let popSounds = [];
+            
+            // Initialize audio for pop sounds
+            function initAudio() {
+                if (audioContext) return;
+                
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Create different pop sounds
+                    for (let i = 0; i < 5; i++) {
+                        createPopSound(i);
+                    }
+                } catch (e) {
+                    console.error("Web Audio API not supported:", e);
+                    popSoundEnabled = false;
+                    popSoundBtn.textContent = 'Pop Sound: Off (Not Supported)';
+                    popSoundBtn.disabled = true;
+                }
+            }
+            
+            // Create a pop sound
+            function createPopSound(index) {
+                const duration = 0.2 + Math.random() * 0.2; // 0.2 to 0.4 seconds
+                const sampleRate = audioContext.sampleRate;
+                const bufferSize = duration * sampleRate;
+                const buffer = audioContext.createBuffer(1, bufferSize, sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                // Create a basic pop sound
+                const freq = 300 + index * 100 + Math.random() * 200;
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    const t = i / sampleRate;
+                    // Quickly ascending frequency with exponential decay
+                    const decay = Math.exp(-20 * t);
+                    data[i] = Math.sin(freq * t * (1 + 5 * t)) * decay * 0.5;
+                }
+                
+                popSounds[index] = buffer;
+            }
+            
+            // Play a pop sound
+            function playPopSound(volume = 0.5) {
+                if (!popSoundEnabled || !audioContext) return;
+                
+                const index = Math.floor(Math.random() * popSounds.length);
+                const source = audioContext.createBufferSource();
+                source.buffer = popSounds[index];
+                
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = volume;
+                
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                source.start();
+            }
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Calculate mouse speed
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                mouseSpeed = Math.sqrt(dx * dx + dy * dy);
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Generate bubbles based on mouse movement
+                if (mouseSpeed > 1) {
+                    const bubbleCount = Math.min(5, Math.floor(mouseSpeed / 5)) + 1;
+                    
+                    for (let i = 0; i < bubbleCount; i++) {
+                        const offset = 20;
+                        const posX = mouseX + (Math.random() * offset * 2 - offset);
+                        const posY = mouseY + (Math.random() * offset * 2 - offset);
+                        
+                        createBubble(posX, posY);
+                    }
+                }
+            });
+            
+            // Handle mouse click
+            document.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                cursor.classList.add('active');
+                
+                // Create bubble burst
+                createBubbleBurst(e.clientX, e.clientY);
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isMouseDown = false;
+                cursor.classList.remove('active');
+            });
+            
+            // Create a continuous burst while mouse is down
+            setInterval(() => {
+                if (isMouseDown) {
+                    createBubbleBurst(mouseX, mouseY, 0.6);
+                }
+            }, 300);
+            
+            // Bubble class
+            class Bubble {
+                constructor(x, y, size = null) {
+                    this.x = x;
+                    this.y = y;
+                    this.size = size || Math.random() * bubbleSize + 5;
+                    this.initialSize = this.size;
+                    this.velocityX = (Math.random() - 0.5) * 1.5;
+                    this.velocityY = -Math.random() * 2 - 1; // Always rise upward
+                    this.alpha = 0.8;
+                    this.color = this.getColor();
+                    this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+                    this.rotation = Math.random() * Math.PI * 2;
+                    this.wobbleSpeed = Math.random() * 0.03 + 0.01;
+                    this.wobbleAmount = Math.random() * 1.5 + 0.5;
+                    this.wobbleOffset = Math.random() * Math.PI * 2;
+                    this.popped = false;
+                    this.popFrame = 0;
+                    this.maxPopFrames = 10;
+                    this.highlightAngle = Math.random() * Math.PI * 2;
+                    this.reflectionAngle = Math.random() * Math.PI * 2;
+                }
+                
+                getColor() {
+                    switch (bubbleStyle) {
+                        case 'simple':
+                            return {
+                                fill: 'rgba(255, 255, 255, 0.2)',
+                                stroke: 'rgba(255, 255, 255, 0.8)'
+                            };
+                        case 'soap':
+                            // Soap bubble has rainbow reflection
+                            return {
+                                fill: 'rgba(255, 255, 255, 0.15)',
+                                stroke: 'rgba(255, 255, 255, 0.6)',
+                                rainbow: true
+                            };
+                        case 'glass':
+                            return {
+                                fill: 'rgba(220, 240, 255, 0.15)',
+                                stroke: 'rgba(220, 240, 255, 0.5)',
+                                highlight: true
+                            };
+                        case 'colorful':
+                            const hue = Math.random() * 360;
+                            return {
+                                fill: `hsla(${hue}, 100%, 70%, 0.3)`,
+                                stroke: `hsla(${hue}, 100%, 80%, 0.7)`
+                            };
+                        case 'neon':
+                            const neonHue = Math.random() * 360;
+                            return {
+                                fill: `hsla(${neonHue}, 100%, 70%, 0.2)`,
+                                stroke: `hsla(${neonHue}, 100%, 80%, 0.9)`,
+                                glow: true
+                            };
+                        default:
+                            return {
+                                fill: 'rgba(255, 255, 255, 0.2)',
+                                stroke: 'rgba(255, 255, 255, 0.8)'
+                            };
+                    }
+                }
+                
+                update() {
+                    if (this.popped) {
+                        this.popFrame++;
+                        return this.popFrame < this.maxPopFrames;
+                    }
+                    
+                    // Apply float speed
+                    this.x += this.velocityX * floatSpeed;
+                    this.y += this.velocityY * floatSpeed;
+                    
+                    // Apply wobble
+                    this.x += Math.sin(Date.now() * this.wobbleSpeed + this.wobbleOffset) * this.wobbleAmount;
+                    
+                    // Rotate
+                    this.rotation += this.rotationSpeed;
+                    
+                    // Apply slow fade
+                    this.alpha -= 0.002;
+                    
+                    // Check if bubble reached top
+                    if (this.y < -this.size * 2) {
+                        return false;
+                    }
+                    
+                    // Check if bubble out of bounds on sides
+                    if (this.x < -this.size * 2 || this.x > canvas.width + this.size * 2) {
+                        return false;
+                    }
+                    
+                    // Random chance to pop
+                    if (Math.random() < 0.0005) {
+                        this.pop();
+                    }
+                    
+                    return this.alpha > 0;
+                }
+                
+                draw(ctx) {
+                    if (this.alpha <= 0) return;
+                    
+                    // Draw pop animation
+                    if (this.popped) {
+                        const progress = this.popFrame / this.maxPopFrames;
+                        const radiusMultiplier = 1 + progress * 0.5;
+                        const fadeOut = 1 - progress;
+                        
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size * radiusMultiplier, 0, Math.PI * 2);
+                        ctx.strokeStyle = this.color.stroke.replace('0.8', `${0.8 * fadeOut}`);
+                        ctx.lineWidth = 1 * (1 - progress);
+                        ctx.stroke();
+                        
+                        // Draw fragments
+                        const fragments = 6;
+                        const fragmentLength = this.size * progress * 0.8;
+                        
+                        for (let i = 0; i < fragments; i++) {
+                            const angle = (i / fragments) * Math.PI * 2;
+                            const startX = this.x + this.size * Math.cos(angle);
+                            const startY = this.y + this.size * Math.sin(angle);
+                            const endX = startX + fragmentLength * Math.cos(angle);
+                            const endY = startY + fragmentLength * Math.sin(angle);
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(startX, startY);
+                            ctx.lineTo(endX, endY);
+                            ctx.strokeStyle = this.color.stroke.replace('0.8', `${0.6 * fadeOut}`);
+                            ctx.lineWidth = 1 * (1 - progress);
+                            ctx.stroke();
+                        }
+                        
+                        return;
+                    }
+                    
+                    // Set shadow/glow for neon style
+                    if (this.color.glow) {
+                        ctx.shadowBlur = this.size * 0.5;
+                        ctx.shadowColor = this.color.stroke;
+                    }
+                    
+                    // Draw bubble
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color.fill.replace('0.2', `${0.2 * this.alpha}`);
+                    ctx.strokeStyle = this.color.stroke.replace('0.8', `${0.8 * this.alpha}`);
+                    ctx.lineWidth = 1.5;
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Reset shadow
+                    if (this.color.glow) {
+                        ctx.shadowBlur = 0;
+                    }
+                    
+                    // Draw highlight
+                    if (this.color.highlight || this.color.rainbow) {
+                        // Draw highlight
+                        const highlightSize = this.size * 0.3;
+                        const highlightX = this.x + this.size * 0.4 * Math.cos(this.highlightAngle);
+                        const highlightY = this.y + this.size * 0.4 * Math.sin(this.highlightAngle);
+                        
+                        ctx.beginPath();
+                        ctx.arc(highlightX, highlightY, highlightSize, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${0.4 * this.alpha})`;
+                        ctx.fill();
+                        
+                        // Draw smaller highlight
+                        const smallHighlightSize = this.size * 0.15;
+                        const smallHighlightX = this.x - this.size * 0.35 * Math.cos(this.highlightAngle);
+                        const smallHighlightY = this.y - this.size * 0.35 * Math.sin(this.highlightAngle);
+                        
+                        ctx.beginPath();
+                        ctx.arc(smallHighlightX, smallHighlightY, smallHighlightSize, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${0.3 * this.alpha})`;
+                        ctx.fill();
+                    }
+                    
+                    // Draw rainbow reflection for soap bubbles
+                    if (this.color.rainbow) {
+                        const reflectionSize = this.size * 0.8;
+                        const reflectionX = this.x + this.size * 0.1 * Math.cos(this.reflectionAngle);
+                        const reflectionY = this.y + this.size * 0.1 * Math.sin(this.reflectionAngle);
+                        
+                        // Create rainbow gradient
+                        const gradient = ctx.createLinearGradient(
+                            reflectionX - reflectionSize / 2,
+                            reflectionY - reflectionSize / 2,
+                            reflectionX + reflectionSize / 2,
+                            reflectionY + reflectionSize / 2
+                        );
+                        
+                        gradient.addColorStop(0, `rgba(255, 0, 0, ${0.1 * this.alpha})`);
+                        gradient.addColorStop(0.2, `rgba(255, 165, 0, ${0.1 * this.alpha})`);
+                        gradient.addColorStop(0.4, `rgba(255, 255, 0, ${0.1 * this.alpha})`);
+                        gradient.addColorStop(0.6, `rgba(0, 255, 0, ${0.1 * this.alpha})`);
+                        gradient.addColorStop(0.8, `rgba(0, 0, 255, ${0.1 * this.alpha})`);
+                        gradient.addColorStop(1, `rgba(128, 0, 128, ${0.1 * this.alpha})`);
+                        
+                        ctx.beginPath();
+                        ctx.ellipse(
+                            reflectionX, reflectionY,
+                            reflectionSize / 2, reflectionSize / 4,
+                            this.rotation + Math.PI / 4, 0, Math.PI * 2
+                        );
+                        ctx.fillStyle = gradient;
+                        ctx.fill();
+                    }
+                }
+                
+                pop() {
+                    this.popped = true;
+                    this.popFrame = 0;
+                    
+                    // Play pop sound
+                    if (popSoundEnabled) {
+                        playPopSound(this.size / bubbleSize * 0.5);
+                    }
+                }
+                
+                // Check if cursor is over the bubble
+                isPointInside(x, y) {
+                    const dx = this.x - x;
+                    const dy = this.y - y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    return distance < this.size;
+                }
+            }
+            
+            // Bubbles collection
+            const bubbles = [];
+            
+            // Create a single bubble
+            function createBubble(x, y, size = null) {
+                if (bubbles.length < 300) { // Limit max bubbles
+                    bubbles.push(new Bubble(x, y, size));
+                }
+            }
+            
+            // Create a burst of bubbles
+            function createBubbleBurst(x, y, scale = 1) {
+                const count = Math.floor(bubbleDensity / 2 * scale);
+                
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 20 * scale;
+                    
+                    const posX = x + Math.cos(angle) * distance;
+                    const posY = y + Math.sin(angle) * distance;
+                    
+                    createBubble(posX, posY);
+                }
+            }
+            
+            // Check if cursor pops bubbles
+            function checkBubbleCollisions() {
+                const cursorRadius = 15;
+                const mouseSpeed = Math.sqrt(
+                    Math.pow(mouseX - prevMouseX, 2) + 
+                    Math.pow(mouseY - prevMouseY, 2)
+                );
+                
+                // Higher chance to pop with faster movement or mouse down
+                const popChance = isMouseDown ? 0.9 : Math.min(0.1 + (mouseSpeed / 20), 0.5);
+                
+                bubbles.forEach(bubble => {
+                    if (!bubble.popped && bubble.isPointInside(mouseX, mouseY)) {
+                        if (Math.random() < popChance) {
+                            bubble.pop();
+                        }
+                    }
+                });
+            }
+            
+            // Animation loop
+            function animate() {
+                // Semi-transparent clear for trail effect
+                ctx.fillStyle = 'rgba(12, 43, 91, 0.15)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Check if cursor pops bubbles
+                checkBubbleCollisions();
+                
+                // Update and draw bubbles
+                for (let i = bubbles.length - 1; i >= 0; i--) {
+                    const bubble = bubbles[i];
+                    const alive = bubble.update();
+                    
+                    bubble.draw(ctx);
+                    
+                    if (!alive) {
+                        bubbles.splice(i, 1);
+                    }
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Start animation
+            animate();
+            
+            // Create initial bubbles
+            for (let i = 0; i < 20; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                createBubble(x, y);
+            }
+        });
+    </script>
+</body>
+</html> 

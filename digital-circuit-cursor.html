@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Circuit Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0b0b1e;
+            font-family: 'Consolas', monospace;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #00ff99;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(0, 255, 153, 0.7);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #99ffcc;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00ff99;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 5px #00ff99;
+        }
+        
+        .custom-cursor::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background-color: #00ff99;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Digital Circuit Cursor</h1>
+        <p>Move your cursor to create digital circuit paths. The paths follow your cursor, connecting nodes and creating a tech-inspired trail.</p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Set canvas size
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Circuit grid
+            const gridSize = 30;
+            const nodeRadius = 2;
+            const nodes = [];
+            const paths = [];
+            const maxPaths = 50;
+            
+            // Set up grid of circuit nodes
+            function setupGrid() {
+                nodes.length = 0;
+                
+                const cols = Math.ceil(canvas.width / gridSize) + 1;
+                const rows = Math.ceil(canvas.height / gridSize) + 1;
+                
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        nodes.push({
+                            x: x * gridSize,
+                            y: y * gridSize,
+                            active: false,
+                            energy: 0,
+                            pulsing: false,
+                            pulseStart: 0
+                        });
+                    }
+                }
+            }
+            
+            // Find nearest grid node to a point
+            function findNearestNode(x, y) {
+                let minDist = Infinity;
+                let nearest = null;
+                
+                for (const node of nodes) {
+                    const dx = node.x - x;
+                    const dy = node.y - y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < minDist) {
+                        minDist = distance;
+                        nearest = node;
+                    }
+                }
+                
+                return nearest;
+            }
+            
+            // Create a path between two nodes
+            function createPath(fromNode, toNode) {
+                // Check if path already exists
+                for (const path of paths) {
+                    if ((path.from === fromNode && path.to === toNode) ||
+                        (path.from === toNode && path.to === fromNode)) {
+                        return false;
+                    }
+                }
+                
+                // Create new path
+                paths.push({
+                    from: fromNode,
+                    to: toNode,
+                    energy: 1.0,
+                    pulses: [],
+                    direction: Math.random() > 0.5 // Direction of data flow
+                });
+                
+                // Activate both nodes
+                fromNode.active = true;
+                toNode.active = true;
+                
+                return true;
+            }
+            
+            // Add a pulse to a path
+            function addPulse(path) {
+                path.pulses.push({
+                    position: 0, // 0 to 1 along the path
+                    speed: 0.01 + Math.random() * 0.02
+                });
+            }
+            
+            // Update circuit elements
+            function updateCircuit() {
+                const currentTime = Date.now();
+                
+                // Find nearest node to cursor
+                const cursorNode = findNearestNode(mouseX, mouseY);
+                
+                if (cursorNode) {
+                    // Activate cursor node
+                    cursorNode.active = true;
+                    cursorNode.energy = 1.0;
+                    
+                    // Find nodes in radius to connect to
+                    const connectRadius = gridSize * 5;
+                    
+                    for (const node of nodes) {
+                        if (node === cursorNode) continue;
+                        
+                        const dx = node.x - cursorNode.x;
+                        const dy = node.y - cursorNode.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Connect nearby nodes with some randomness
+                        if (distance < connectRadius && Math.random() < 0.03) {
+                            if (createPath(cursorNode, node)) {
+                                // Start a pulse
+                                if (paths.length > 0) {
+                                    addPulse(paths[paths.length - 1]);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Create a pulse on a random existing path occasionally
+                    if (paths.length > 0 && Math.random() < 0.1) {
+                        const randomPath = paths[Math.floor(Math.random() * paths.length)];
+                        addPulse(randomPath);
+                    }
+                }
+                
+                // Limit number of paths
+                while (paths.length > maxPaths) {
+                    paths.shift();
+                }
+                
+                // Update node energy
+                for (const node of nodes) {
+                    if (node !== cursorNode && node.active) {
+                        // Decay energy
+                        node.energy *= 0.99;
+                        
+                        // Deactivate low-energy nodes
+                        if (node.energy < 0.05) {
+                            node.active = false;
+                            node.energy = 0;
+                        }
+                    }
+                    
+                    // Update pulsing nodes
+                    if (node.pulsing) {
+                        const pulseAge = currentTime - node.pulseStart;
+                        if (pulseAge > 500) {
+                            node.pulsing = false;
+                        }
+                    }
+                }
+                
+                // Update paths
+                for (let i = paths.length - 1; i >= 0; i--) {
+                    const path = paths[i];
+                    
+                    // Decay path energy
+                    path.energy *= 0.995;
+                    
+                    // Remove low-energy paths
+                    if (path.energy < 0.05) {
+                        paths.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Update pulses
+                    for (let j = path.pulses.length - 1; j >= 0; j--) {
+                        const pulse = path.pulses[j];
+                        
+                        // Move pulse along path
+                        pulse.position += pulse.speed;
+                        
+                        // Remove pulses that completed the path
+                        if (pulse.position >= 1) {
+                            path.pulses.splice(j, 1);
+                            
+                            // Make the destination node pulse
+                            path.to.pulsing = true;
+                            path.to.pulseStart = currentTime;
+                            path.to.energy = 1.0;
+                            
+                            // Sometimes send pulse back
+                            if (Math.random() < 0.3) {
+                                addPulse(path);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Draw circuit elements
+            function drawCircuit() {
+                // Clear canvas with slight fade
+                ctx.fillStyle = 'rgba(11, 11, 30, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw paths
+                for (const path of paths) {
+                    const fromX = path.from.x;
+                    const fromY = path.from.y;
+                    const toX = path.to.x;
+                    const toY = path.to.y;
+                    
+                    // Draw path line with energy-based opacity
+                    ctx.strokeStyle = `rgba(0, 255, 153, ${path.energy * 0.3})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(fromX, fromY);
+                    ctx.lineTo(toX, toY);
+                    ctx.stroke();
+                    
+                    // Draw pulses
+                    for (const pulse of path.pulses) {
+                        const pulseX = fromX + (toX - fromX) * pulse.position;
+                        const pulseY = fromY + (toY - fromY) * pulse.position;
+                        
+                        // Draw pulse
+                        const gradient = ctx.createRadialGradient(
+                            pulseX, pulseY, 0,
+                            pulseX, pulseY, 5
+                        );
+                        gradient.addColorStop(0, 'rgba(0, 255, 153, 0.8)');
+                        gradient.addColorStop(1, 'rgba(0, 255, 153, 0)');
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(pulseX, pulseY, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                
+                // Draw nodes
+                for (const node of nodes) {
+                    if (node.active) {
+                        // Draw active node with energy-based glow
+                        ctx.fillStyle = `rgba(0, 255, 153, ${node.energy * 0.7})`;
+                        ctx.beginPath();
+                        ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Draw glow for active nodes
+                        if (node.energy > 0.5) {
+                            const gradient = ctx.createRadialGradient(
+                                node.x, node.y, 0,
+                                node.x, node.y, 10 * node.energy
+                            );
+                            gradient.addColorStop(0, 'rgba(0, 255, 153, 0.5)');
+                            gradient.addColorStop(1, 'rgba(0, 255, 153, 0)');
+                            
+                            ctx.fillStyle = gradient;
+                            ctx.beginPath();
+                            ctx.arc(node.x, node.y, 10 * node.energy, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    } else {
+                        // Draw inactive node
+                        ctx.fillStyle = 'rgba(0, 255, 153, 0.2)';
+                        ctx.beginPath();
+                        ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // Draw pulsing effect
+                    if (node.pulsing) {
+                        const pulseAge = Date.now() - node.pulseStart;
+                        const pulseSize = pulseAge / 100;
+                        const pulseOpacity = Math.max(0, 1 - pulseAge / 500);
+                        
+                        ctx.strokeStyle = `rgba(0, 255, 153, ${pulseOpacity})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.arc(node.x, node.y, pulseSize, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                updateCircuit();
+                drawCircuit();
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                setupGrid();
+            });
+            
+            // Handle click - add more connections
+            document.addEventListener('click', () => {
+                const clickNode = findNearestNode(mouseX, mouseY);
+                
+                if (clickNode) {
+                    // Create connections to nearby nodes
+                    const connectRadius = gridSize * 8;
+                    let connectionsAdded = 0;
+                    
+                    for (const node of nodes) {
+                        if (node === clickNode) continue;
+                        
+                        const dx = node.x - clickNode.x;
+                        const dy = node.y - clickNode.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < connectRadius && Math.random() < 0.2) {
+                            if (createPath(clickNode, node)) {
+                                // Start a pulse
+                                if (paths.length > 0) {
+                                    addPulse(paths[paths.length - 1]);
+                                }
+                                
+                                connectionsAdded++;
+                                if (connectionsAdded >= 8) break;
+                            }
+                        }
+                    }
+                    
+                    // Make click node pulse
+                    clickNode.pulsing = true;
+                    clickNode.pulseStart = Date.now();
+                    clickNode.energy = 1.0;
+                }
+            });
+            
+            // Initialize and start animation
+            setupGrid();
+            animate();
+        });
+    </script>
+</body>
+</html> 

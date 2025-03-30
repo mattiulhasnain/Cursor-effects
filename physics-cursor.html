@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics-Based Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #111133;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(100, 100, 255, 0.8);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.8);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(100, 100, 255, 0.8);
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+            pointer-events: auto;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: white;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 5px 15px;
+        }
+        
+        .slider-label {
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+        
+        input[type="range"] {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Physics-Based Cursor</h1>
+        <p>Move your cursor to interact with the spring-connected objects. The physics simulation creates realistic motion with elastic connections between elements.</p>
+    </div>
+    
+    <div class="controls">
+        <div class="slider-container">
+            <span class="slider-label">Spring Strength:</span>
+            <input type="range" id="spring-strength" min="0.01" max="0.15" step="0.01" value="0.05">
+        </div>
+        
+        <div class="slider-container">
+            <span class="slider-label">Damping:</span>
+            <input type="range" id="damping" min="0.5" max="0.99" step="0.01" value="0.8">
+        </div>
+        
+        <button id="toggle-connection">Toggle Connection View</button>
+        <button id="reset-simulation">Reset</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            document.body.appendChild(cursor);
+            
+            // Mouse position
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let lastMouseX = mouseX;
+            let lastMouseY = mouseY;
+            
+            // Physics parameters (can be adjusted by UI)
+            let springStrength = 0.05;
+            let damping = 0.8;
+            let showConnections = true;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                lastMouseX = mouseX;
+                lastMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update custom cursor
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Physics objects
+            class PhysicsNode {
+                constructor(x, y, radius, isFixed = false) {
+                    this.x = x;
+                    this.y = y;
+                    this.oldX = x;
+                    this.oldY = y;
+                    this.vx = 0;
+                    this.vy = 0;
+                    this.radius = radius;
+                    this.isFixed = isFixed;
+                    this.color = `hsl(${Math.random() * 220 + 180}, 70%, 60%)`;
+                    this.connections = [];
+                }
+                
+                update() {
+                    if (this.isFixed) return;
+                    
+                    // Calculate velocity from current and old position
+                    this.vx = (this.x - this.oldX) * damping;
+                    this.vy = (this.y - this.oldY) * damping;
+                    
+                    // Save current position as old position
+                    this.oldX = this.x;
+                    this.oldY = this.y;
+                    
+                    // Apply velocity
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Apply gravity
+                    this.vy += 0.2;
+                    
+                    // Constrain to window boundaries
+                    if (this.x < this.radius) {
+                        this.x = this.radius;
+                        this.vx *= -0.5;
+                    } else if (this.x > canvas.width - this.radius) {
+                        this.x = canvas.width - this.radius;
+                        this.vx *= -0.5;
+                    }
+                    
+                    if (this.y < this.radius) {
+                        this.y = this.radius;
+                        this.vy *= -0.5;
+                    } else if (this.y > canvas.height - this.radius) {
+                        this.y = canvas.height - this.radius;
+                        this.vy *= -0.5;
+                    }
+                }
+                
+                applyForce(fx, fy) {
+                    if (this.isFixed) return;
+                    this.x += fx;
+                    this.y += fy;
+                }
+                
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    
+                    // Add glow effect
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = this.color;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+            
+            class Spring {
+                constructor(nodeA, nodeB, length, strength) {
+                    this.nodeA = nodeA;
+                    this.nodeB = nodeB;
+                    this.length = length;
+                    this.strength = strength;
+                    
+                    // Add to the nodes' connections
+                    nodeA.connections.push(this);
+                    nodeB.connections.push(this);
+                }
+                
+                update() {
+                    // Calculate distance between nodes
+                    const dx = this.nodeB.x - this.nodeA.x;
+                    const dy = this.nodeB.y - this.nodeA.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Calculate extension beyond rest length
+                    const extension = distance - this.length;
+                    
+                    // Calculate direction vector
+                    const dirX = dx / distance || 0;
+                    const dirY = dy / distance || 0;
+                    
+                    // Calculate force based on extension and spring strength
+                    const force = extension * this.strength;
+                    
+                    // Apply force to both nodes in opposite directions
+                    this.nodeA.applyForce(dirX * force, dirY * force);
+                    this.nodeB.applyForce(-dirX * force, -dirY * force);
+                }
+                
+                draw() {
+                    if (!showConnections) return;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(this.nodeA.x, this.nodeA.y);
+                    ctx.lineTo(this.nodeB.x, this.nodeB.y);
+                    
+                    // Calculate extension ratio for color
+                    const dx = this.nodeB.x - this.nodeA.x;
+                    const dy = this.nodeB.y - this.nodeA.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const extensionRatio = Math.min(Math.abs(distance - this.length) / this.length, 1);
+                    
+                    // Color gradient from blue (relaxed) to red (stretched)
+                    const hue = 240 - extensionRatio * 180;
+                    ctx.strokeStyle = `hsla(${hue}, 80%, 60%, 0.5)`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+            
+            // Create physics objects
+            const nodes = [];
+            const springs = [];
+            
+            // Mouse node (follows cursor)
+            const mouseNode = new PhysicsNode(mouseX, mouseY, 10, true);
+            nodes.push(mouseNode);
+            
+            // Create grid of nodes
+            function createNodeGrid() {
+                // Clear existing nodes and springs
+                nodes.length = 1; // Keep only mouseNode
+                springs.length = 0;
+                
+                const gridSize = 8;
+                const spacing = Math.min(canvas.width, canvas.height) / gridSize;
+                
+                for (let y = 1; y < gridSize; y++) {
+                    for (let x = 1; x < gridSize; x++) {
+                        const posX = x * spacing;
+                        const posY = y * spacing;
+                        const node = new PhysicsNode(posX, posY, 8 + Math.random() * 8);
+                        nodes.push(node);
+                        
+                        // Connect with neighbor nodes
+                        if (x > 1) {
+                            const leftNode = nodes[nodes.length - 2];
+                            const spring = new Spring(node, leftNode, spacing, springStrength);
+                            springs.push(spring);
+                        }
+                        
+                        if (y > 1) {
+                            const aboveNode = nodes[nodes.length - gridSize];
+                            const spring = new Spring(node, aboveNode, spacing, springStrength);
+                            springs.push(spring);
+                        }
+                    }
+                }
+                
+                // Connect some nodes to mouse for interaction
+                const nodesToConnect = 5;
+                for (let i = 0; i < nodesToConnect; i++) {
+                    const randomIndex = Math.floor(Math.random() * (nodes.length - 1)) + 1;
+                    const spring = new Spring(mouseNode, nodes[randomIndex], 100, springStrength * 2);
+                    springs.push(spring);
+                }
+            }
+            
+            // Initialize grid
+            createNodeGrid();
+            
+            // Update physics simulation
+            function updateSimulation() {
+                // Update mouse node position
+                mouseNode.x = mouseX;
+                mouseNode.y = mouseY;
+                
+                // Update springs first
+                springs.forEach(spring => spring.update());
+                
+                // Then update nodes
+                nodes.forEach(node => node.update());
+            }
+            
+            // Animation loop
+            function animate() {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update simulation multiple times for stability
+                for (let i = 0; i < 3; i++) {
+                    updateSimulation();
+                }
+                
+                // Draw springs
+                springs.forEach(spring => spring.draw());
+                
+                // Draw nodes
+                nodes.forEach(node => node.draw());
+                
+                // Continue animation
+                requestAnimationFrame(animate);
+            }
+            
+            // UI Controls
+            const springStrengthSlider = document.getElementById('spring-strength');
+            const dampingSlider = document.getElementById('damping');
+            const toggleConnectionBtn = document.getElementById('toggle-connection');
+            const resetButton = document.getElementById('reset-simulation');
+            
+            springStrengthSlider.addEventListener('input', (e) => {
+                springStrength = parseFloat(e.target.value);
+                springs.forEach(spring => spring.strength = springStrength);
+            });
+            
+            dampingSlider.addEventListener('input', (e) => {
+                damping = parseFloat(e.target.value);
+            });
+            
+            toggleConnectionBtn.addEventListener('click', () => {
+                showConnections = !showConnections;
+                toggleConnectionBtn.textContent = showConnections ? 'Hide Connections' : 'Show Connections';
+            });
+            
+            resetButton.addEventListener('click', () => {
+                createNodeGrid();
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                createNodeGrid();
+            });
+            
+            // Add click interaction
+            document.addEventListener('click', () => {
+                // Expand cursor momentarily
+                cursor.style.transform = 'translate(-50%, -50%) scale(2)';
+                setTimeout(() => {
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 300);
+                
+                // Apply force to all nodes
+                nodes.forEach(node => {
+                    if (node !== mouseNode) {
+                        const dx = node.x - mouseX;
+                        const dy = node.y - mouseY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const maxDistance = 300;
+                        
+                        if (distance < maxDistance) {
+                            const force = (maxDistance - distance) / maxDistance * 20;
+                            const dirX = dx / distance || 0;
+                            const dirY = dy / distance || 0;
+                            node.applyForce(dirX * force, dirY * force);
+                        }
+                    }
+                });
+            });
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

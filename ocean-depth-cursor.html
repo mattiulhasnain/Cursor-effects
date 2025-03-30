@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ocean Depth Cursor Effect - Your cursor creates rippling water effects with realistic physics, including bubbles that rise on click">
+    <title>Ocean Depth Cursor Effect - Interactive Cursor Animation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --background: #0a192f;
+            --water-surface: #3498db;
+            --water-deep: #1a5276;
+            --bubble-color: rgba(255, 255, 255, 0.8);
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            cursor: none; /* Hide default cursor */
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zm20.97 0l9.315 9.314-1.414 1.414L34.828 0h2.83zM22.344 0L13.03 9.314l1.414 1.414L25.172 0h-2.83zM32 0l12.142 12.142-1.414 1.414L30 2.828 17.272 15.556l-1.414-1.414L28 0h4zM.284 0l28 28-1.414 1.414L0 2.544V0h.284zM0 5.373l25.456 25.455-1.414 1.415L0 8.2V5.374zm0 5.656l22.627 22.627-1.414 1.414L0 13.86v-2.83zm0 5.656l19.8 19.8-1.415 1.413L0 19.514v-2.83zm0 5.657l16.97 16.97-1.414 1.415L0 25.172v-2.83zM0 28l14.142 14.142-1.414 1.414L0 30.828V28zm0 5.657L11.314 44.97 9.9 46.386l-9.9-9.9v-2.828zm0 5.657L8.485 47.8 7.07 49.214 0 42.143v-2.83zm0 5.657l5.657 5.657-1.414 1.415L0 47.8v-2.83zm0 5.657l2.828 2.83-1.414 1.413L0 53.456v-2.83zM54.627 60L30 35.373 5.373 60H8.2L30 38.2 51.8 60h2.827zm-5.656 0L30 41.03 11.03 60h2.828L30 43.858 46.142 60h2.83zm-5.656 0L30 46.686 16.686 60h2.83L30 49.515 40.485 60h2.83zm-5.657 0L30 52.343 22.344 60h2.83L30 55.172 34.828 60h2.83zM32 60l-2-2-2 2h4zM59.716 0l-28 28 1.414 1.414L60 2.544V0h-.284zM60 5.373L34.544 30.828l1.414 1.415L60 8.2V5.374zm0 5.656L37.373 33.656l1.414 1.414L60 13.86v-2.83zm0 5.656l-19.8 19.8 1.415 1.413L60 19.514v-2.83zm0 5.657l-16.97 16.97 1.414 1.415L60 25.172v-2.83zM60 28L45.858 42.142l1.414 1.414L60 30.828V28zm0 5.657L48.686 44.97l1.415 1.415 9.9-9.9v-2.828zm0 5.657L51.515 47.8l1.414 1.414L60 42.143v-2.83zm0 5.657l-5.657 5.657 1.414 1.415L60 47.8v-2.83zm0 5.657l-2.828 2.83 1.414 1.413L60 53.456v-2.83zM39.9 16.385l1.414-1.414L30 3.658 18.686 14.97l1.415 1.415 9.9-9.9 9.9 9.9zm-2.83 2.828l1.415-1.414L30 9.313 21.515 17.8l1.414 1.413L30 11.8l7.07 7.414v-.002zm-2.827 2.83l1.414-1.416L30 14.97l-5.657 5.657 1.414 1.415L30 17.8l4.243 4.242zm-2.83 2.827l1.415-1.414L30 20.626l-2.828 2.83 1.414 1.414L30 23.456l1.414 1.414zM56.87 59.414L58.284 58 30 29.716 1.716 58l1.414 1.414L30 32.544l26.87 26.87z' fill='rgba(93, 187, 99, 0.05)' fill-rule='evenodd'/%3E%3C/svg%3E"),
+                radial-gradient(circle at 30% 10%, rgba(26, 82, 118, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 70% 90%, rgba(52, 152, 219, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .description {
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--background);
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .back-button:hover::before {
+            opacity: 1;
+        }
+
+        .content-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .content-area {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .content-box {
+            background: rgba(28, 42, 57, 0.7);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .content-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .content-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-light);
+        }
+
+        .content-box p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .ocean-demo {
+            position: relative;
+            margin-top: 2rem;
+            background: rgba(28, 42, 57, 0.7);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .ocean-demo h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-light);
+        }
+
+        .ocean-demo p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .ocean-canvas {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(to bottom, var(--water-surface) 0%, var(--water-deep) 100%);
+        }
+
+        .ocean-surface {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: rgba(52, 152, 219, 0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        .underwater-objects {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+        }
+
+        .seaweed {
+            width: 20px;
+            height: 120px;
+            background: linear-gradient(to top, var(--primary-dark), var(--primary));
+            border-radius: 10px 10px 0 0;
+            position: relative;
+            transform-origin: bottom center;
+            animation: sway 5s ease-in-out infinite alternate;
+        }
+
+        .seaweed::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -10px;
+            width: 40px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        .seaweed:nth-child(2) {
+            height: 150px;
+            animation-delay: 0.5s;
+        }
+
+        .seaweed:nth-child(3) {
+            height: 130px;
+            animation-delay: 1s;
+        }
+
+        .seaweed:nth-child(4) {
+            height: 160px;
+            animation-delay: 1.5s;
+        }
+
+        .seaweed:nth-child(5) {
+            height: 140px;
+            animation-delay: 2s;
+        }
+
+        @keyframes sway {
+            0% {
+                transform: rotate(-5deg);
+            }
+            100% {
+                transform: rotate(5deg);
+            }
+        }
+
+        .coral {
+            position: absolute;
+            bottom: 10px;
+            width: 50px;
+            height: 60px;
+            background: var(--accent);
+            border-radius: 25px 25px 5px 5px;
+        }
+
+        .coral:nth-child(6) {
+            left: 15%;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), #ff4d79);
+        }
+
+        .coral:nth-child(7) {
+            right: 20%;
+            height: 50px;
+            width: 60px;
+            background: linear-gradient(135deg, #ff9c4d, #ff7eb9);
+        }
+
+        .fish {
+            position: absolute;
+            width: 30px;
+            height: 15px;
+            background: #ff9c4d;
+            border-radius: 50% 0 0 50%;
+            animation: swim 15s linear infinite;
+            opacity: 0.8;
+        }
+
+        .fish::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        .fish::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -10px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 7.5px 0 7.5px 12px;
+            border-color: transparent transparent transparent #ff9c4d;
+        }
+
+        .fish:nth-child(1) {
+            top: 30%;
+            left: -5%;
+            animation-duration: 20s;
+            transform: scale(1.5);
+        }
+
+        .fish:nth-child(2) {
+            top: 50%;
+            left: -5%;
+            animation-duration: 15s;
+            animation-delay: 5s;
+            background: #4d79ff;
+        }
+
+        .fish:nth-child(2)::after {
+            border-color: transparent transparent transparent #4d79ff;
+        }
+
+        .fish:nth-child(3) {
+            top: 70%;
+            left: -5%;
+            animation-duration: 25s;
+            animation-delay: 10s;
+            background: #ff4d79;
+            transform: scale(0.8);
+        }
+
+        .fish:nth-child(3)::after {
+            border-color: transparent transparent transparent #ff4d79;
+        }
+
+        @keyframes swim {
+            0% {
+                left: -5%;
+            }
+            100% {
+                left: 105%;
+            }
+        }
+
+        .controls {
+            background: rgba(28, 42, 57, 0.7);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .controls h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-light);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .control-item {
+            background: rgba(10, 25, 47, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(93, 187, 99, 0.1);
+        }
+
+        .control-item h4 {
+            margin-bottom: 0.5rem;
+            color: var(--secondary-light);
+        }
+
+        .control-item p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Water ripple canvas */
+        #ripple-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Custom cursor */
+        .ocean-cursor {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--secondary-light);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: width 0.1s, height 0.1s;
+        }
+
+        .ocean-cursor::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: var(--secondary-light);
+            border-radius: 50%;
+        }
+
+        /* Bubble styling */
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--bubble-color);
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        /* Depth indicator */
+        .depth-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(10, 25, 47, 0.8);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            z-index: 5;
+        }
+
+        .depth-indicator h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--secondary-light);
+        }
+
+        .depth-meter {
+            width: 150px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .depth-value {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(to right, var(--secondary-light), var(--secondary));
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .depth-text {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Ocean Depth Cursor</h1>
+            <p class="description">
+                Dive into the depths with this interactive ocean cursor effect. As you move your cursor, realistic water ripples follow your movements. Click to create rising bubbles and explore an underwater world with dynamic physics.
+            </p>
+            <a href="index.html" class="back-button">← Back to All Effects</a>
+        </header>
+
+        <div class="content-area">
+            <div class="content-box">
+                <h3>Water Physics</h3>
+                <p>
+                    This cursor effect simulates realistic water physics using advanced wave propagation algorithms. Each ripple interacts with others, creating complex patterns that mimic real fluid dynamics.
+                </p>
+                <p>
+                    The waves respond to your cursor's velocity and direction, with faster movements creating more dramatic disturbances in the digital water surface.
+                </p>
+            </div>
+            <div class="content-box">
+                <h3>Underwater Elements</h3>
+                <p>
+                    Below the surface, a complete underwater ecosystem exists. Bubbles rise with realistic buoyancy when you click, affected by simulated water currents and pressure.
+                </p>
+                <p>
+                    Fish swim through the depths, seaweed sways with the currents, and coral formations add color to this interactive aquatic environment.
+                </p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <h3>User Controls</h3>
+            <div class="controls-grid">
+                <div class="control-item">
+                    <h4>Mouse Movement</h4>
+                    <p>Move your cursor across the water surface to create realistic ripple effects that propagate outward.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Click</h4>
+                    <p>Click anywhere to create bubbles that rise to the surface with realistic physics and buoyancy.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Click & Hold</h4>
+                    <p>Click and hold to create a continuous stream of bubbles, simulating an underwater air source.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Double Click</h4>
+                    <p>Double-click to create a larger disturbance, generating a school of small fish that swim away.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="ocean-demo">
+            <h3>Interactive Ocean</h3>
+            <p>Move your cursor over this underwater scene to create ripples and click to generate bubbles:</p>
+            
+            <div class="ocean-canvas">
+                <canvas id="ripple-canvas"></canvas>
+                
+                <div class="underwater-objects">
+                    <div class="seaweed"></div>
+                    <div class="seaweed"></div>
+                    <div class="seaweed"></div>
+                    <div class="seaweed"></div>
+                    <div class="seaweed"></div>
+                    <div class="coral"></div>
+                    <div class="coral"></div>
+                </div>
+                
+                <div class="fish"></div>
+                <div class="fish"></div>
+                <div class="fish"></div>
+                
+                <div class="depth-indicator">
+                    <h4>Depth</h4>
+                    <div class="depth-meter">
+                        <div class="depth-value"></div>
+                    </div>
+                    <div class="depth-text">50 meters</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom cursor element -->
+    <div class="ocean-cursor"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elements
+            const oceanCursor = document.querySelector('.ocean-cursor');
+            const oceanCanvas = document.querySelector('.ocean-canvas');
+            const depthValue = document.querySelector('.depth-value');
+            const depthText = document.querySelector('.depth-text');
+            
+            // Ripple canvas setup
+            const canvas = document.getElementById('ripple-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Get canvas dimensions
+            const canvasRect = oceanCanvas.getBoundingClientRect();
+            canvas.width = canvasRect.width;
+            canvas.height = canvasRect.height;
+            
+            // State variables
+            let mouseX = 0;
+            let mouseY = 0;
+            let ripples = [];
+            let bubbles = [];
+            let isMouseDown = false;
+            let bubbleInterval = null;
+            let canvasOffsetTop = oceanCanvas.offsetTop;
+            let canvasOffsetLeft = oceanCanvas.offsetLeft;
+            
+            // Initialize animation
+            initRippleEffect();
+            
+            // Update cursor position and create ripples
+            document.addEventListener('mousemove', (e) => {
+                // Update cursor element
+                oceanCursor.style.left = `${e.clientX}px`;
+                oceanCursor.style.top = `${e.clientY}px`;
+                
+                const canvasRect = oceanCanvas.getBoundingClientRect();
+                
+                // Calculate position relative to canvas
+                mouseX = e.clientX - canvasRect.left;
+                mouseY = e.clientY - canvasRect.top;
+                
+                // Update depth indicator based on cursor Y position
+                if (isWithinCanvas(e.clientX, e.clientY)) {
+                    const depth = Math.min(100, Math.max(0, (mouseY / canvasRect.height) * 100));
+                    depthValue.style.width = `${depth}%`;
+                    depthText.textContent = `${Math.floor(depth)} meters`;
+                    
+                    // Create ripples when moving in the canvas
+                    if (mouseY < 50) { // Only on water surface
+                        createRipple(mouseX, mouseY);
+                    }
+                }
+            });
+            
+            // Create bubbles on mouse down
+            document.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                oceanCursor.style.width = '35px';
+                oceanCursor.style.height = '35px';
+                
+                if (isWithinCanvas(e.clientX, e.clientY)) {
+                    createBubble(mouseX, mouseY);
+                    
+                    // Create continuous bubbles while mouse is down
+                    bubbleInterval = setInterval(() => {
+                        createBubble(mouseX, mouseY);
+                    }, 300);
+                }
+            });
+            
+            // Stop creating bubbles on mouse up
+            document.addEventListener('mouseup', () => {
+                isMouseDown = false;
+                oceanCursor.style.width = '30px';
+                oceanCursor.style.height = '30px';
+                
+                if (bubbleInterval) {
+                    clearInterval(bubbleInterval);
+                    bubbleInterval = null;
+                }
+            });
+            
+            // Create fish school on double click
+            document.addEventListener('dblclick', (e) => {
+                if (isWithinCanvas(e.clientX, e.clientY)) {
+                    createFishSchool(mouseX, mouseY);
+                }
+            });
+            
+            // Check if mouse is within canvas
+            function isWithinCanvas(x, y) {
+                const canvasRect = oceanCanvas.getBoundingClientRect();
+                return (
+                    x >= canvasRect.left &&
+                    x <= canvasRect.right &&
+                    y >= canvasRect.top &&
+                    y <= canvasRect.bottom
+                );
+            }
+            
+            // Create ripple effect
+            function createRipple(x, y) {
+                ripples.push({
+                    x,
+                    y: Math.min(y, 50), // Keep on surface
+                    radius: 10,
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    maxRadius: 80,
+                    speed: 1,
+                    opacity: 0.8
+                });
+            }
+            
+            // Create bubble
+            function createBubble(x, y) {
+                const size = Math.random() * 10 + 5;
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${x + oceanCanvas.getBoundingClientRect().left}px`;
+                bubble.style.top = `${y + oceanCanvas.getBoundingClientRect().top}px`;
+                document.body.appendChild(bubble);
+                
+                bubbles.push({
+                    element: bubble,
+                    x,
+                    y,
+                    size,
+                    speedY: Math.random() * 2 + 1,
+                    wobbleSpeed: Math.random() * 0.2 + 0.1,
+                    wobbleAmount: Math.random() * 20 + 5,
+                    opacity: 0.7
+                });
+            }
+            
+            // Create fish school
+            function createFishSchool(x, y) {
+                const schoolSize = Math.floor(Math.random() * 5) + 5;
+                
+                for (let i = 0; i < schoolSize; i++) {
+                    const fish = document.createElement('div');
+                    fish.className = 'fish';
+                    fish.style.top = `${y + Math.random() * 50 - 25 + oceanCanvas.getBoundingClientRect().top}px`;
+                    fish.style.left = `${x + oceanCanvas.getBoundingClientRect().left}px`;
+                    fish.style.transform = `scale(${Math.random() * 0.5 + 0.5})`;
+                    
+                    // Random fish color
+                    const hue = Math.floor(Math.random() * 360);
+                    fish.style.background = `hsl(${hue}, 80%, 60%)`;
+                    fish.querySelector('::after').style.borderColor = `transparent transparent transparent hsl(${hue}, 80%, 60%)`;
+                    
+                    // Random animation duration
+                    const duration = Math.random() * 10 + 5;
+                    fish.style.animation = `swim ${duration}s linear forwards`;
+                    
+                    document.body.appendChild(fish);
+                    
+                    // Remove fish when animation completes
+                    setTimeout(() => {
+                        fish.remove();
+                    }, duration * 1000);
+                }
+            }
+            
+            // Initialize ripple effect
+            function initRippleEffect() {
+                // Set up animation
+                function animate() {
+                    // Clear canvas
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw ripples
+                    for (let i = 0; i < ripples.length; i++) {
+                        const ripple = ripples[i];
+                        
+                        // Draw ripple
+                        ctx.beginPath();
+                        ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${ripple.opacity})`;
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        // Update ripple
+                        ripple.radius += ripple.speed;
+                        ripple.opacity -= 0.01;
+                        
+                        // Remove when fully expanded or faded
+                        if (ripple.radius > ripple.maxRadius || ripple.opacity <= 0) {
+                            ripples.splice(i, 1);
+                            i--;
+                        }
+                    }
+                    
+                    // Update bubbles
+                    for (let i = 0; i < bubbles.length; i++) {
+                        const bubble = bubbles[i];
+                        
+                        // Update bubble position with wobble
+                        bubble.y -= bubble.speedY;
+                        bubble.x += Math.sin(Date.now() * bubble.wobbleSpeed) * 0.5;
+                        
+                        // Apply position to element
+                        bubble.element.style.left = `${bubble.x + oceanCanvas.getBoundingClientRect().left}px`;
+                        bubble.element.style.top = `${bubble.y + oceanCanvas.getBoundingClientRect().top}px`;
+                        
+                        // Increase transparency as bubble rises
+                        bubble.opacity -= 0.002;
+                        bubble.element.style.opacity = bubble.opacity;
+                        
+                        // Remove when it reaches top or fades
+                        if (bubble.y <= 0 || bubble.opacity <= 0) {
+                            bubble.element.remove();
+                            bubbles.splice(i, 1);
+                            i--;
+                        }
+                    }
+                    
+                    requestAnimationFrame(animate);
+                }
+                
+                animate();
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                const canvasRect = oceanCanvas.getBoundingClientRect();
+                canvas.width = canvasRect.width;
+                canvas.height = canvasRect.height;
+                
+                canvasOffsetTop = oceanCanvas.offsetTop;
+                canvasOffsetLeft = oceanCanvas.offsetLeft;
+            });
+        });
+    </script>
+</body>
+</html> 

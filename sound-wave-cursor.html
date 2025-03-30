@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Wave Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0a0a18;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #ff9d00;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+        }
+        
+        select {
+            padding: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button {
+            background-color: #ff9d00;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #ffb84d;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #ff9d00;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            transition: transform 0.1s;
+        }
+        
+        .eq-visualizer {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            width: 200px;
+            height: 100px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="eq-visualizer" id="eq-visualizer"></div>
+    
+    <div class="content">
+        <h1>Sound Wave Cursor Effect</h1>
+        <p>Move your cursor to create sound wave patterns. Click to trigger audio pulses with waveform visualizations.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="amplitude">Amplitude</label>
+                <input type="range" id="amplitude" min="1" max="50" step="1" value="15">
+            </div>
+            
+            <div class="control-group">
+                <label for="frequency">Frequency</label>
+                <input type="range" id="frequency" min="1" max="20" step="0.5" value="5">
+            </div>
+            
+            <div class="control-group">
+                <label for="wave-type">Wave Type</label>
+                <select id="wave-type">
+                    <option value="sine">Sine</option>
+                    <option value="square">Square</option>
+                    <option value="sawtooth">Sawtooth</option>
+                    <option value="triangle">Triangle</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="color-mode">Color Mode</label>
+                <select id="color-mode">
+                    <option value="spectrum">Spectrum</option>
+                    <option value="amplitude">Amplitude</option>
+                    <option value="frequency">Frequency</option>
+                </select>
+            </div>
+            
+            <button id="toggle-audio">Enable Audio</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const eqVisualizer = document.getElementById('eq-visualizer');
+            const eqCtx = eqVisualizer.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            eqVisualizer.width = 200;
+            eqVisualizer.height = 100;
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'cursor';
+            document.body.appendChild(cursor);
+            
+            // Controls
+            const amplitudeSlider = document.getElementById('amplitude');
+            const frequencySlider = document.getElementById('frequency');
+            const waveTypeSelect = document.getElementById('wave-type');
+            const colorModeSelect = document.getElementById('color-mode');
+            const toggleAudioButton = document.getElementById('toggle-audio');
+            
+            // Config variables
+            let amplitude = parseInt(amplitudeSlider.value);
+            let frequency = parseFloat(frequencySlider.value);
+            let waveType = waveTypeSelect.value;
+            let colorMode = colorModeSelect.value;
+            let audioEnabled = false;
+            
+            // Audio context setup
+            let audioContext;
+            let analyser;
+            let dataArray;
+            let audioBufferLength;
+            
+            // Event listeners for controls
+            amplitudeSlider.addEventListener('input', () => {
+                amplitude = parseInt(amplitudeSlider.value);
+            });
+            
+            frequencySlider.addEventListener('input', () => {
+                frequency = parseFloat(frequencySlider.value);
+            });
+            
+            waveTypeSelect.addEventListener('change', () => {
+                waveType = waveTypeSelect.value;
+            });
+            
+            colorModeSelect.addEventListener('change', () => {
+                colorMode = colorModeSelect.value;
+            });
+            
+            toggleAudioButton.addEventListener('click', () => {
+                if (!audioContext) {
+                    initAudio();
+                    audioEnabled = true;
+                    toggleAudioButton.textContent = 'Disable Audio';
+                } else {
+                    if (audioEnabled) {
+                        audioEnabled = false;
+                        toggleAudioButton.textContent = 'Enable Audio';
+                    } else {
+                        audioEnabled = true;
+                        toggleAudioButton.textContent = 'Disable Audio';
+                    }
+                }
+            });
+            
+            // Initialize audio context
+            function initAudio() {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                audioBufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(audioBufferLength);
+                
+                // Connect analyser
+                analyser.connect(audioContext.destination);
+            }
+            
+            // Play sound based on wave properties
+            function playSound(freq, type) {
+                if (!audioContext || !audioEnabled) return;
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = type;
+                oscillator.frequency.setValueAtTime(100 + freq * 50, audioContext.currentTime);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(analyser);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 1);
+            }
+            
+            // Update EQ visualizer
+            function updateEQVisualizer() {
+                if (!audioContext || !audioEnabled) {
+                    // Show placeholder if audio not enabled
+                    eqCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    eqCtx.fillRect(0, 0, eqVisualizer.width, eqVisualizer.height);
+                    
+                    eqCtx.fillStyle = '#666';
+                    eqCtx.font = '12px Arial';
+                    eqCtx.fillText('Audio Disabled', 70, 50);
+                    return;
+                }
+                
+                // Get frequency data
+                analyser.getByteFrequencyData(dataArray);
+                
+                eqCtx.clearRect(0, 0, eqVisualizer.width, eqVisualizer.height);
+                eqCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                eqCtx.fillRect(0, 0, eqVisualizer.width, eqVisualizer.height);
+                
+                const barWidth = (eqVisualizer.width / audioBufferLength) * 2.5;
+                let x = 0;
+                
+                for (let i = 0; i < audioBufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * eqVisualizer.height;
+                    
+                    // Color based on frequency
+                    const hue = i / audioBufferLength * 360;
+                    eqCtx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                    
+                    eqCtx.fillRect(x, eqVisualizer.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+            }
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let prevMouseX = mouseX;
+            let prevMouseY = mouseY;
+            let mouseVelocity = 0;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Calculate velocity
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                mouseVelocity = Math.sqrt(dx * dx + dy * dy);
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Adjust cursor size based on velocity
+                const size = Math.min(20 + mouseVelocity * 0.5, 40);
+                cursor.style.width = `${size}px`;
+                cursor.style.height = `${size}px`;
+            });
+            
+            // Handle click
+            document.addEventListener('click', (e) => {
+                // Create ripple at click position
+                createRipple(e.clientX, e.clientY, amplitude * 2);
+                
+                // Play sound on click
+                playSound(frequency * 2, waveType);
+                
+                // Pulse cursor
+                cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                setTimeout(() => {
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 200);
+            });
+            
+            // Wave class
+            class Wave {
+                constructor(x, y, amplitude, frequency, waveType, color) {
+                    this.x = x;
+                    this.y = y;
+                    this.amplitude = amplitude;
+                    this.frequency = frequency;
+                    this.waveType = waveType;
+                    this.color = color;
+                    this.time = 0;
+                    this.lifespan = 100;
+                    this.age = 0;
+                }
+                
+                update() {
+                    this.age++;
+                    this.time += 0.05;
+                    return this.age < this.lifespan;
+                }
+                
+                draw() {
+                    const maxRadius = 100 + this.amplitude * 5;
+                    const progress = this.age / this.lifespan;
+                    const radius = maxRadius * progress;
+                    const opacity = 1 - progress;
+                    
+                    ctx.strokeStyle = this.color.replace(')', `, ${opacity})`).replace('rgb', 'rgba');
+                    ctx.lineWidth = 2;
+                    
+                    ctx.beginPath();
+                    
+                    for (let i = 0; i < Math.PI * 2; i += 0.01) {
+                        const x = this.x + Math.cos(i) * radius;
+                        const y = this.y + Math.sin(i) * radius;
+                        
+                        // Apply wave distortion based on type
+                        let distortion = 0;
+                        const waveInput = i * this.frequency + this.time;
+                        
+                        switch (this.waveType) {
+                            case 'sine':
+                                distortion = Math.sin(waveInput) * this.amplitude;
+                                break;
+                            case 'square':
+                                distortion = Math.sign(Math.sin(waveInput)) * this.amplitude;
+                                break;
+                            case 'sawtooth':
+                                distortion = ((waveInput % (Math.PI * 2)) / (Math.PI * 2) - 0.5) * 2 * this.amplitude;
+                                break;
+                            case 'triangle':
+                                distortion = Math.abs(((waveInput % (Math.PI * 2)) / (Math.PI * 2) - 0.5) * 4 - 1) * this.amplitude - this.amplitude / 2;
+                                break;
+                        }
+                        
+                        const distX = this.x + Math.cos(i) * (radius + distortion);
+                        const distY = this.y + Math.sin(i) * (radius + distortion);
+                        
+                        if (i === 0) {
+                            ctx.moveTo(distX, distY);
+                        } else {
+                            ctx.lineTo(distX, distY);
+                        }
+                    }
+                    
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+            }
+            
+            // Waves collection
+            const waves = [];
+            
+            // Create ripple effect
+            function createRipple(x, y, amp) {
+                const color = getColor(amp, frequency);
+                waves.push(new Wave(x, y, amp, frequency, waveType, color));
+            }
+            
+            // Get color based on mode
+            function getColor(amp, freq) {
+                switch (colorMode) {
+                    case 'spectrum':
+                        return `hsl(${(Date.now() / 50) % 360}, 100%, 50%)`;
+                    case 'amplitude':
+                        return `hsl(${amp * 5}, 100%, 50%)`;
+                    case 'frequency':
+                        return `hsl(${freq * 20}, 100%, 50%)`;
+                    default:
+                        return 'rgb(255, 157, 0)';
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw waves
+                for (let i = waves.length - 1; i >= 0; i--) {
+                    const stillAlive = waves[i].update();
+                    
+                    if (stillAlive) {
+                        waves[i].draw();
+                    } else {
+                        waves.splice(i, 1);
+                    }
+                }
+                
+                // Create ambient waves based on mouse velocity
+                if (Math.random() < mouseVelocity * 0.01) {
+                    const amp = amplitude * (0.5 + Math.random() * 0.5);
+                    const freq = frequency * (0.5 + Math.random() * 0.5);
+                    const color = getColor(amp, freq);
+                    waves.push(new Wave(mouseX, mouseY, amp, freq, waveType, color));
+                    
+                    if (audioEnabled && Math.random() < 0.1) {
+                        playSound(freq, waveType);
+                    }
+                }
+                
+                // Update EQ visualizer
+                updateEQVisualizer();
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Start animation
+            animate();
+            
+            // Initial ripple
+            setTimeout(() => {
+                createRipple(canvas.width / 2, canvas.height / 2, amplitude);
+            }, 500);
+        });
+    </script>
+</body>
+</html> 

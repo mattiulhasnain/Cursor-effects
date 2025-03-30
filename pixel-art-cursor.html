@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #222034;
+            font-family: 'Courier New', monospace;
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #ff77a8;
+            text-shadow: 3px 3px 0px #45283c;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #a7f070;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #3a4466;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 3px 3px 0px #1a1c2c;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #a7f070;
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+        }
+        
+        .color-box {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .color-option {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #5fcde4;
+            cursor: pointer;
+        }
+        
+        .color-option.selected {
+            border-color: white;
+            transform: scale(1.2);
+        }
+        
+        button {
+            background-color: #29366f;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            box-shadow: 3px 3px 0px #1a1c2c;
+        }
+        
+        button:hover {
+            background-color: #3b5dc9;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 1px 1px 0px #1a1c2c;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            image-rendering: pixelated;
+            z-index: 5;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            pointer-events: none;
+            z-index: 1000;
+            image-rendering: pixelated;
+        }
+        
+        .pixelated {
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Pixel Art Cursor Effect</h1>
+        <p>Move your cursor to create pixel art. Click to switch between drawing modes.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="pixel-size">Pixel Size</label>
+                <input type="range" id="pixel-size" min="4" max="32" step="4" value="8">
+            </div>
+            
+            <div class="control-group">
+                <label for="draw-mode">Draw Mode</label>
+                <select id="draw-mode">
+                    <option value="trail">Cursor Trail</option>
+                    <option value="paint">Paint Mode</option>
+                    <option value="stamp">Pixel Stamp</option>
+                    <option value="rainbow">Rainbow</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Color Palette</label>
+                <div class="color-box" id="color-palette"></div>
+            </div>
+            
+            <button id="clear-canvas">Clear Canvas</button>
+            <button id="save-image">Save Image</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions to match window
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'cursor';
+            document.body.appendChild(cursor);
+            
+            // Controls
+            const pixelSizeSlider = document.getElementById('pixel-size');
+            const drawModeSelect = document.getElementById('draw-mode');
+            const colorPalette = document.getElementById('color-palette');
+            const clearButton = document.getElementById('clear-canvas');
+            const saveButton = document.getElementById('save-image');
+            
+            // Config variables
+            let pixelSize = parseInt(pixelSizeSlider.value);
+            let drawMode = drawModeSelect.value;
+            let currentColor = '#ff77a8'; // Default color
+            let isDrawing = false;
+            let cursorImage = generateCursorImage();
+            
+            // Pixel palette colors (PICO-8 inspired)
+            const colors = [
+                '#1a1c2c', '#5d275d', '#b13e53', '#ef7d57', 
+                '#ffcd75', '#a7f070', '#38b764', '#257179', 
+                '#29366f', '#3b5dc9', '#41a6f6', '#73eff7', 
+                '#f4f4f4', '#94b0c2', '#566c86', '#333c57'
+            ];
+            
+            // Pixel art cursor appearance
+            function generateCursorImage() {
+                const cursorCanvas = document.createElement('canvas');
+                cursorCanvas.width = pixelSize;
+                cursorCanvas.height = pixelSize;
+                const cursorCtx = cursorCanvas.getContext('2d');
+                
+                // Draw pixel cursor
+                cursorCtx.fillStyle = currentColor;
+                cursorCtx.fillRect(0, 0, pixelSize, pixelSize);
+                cursorCtx.strokeStyle = '#ffffff';
+                cursorCtx.lineWidth = 1;
+                cursorCtx.strokeRect(0, 0, pixelSize, pixelSize);
+                
+                // For stamp mode, add a plus sign
+                if (drawMode === 'stamp') {
+                    cursorCtx.strokeStyle = '#ffffff';
+                    cursorCtx.beginPath();
+                    cursorCtx.moveTo(pixelSize / 2, 2);
+                    cursorCtx.lineTo(pixelSize / 2, pixelSize - 2);
+                    cursorCtx.moveTo(2, pixelSize / 2);
+                    cursorCtx.lineTo(pixelSize - 2, pixelSize / 2);
+                    cursorCtx.stroke();
+                }
+                
+                return cursorCanvas.toDataURL();
+            }
+            
+            // Initialize color palette
+            function initColorPalette() {
+                colorPalette.innerHTML = '';
+                
+                colors.forEach(color => {
+                    const colorOption = document.createElement('div');
+                    colorOption.className = 'color-option';
+                    colorOption.style.backgroundColor = color;
+                    
+                    if (color === currentColor) {
+                        colorOption.classList.add('selected');
+                    }
+                    
+                    colorOption.addEventListener('click', () => {
+                        // Remove selected class from all options
+                        document.querySelectorAll('.color-option').forEach(option => {
+                            option.classList.remove('selected');
+                        });
+                        
+                        // Add selected class to clicked option
+                        colorOption.classList.add('selected');
+                        
+                        // Update current color
+                        currentColor = color;
+                        
+                        // Regenerate cursor image
+                        cursorImage = generateCursorImage();
+                        cursor.style.backgroundImage = `url(${cursorImage})`;
+                    });
+                    
+                    colorPalette.appendChild(colorOption);
+                });
+            }
+            
+            // Initialize color palette
+            initColorPalette();
+            
+            // Event listeners for controls
+            pixelSizeSlider.addEventListener('input', () => {
+                pixelSize = parseInt(pixelSizeSlider.value);
+                cursorImage = generateCursorImage();
+                cursor.style.backgroundImage = `url(${cursorImage})`;
+                cursor.style.width = `${pixelSize}px`;
+                cursor.style.height = `${pixelSize}px`;
+            });
+            
+            drawModeSelect.addEventListener('change', () => {
+                drawMode = drawModeSelect.value;
+                cursorImage = generateCursorImage();
+                cursor.style.backgroundImage = `url(${cursorImage})`;
+            });
+            
+            clearButton.addEventListener('click', () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+            
+            saveButton.addEventListener('click', () => {
+                // Create a temporary anchor element
+                const link = document.createElement('a');
+                link.download = 'pixel-art.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            let lastX = 0;
+            let lastY = 0;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                lastX = mouseX;
+                lastY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Snap to pixel grid
+                const snappedX = Math.floor(mouseX / pixelSize) * pixelSize;
+                const snappedY = Math.floor(mouseY / pixelSize) * pixelSize;
+                
+                // Update cursor position
+                cursor.style.left = `${snappedX}px`;
+                cursor.style.top = `${snappedY}px`;
+                cursor.style.backgroundImage = `url(${cursorImage})`;
+                cursor.style.width = `${pixelSize}px`;
+                cursor.style.height = `${pixelSize}px`;
+                
+                // Draw if mouse is down
+                if (isDrawing) {
+                    drawPixel(snappedX, snappedY);
+                    
+                    // For trail mode, draw a line of pixels
+                    if (drawMode === 'trail') {
+                        const lastSnappedX = Math.floor(lastX / pixelSize) * pixelSize;
+                        const lastSnappedY = Math.floor(lastY / pixelSize) * pixelSize;
+                        
+                        // Draw intermediary pixels for a continuous line
+                        const dx = Math.abs(snappedX - lastSnappedX);
+                        const dy = Math.abs(snappedY - lastSnappedY);
+                        const sx = lastSnappedX < snappedX ? pixelSize : -pixelSize;
+                        const sy = lastSnappedY < snappedY ? pixelSize : -pixelSize;
+                        let err = dx - dy;
+                        
+                        let x = lastSnappedX;
+                        let y = lastSnappedY;
+                        
+                        while (true) {
+                            if (x === snappedX && y === snappedY) break;
+                            
+                            const e2 = 2 * err;
+                            if (e2 > -dy) {
+                                err -= dy;
+                                x += sx;
+                            }
+                            if (e2 < dx) {
+                                err += dx;
+                                y += sy;
+                            }
+                            
+                            drawPixel(x, y);
+                        }
+                    }
+                }
+            });
+            
+            // Handle mouse click
+            document.addEventListener('mousedown', (e) => {
+                isDrawing = true;
+                
+                // Snap to pixel grid
+                const snappedX = Math.floor(e.clientX / pixelSize) * pixelSize;
+                const snappedY = Math.floor(e.clientY / pixelSize) * pixelSize;
+                
+                // Draw on click
+                drawPixel(snappedX, snappedY);
+                
+                // For stamp mode, create a pattern
+                if (drawMode === 'stamp') {
+                    createStampPattern(snappedX, snappedY);
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDrawing = false;
+            });
+            
+            // Draw a pixel at the specified position
+            function drawPixel(x, y) {
+                // Skip if clicking on UI elements
+                if (y < canvas.height * 0.3 && x > canvas.width * 0.2 && x < canvas.width * 0.8) {
+                    return;
+                }
+                
+                let color = currentColor;
+                
+                // For rainbow mode, use a cycling color
+                if (drawMode === 'rainbow') {
+                    const hue = (Date.now() / 20) % 360;
+                    color = `hsl(${hue}, 100%, 50%)`;
+                }
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, pixelSize, pixelSize);
+            }
+            
+            // Create a stamp pattern at the specified position
+            function createStampPattern(x, y) {
+                const patterns = [
+                    // Plus shape
+                    [
+                        [0, 1, 0],
+                        [1, 1, 1],
+                        [0, 1, 0]
+                    ],
+                    // Square
+                    [
+                        [1, 1, 1],
+                        [1, 0, 1],
+                        [1, 1, 1]
+                    ],
+                    // X shape
+                    [
+                        [1, 0, 1],
+                        [0, 1, 0],
+                        [1, 0, 1]
+                    ],
+                    // Diamond
+                    [
+                        [0, 1, 0],
+                        [1, 0, 1],
+                        [0, 1, 0]
+                    ]
+                ];
+                
+                // Select a random pattern
+                const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+                
+                // Draw the pattern
+                for (let py = 0; py < pattern.length; py++) {
+                    for (let px = 0; px < pattern[0].length; px++) {
+                        if (pattern[py][px] === 1) {
+                            const offsetX = (px - 1) * pixelSize;
+                            const offsetY = (py - 1) * pixelSize;
+                            drawPixel(x + offsetX, y + offsetY);
+                        }
+                    }
+                }
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Save current drawing
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Resize canvas
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Restore drawing
+                ctx.putImageData(imageData, 0, 0);
+            });
+            
+            // Initial cursor setup
+            cursor.style.backgroundImage = `url(${cursorImage})`;
+            cursor.style.width = `${pixelSize}px`;
+            cursor.style.height = `${pixelSize}px`;
+            
+            // Draw initial welcome message in pixel art style
+            function drawWelcomeMessage() {
+                ctx.fillStyle = '#41a6f6';
+                const size = 8;
+                const messageX = Math.floor(canvas.width / 2 / size) * size - 120;
+                const messageY = Math.floor(canvas.height * 0.7 / size) * size;
+                
+                // Simple pixel font for "DRAW HERE"
+                const pixelFont = {
+                    'D': [
+                        [1, 1, 0],
+                        [1, 0, 1],
+                        [1, 0, 1],
+                        [1, 1, 0]
+                    ],
+                    'R': [
+                        [1, 1, 0],
+                        [1, 0, 1],
+                        [1, 1, 0],
+                        [1, 0, 1]
+                    ],
+                    'A': [
+                        [0, 1, 0],
+                        [1, 0, 1],
+                        [1, 1, 1],
+                        [1, 0, 1]
+                    ],
+                    'W': [
+                        [1, 0, 1],
+                        [1, 0, 1],
+                        [1, 1, 1],
+                        [1, 0, 1]
+                    ],
+                    'H': [
+                        [1, 0, 1],
+                        [1, 1, 1],
+                        [1, 0, 1],
+                        [1, 0, 1]
+                    ],
+                    'E': [
+                        [1, 1, 1],
+                        [1, 0, 0],
+                        [1, 1, 0],
+                        [1, 1, 1]
+                    ],
+                    ' ': [
+                        [0, 0, 0],
+                        [0, 0, 0],
+                        [0, 0, 0],
+                        [0, 0, 0]
+                    ]
+                };
+                
+                const message = "DRAW HERE";
+                
+                // Draw message
+                for (let i = 0; i < message.length; i++) {
+                    const char = message[i];
+                    const pixelChar = pixelFont[char] || pixelFont[' '];
+                    
+                    for (let y = 0; y < pixelChar.length; y++) {
+                        for (let x = 0; x < pixelChar[0].length; x++) {
+                            if (pixelChar[y][x] === 1) {
+                                ctx.fillRect(messageX + i * size * 4 + x * size, messageY + y * size, size, size);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Draw initial welcome message
+            drawWelcomeMessage();
+        });
+    </script>
+</body>
+</html> 

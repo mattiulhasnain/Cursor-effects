@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxy Creator Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #000010; /* Deep space background */
+            font-family: 'Orbitron', sans-serif; /* Futuristic font */
+            overflow: hidden;
+            cursor: none;
+            color: #e0e0e0;
+        }
+        
+        /* Optional: Import Orbitron font */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        
+        .content {
+            position: absolute;
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 90%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            text-shadow: 0 0 10px #9c27b0, 0 0 20px #9c27b0;
+        }
+        
+        p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            color: #bdbdbd;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(30, 30, 50, 0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(156, 39, 176, 0.2);
+             border: 1px solid rgba(156, 39, 176, 0.4);
+        }
+        
+        label {
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+            color: #e0e0e0;
+        }
+        
+        input[type="range"], select, input[type="color"], button {
+            width: 100px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            background-color: #2c2c44;
+            color: #fff;
+            border: 1px solid #7e57c2;
+            font-size: 0.8rem;
+        }
+        
+        input[type="range"] { padding: 0; height: 5px; }
+        input[type="color"] { padding: 2px; height: 25px; }
+        
+        button {
+            background-color: #7e57c2;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            width: auto;
+            padding: 6px 12px;
+        }
+        
+        button:hover {
+            background-color: #673ab7;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: 2px solid #d1c4e9;
+            background: radial-gradient(circle, rgba(209, 196, 233, 0.3) 0%, rgba(209, 196, 233, 0) 70%);
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out;
+        }
+        
+        .cursor.drawing-stars {
+            border-color: #fff;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%);
+        }
+        
+         .cursor.drawing-nebula {
+            border-color: #ff4081;
+             background: radial-gradient(circle, rgba(255, 64, 129, 0.5) 0%, rgba(255, 64, 129, 0) 70%);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Galaxy Creator</h1>
+        <p>Click and drag to paint stars and nebulas across the cosmos. Create your own pocket universe!</p>
+        
+        <div class="controls">
+             <div class="control-group">
+                <label for="brush-type">Brush Type</label>
+                <select id="brush-type">
+                    <option value="stars">Stars</option>
+                    <option value="nebula">Nebula</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="brush-size">Nebula Size/Star Density</label>
+                <input type="range" id="brush-size" min="5" max="50" step="1" value="20">
+            </div>
+            <div class="control-group">
+                <label for="nebula-color">Nebula Color</label>
+                <input type="color" id="nebula-color" value="#9c27b0">
+            </div>
+             <div class="control-group">
+                <label for="star-brightness">Star Brightness</label>
+                <input type="range" id="star-brightness" min="0.2" max="1" step="0.1" value="0.8">
+            </div>
+            <button id="clear-btn">Clear Canvas</button>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const cursor = document.getElementById('cursor');
+            const brushTypeSelect = document.getElementById('brush-type');
+            const brushSizeSlider = document.getElementById('brush-size');
+            const nebulaColorInput = document.getElementById('nebula-color');
+            const starBrightnessSlider = document.getElementById('star-brightness');
+            const clearBtn = document.getElementById('clear-btn');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let isDrawing = false;
+            
+            let brushType = brushTypeSelect.value;
+            let brushSize = parseInt(brushSizeSlider.value);
+            let nebulaColor = nebulaColorInput.value;
+            let starBrightness = parseFloat(starBrightnessSlider.value);
+
+            // Initial background
+            ctx.fillStyle = '#000010';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            function hexToRgb(hex) {
+                const bigint = parseInt(hex.slice(1), 16);
+                const r = (bigint >> 16) & 255;
+                const g = (bigint >> 8) & 255;
+                const b = bigint & 255;
+                return { r, g, b };
+            }
+
+            function drawStar(x, y) {
+                const size = Math.random() * 1.5 + 0.5;
+                const brightness = Math.random() * 0.5 + 0.5 * starBrightness; // Base brightness + slider influence
+                ctx.fillStyle = `rgba(255, 255, 255, ${brightness})`;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            function drawNebula(x, y) {
+                const radius = brushSize * (0.5 + Math.random() * 0.5);
+                const density = 0.1 + Math.random() * 0.2; // Nebula cloud density
+                const rgbColor = hexToRgb(nebulaColor);
+
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                gradient.addColorStop(0, `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${density})`);
+                gradient.addColorStop(1, `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0)`);
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+                
+                // Add some subtle variations/hotspots
+                for(let i=0; i<3; i++) {
+                    const hotspotX = x + (Math.random() - 0.5) * radius * 0.8;
+                    const hotspotY = y + (Math.random() - 0.5) * radius * 0.8;
+                    const hotspotRadius = radius * (0.1 + Math.random() * 0.2);
+                    const hotspotDensity = density * (1.5 + Math.random());
+                    
+                    const hotspotGradient = ctx.createRadialGradient(hotspotX, hotspotY, 0, hotspotX, hotspotY, hotspotRadius);
+                    hotspotGradient.addColorStop(0, `rgba(${rgbColor.r + 20}, ${rgbColor.g + 20}, ${rgbColor.b + 20}, ${hotspotDensity})`);
+                    hotspotGradient.addColorStop(1, `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0)`);
+                    
+                    ctx.fillStyle = hotspotGradient;
+                    ctx.fillRect(hotspotX - hotspotRadius, hotspotY - hotspotRadius, hotspotRadius * 2, hotspotRadius * 2);
+                }
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+                
+                mouseX = e.clientX || e.touches[0].clientX;
+                mouseY = e.clientY || e.touches[0].clientY;
+
+                if (brushType === 'stars') {
+                    // Draw multiple stars based on density (brush size)
+                    const density = Math.ceil(brushSize / 5);
+                     for(let i = 0; i < density; i++) {
+                        const offsetX = (Math.random() - 0.5) * brushSize * 2;
+                        const offsetY = (Math.random() - 0.5) * brushSize * 2;
+                        if (Math.sqrt(offsetX*offsetX + offsetY*offsetY) < brushSize) { // Draw within circular area
+                             drawStar(mouseX + offsetX, mouseY + offsetY);
+                        }
+                     }
+                } else if (brushType === 'nebula') {
+                    drawNebula(mouseX, mouseY);
+                }
+            }
+
+            function updateCursorStyle() {
+                 cursor.classList.remove('drawing-stars', 'drawing-nebula');
+                 if (isDrawing) {
+                     if (brushType === 'stars') {
+                         cursor.classList.add('drawing-stars');
+                     } else if (brushType === 'nebula') {
+                          cursor.classList.add('drawing-nebula');
+                     }
+                 }
+            }
+
+            // Event Listeners
+            canvas.addEventListener('mousedown', (e) => {
+                isDrawing = true;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                updateCursorStyle();
+                draw(e);
+            });
+            
+             canvas.addEventListener('touchstart', (e) => {
+                 e.preventDefault(); // Prevent scrolling
+                 isDrawing = true;
+                 mouseX = e.touches[0].clientX;
+                 mouseY = e.touches[0].clientY;
+                 updateCursorStyle();
+                 draw(e);
+             }, { passive: false });
+
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('touchmove', (e) => {
+                 e.preventDefault(); // Prevent scrolling
+                 draw(e);
+             }, { passive: false });
+
+            canvas.addEventListener('mouseup', () => {
+                isDrawing = false;
+                 updateCursorStyle();
+            });
+             canvas.addEventListener('touchend', () => {
+                 isDrawing = false;
+                 updateCursorStyle();
+             });
+             canvas.addEventListener('mouseleave', () => {
+                 isDrawing = false; // Stop drawing if mouse leaves canvas
+                 updateCursorStyle();
+             });
+
+            document.addEventListener('mousemove', (e) => {
+                // Update visual cursor position regardless of drawing state
+                cursor.style.left = `${e.clientX}px`;
+                cursor.style.top = `${e.clientY}px`;
+            });
+
+            brushTypeSelect.addEventListener('change', (e) => brushType = e.target.value);
+            brushSizeSlider.addEventListener('input', (e) => brushSize = parseInt(e.target.value));
+            nebulaColorInput.addEventListener('input', (e) => nebulaColor = e.target.value);
+            starBrightnessSlider.addEventListener('input', (e) => starBrightness = parseFloat(e.target.value));
+            
+            clearBtn.addEventListener('click', () => {
+                ctx.fillStyle = '#000010';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            });
+
+            window.addEventListener('resize', () => {
+                // Save current canvas content
+                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Resize canvas
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Restore canvas content
+                ctx.putImageData(imageData, 0, 0);
+            });
+
+        });
+    </script>
+</body>
+</html> 

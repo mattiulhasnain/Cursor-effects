@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Trails Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, #00308F, #7D6EF1);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #e0e0e0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+        
+        .rain-drop {
+            position: absolute;
+            background-color: rgba(200, 230, 255, 0.6);
+            width: 2px;
+            pointer-events: none;
+            border-radius: 0 0 5px 5px;
+            z-index: 5;
+        }
+        
+        .splash {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            animation: splash 0.5s linear forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes splash {
+            0% {
+                width: 0px;
+                height: 0px;
+                opacity: 0.7;
+            }
+            100% {
+                width: 25px;
+                height: 25px;
+                opacity: 0;
+            }
+        }
+        
+        .rainbow {
+            position: absolute;
+            pointer-events: none;
+            z-index: 4;
+        }
+        
+        .cloud {
+            position: fixed;
+            background-color: rgba(250, 250, 250, 0.4);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            box-shadow: 
+                15px 0px 0 0 rgba(250, 250, 250, 0.4),
+                30px 0px 0 0 rgba(250, 250, 250, 0.4),
+                10px -10px 0 0 rgba(250, 250, 250, 0.4),
+                25px -5px 0 0 rgba(250, 250, 250, 0.4);
+            opacity: 0.7;
+            z-index: 3;
+            filter: blur(2px);
+        }
+        
+        .sun {
+            position: fixed;
+            top: 50px;
+            right: 100px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at center, rgba(255, 230, 100, 0.8), rgba(255, 160, 80, 0.4));
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(255, 230, 100, 0.6);
+            z-index: 2;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .return-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Rainbow Trails Cursor Effect</h1>
+        <p>Move your cursor to create rain, then watch as beautiful rainbow arcs form from your movements. The faster you move, the more rainbows will appear!</p>
+    </div>
+    
+    <div class="sun"></div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const cursor = document.querySelector('.cursor');
+            
+            // Create background clouds
+            for (let i = 0; i < 6; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.left = `${Math.random() * window.innerWidth}px`;
+                cloud.style.top = `${Math.random() * 200}px`;
+                cloud.style.transform = `scale(${0.8 + Math.random() * 1.5})`;
+                body.appendChild(cloud);
+            }
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            
+            // Track mouse movement path for rainbow creation
+            const mousePath = [];
+            const maxPathPoints = 15;
+            
+            // Settings
+            const rainInterval = 60; // ms between rain drops
+            const dropSpeed = 5;
+            const gravity = 0.2;
+            const rainbowLifespan = 5000; // ms
+            const rainbowColors = [
+                'rgba(255, 0, 0, 0.5)',  // Red
+                'rgba(255, 127, 0, 0.5)', // Orange
+                'rgba(255, 255, 0, 0.5)', // Yellow
+                'rgba(0, 255, 0, 0.5)',   // Green
+                'rgba(0, 0, 255, 0.5)',   // Blue
+                'rgba(75, 0, 130, 0.5)',  // Indigo
+                'rgba(148, 0, 211, 0.5)'  // Violet
+            ];
+            
+            let lastRainTime = 0;
+            let raindrops = [];
+            const rainbows = [];
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Track mouse path for rainbow creation
+                mousePath.push({ x: mouseX, y: mouseY, time: Date.now() });
+                if (mousePath.length > maxPathPoints) {
+                    mousePath.shift();
+                }
+            });
+            
+            // Create raindrop
+            function createRaindrop(x, y) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.left = `${x}px`;
+                drop.style.top = `${y}px`;
+                drop.style.height = `${5 + Math.random() * 15}px`;
+                drop.style.opacity = 0.3 + Math.random() * 0.5;
+                body.appendChild(drop);
+                
+                return {
+                    element: drop,
+                    x: x,
+                    y: y,
+                    speed: dropSpeed + Math.random() * 3,
+                    removed: false
+                };
+            }
+            
+            // Create splash
+            function createSplash(x, y) {
+                const splash = document.createElement('div');
+                splash.className = 'splash';
+                splash.style.left = `${x}px`;
+                splash.style.top = `${y}px`;
+                body.appendChild(splash);
+                
+                // Remove splash after animation
+                setTimeout(() => {
+                    if (splash && splash.parentNode) {
+                        splash.parentNode.removeChild(splash);
+                    }
+                }, 500);
+            }
+            
+            // Create rainbow
+            function createRainbow(x, y, width, height, rotation) {
+                // Check if conditions are right for rainbow - need some vertical movement
+                if (height < 50) return null;
+                
+                const svgNS = "http://www.w3.org/2000/svg";
+                const rainbow = document.createElementNS(svgNS, "svg");
+                rainbow.setAttribute("width", width);
+                rainbow.setAttribute("height", height);
+                rainbow.setAttribute("class", "rainbow");
+                rainbow.style.left = `${x - width/2}px`;
+                rainbow.style.top = `${y - height}px`;
+                rainbow.style.transform = `rotate(${rotation}deg)`;
+                rainbow.style.opacity = "0.8";
+                
+                // Create rainbow bands
+                for (let i = 0; i < rainbowColors.length; i++) {
+                    const bandWidth = width - i * (width / 10);
+                    const bandHeight = height - i * (height / 10);
+                    const centerX = width / 2;
+                    const centerY = height;
+                    
+                    const path = document.createElementNS(svgNS, "path");
+                    const d = `M ${centerX - bandWidth/2} ${centerY} A ${bandWidth/2} ${bandHeight} 0 0 1 ${centerX + bandWidth/2} ${centerY}`;
+                    
+                    path.setAttribute("d", d);
+                    path.setAttribute("stroke", rainbowColors[i]);
+                    path.setAttribute("stroke-width", "4");
+                    path.setAttribute("fill", "none");
+                    rainbow.appendChild(path);
+                }
+                
+                body.appendChild(rainbow);
+                
+                return {
+                    element: rainbow,
+                    created: Date.now(),
+                    lifespan: rainbowLifespan + Math.random() * 2000
+                };
+            }
+            
+            function update() {
+                const currentTime = Date.now();
+                
+                // Create new raindrops at intervals when mouse moves
+                if (currentTime - lastRainTime > rainInterval) {
+                    const movementDistance = Math.sqrt(
+                        Math.pow(mouseX - prevMouseX, 2) + 
+                        Math.pow(mouseY - prevMouseY, 2)
+                    );
+                    
+                    if (movementDistance > 5) {
+                        const offsetX = (Math.random() - 0.5) * 30;
+                        raindrops.push(createRaindrop(mouseX + offsetX, mouseY));
+                        lastRainTime = currentTime;
+                    }
+                }
+                
+                // Update raindrops
+                for (let i = 0; i < raindrops.length; i++) {
+                    const drop = raindrops[i];
+                    if (drop.removed) continue;
+                    
+                    drop.speed += gravity;
+                    drop.y += drop.speed;
+                    drop.element.style.top = `${drop.y}px`;
+                    
+                    // Remove if off-screen
+                    if (drop.y > window.innerHeight) {
+                        createSplash(drop.x, window.innerHeight);
+                        drop.element.remove();
+                        drop.removed = true;
+                    }
+                }
+                
+                // Clean up removed raindrops
+                raindrops = raindrops.filter(drop => !drop.removed);
+                
+                // Check if we should create a rainbow (based on mouse movement)
+                if (mousePath.length >= 5 && Math.random() < 0.05) {
+                    const startPoint = mousePath[0];
+                    const endPoint = mousePath[mousePath.length - 1];
+                    
+                    // Calculate path length to determine rainbow size
+                    let pathLength = 0;
+                    for (let i = 1; i < mousePath.length; i++) {
+                        const dx = mousePath[i].x - mousePath[i-1].x;
+                        const dy = mousePath[i].y - mousePath[i-1].y;
+                        pathLength += Math.sqrt(dx*dx + dy*dy);
+                    }
+                    
+                    if (pathLength > 100) {
+                        // Calculate rainbow dimensions based on path
+                        const width = 100 + pathLength * 0.5;
+                        const height = 50 + pathLength * 0.3;
+                        
+                        // Calculate angle between start and end points
+                        const dx = endPoint.x - startPoint.x;
+                        const dy = endPoint.y - startPoint.y;
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+                        
+                        // Choose a point along the path for the rainbow origin
+                        const pathIndex = Math.floor(mousePath.length * 0.3);
+                        const originPoint = mousePath[pathIndex];
+                        
+                        const rainbow = createRainbow(originPoint.x, originPoint.y, width, height, angle);
+                        if (rainbow) {
+                            rainbows.push(rainbow);
+                        }
+                    }
+                }
+                
+                // Update rainbows (fade out and remove when old)
+                for (let i = 0; i < rainbows.length; i++) {
+                    const rainbow = rainbows[i];
+                    const age = currentTime - rainbow.created;
+                    
+                    if (age > rainbow.lifespan) {
+                        rainbow.element.remove();
+                        rainbows.splice(i, 1);
+                        i--;
+                    } else {
+                        // Calculate opacity based on age
+                        const lifeProgress = age / rainbow.lifespan;
+                        // Fade in quickly then fade out slowly
+                        const opacity = lifeProgress < 0.2 
+                            ? lifeProgress * 5 * 0.8 
+                            : 0.8 * (1 - (lifeProgress - 0.2) / 0.8);
+                        
+                        rainbow.element.style.opacity = opacity.toFixed(2);
+                    }
+                }
+                
+                requestAnimationFrame(update);
+            }
+            
+            update();
+        });
+    </script>
+</body>
+</html> 

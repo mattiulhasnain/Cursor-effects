@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ripple Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #232323;
+            font-family: Arial, sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        p {
+            text-align: center;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            background-color: rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            animation: ripple-animation 1s linear;
+        }
+        
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Ripple Cursor Effect</h1>
+    <p>Click anywhere on the screen to create ripple effects. The ripples will expand outward from where you click, creating a water-like effect.</p>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ripple effect on click
+            document.addEventListener('click', createRipple);
+            
+            function createRipple(event) {
+                const x = event.clientX;
+                const y = event.clientY;
+                
+                // Create ripple element
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple';
+                
+                // Set initial position
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                
+                // Set random color
+                const hue = Math.random() * 360;
+                ripple.style.backgroundColor = `hsla(${hue}, 80%, 60%, 0.3)`;
+                
+                // Set random size
+                const size = Math.random() * 50 + 50;
+                ripple.style.width = `${size}px`;
+                ripple.style.height = `${size}px`;
+                
+                // Add to body
+                document.body.appendChild(ripple);
+                
+                // Remove after animation completes
+                setTimeout(() => {
+                    document.body.removeChild(ripple);
+                }, 1000);
+            }
+            
+            // Create random ripples periodically for demo purposes
+            function createRandomRipple() {
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                
+                const fakeEvent = {
+                    clientX: x,
+                    clientY: y
+                };
+                
+                createRipple(fakeEvent);
+                
+                // Schedule next random ripple
+                const delay = Math.random() * 2000 + 1000;
+                setTimeout(createRandomRipple, delay);
+            }
+            
+            // Start random ripples after a delay
+            setTimeout(createRandomRipple, 2000);
+        });
+    </script>
+</body>
+</html> 

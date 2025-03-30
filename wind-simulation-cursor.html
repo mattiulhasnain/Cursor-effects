@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wind Simulation Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #e0f2f7; /* Light sky blue background */
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+            color: #0277bd; /* Darker blue for text */
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #039be5;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #0277bd;
+        }
+        
+        input[type="range"], select, button {
+            width: 130px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #81d4fa;
+        }
+        
+        input[type="range"] { padding: 0; height: 6px; }
+        
+        button {
+            background-color: #4fc3f7;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #29b6f6;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #03a9f4;
+            background-color: rgba(225, 245, 254, 0.5);
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Wind Simulation</h1>
+        <p>Move your cursor to create gusts of wind. Particles flow dynamically around your cursor.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="particle-count">Particle Count</label>
+                <input type="range" id="particle-count" min="50" max="500" step="25" value="200">
+            </div>
+            <div class="control-group">
+                <label for="wind-strength">Wind Strength</label>
+                <input type="range" id="wind-strength" min="0.1" max="3" step="0.1" value="1">
+            </div>
+             <div class="control-group">
+                <label for="particle-length">Particle Length</label>
+                <input type="range" id="particle-length" min="5" max="50" step="1" value="15">
+            </div>
+            <div class="control-group">
+                <label for="color-scheme">Color Scheme</label>
+                <select id="color-scheme">
+                    <option value="sky_blue">Sky Blue</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="forest">Forest</option>
+                    <option value="monochrome">Monochrome</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="cursor" id="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const cursor = document.getElementById('cursor');
+            const particleCountSlider = document.getElementById('particle-count');
+            const windStrengthSlider = document.getElementById('wind-strength');
+            const particleLengthSlider = document.getElementById('particle-length');
+            const colorSchemeSelect = document.getElementById('color-scheme');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let lastMouseX = mouseX;
+            let lastMouseY = mouseY;
+            let mouseVelX = 0;
+            let mouseVelY = 0;
+            
+            let particleCount = parseInt(particleCountSlider.value);
+            let windStrength = parseFloat(windStrengthSlider.value);
+            let particleLength = parseFloat(particleLengthSlider.value);
+            let colorScheme = colorSchemeSelect.value;
+
+            let particles = [];
+            
+            // Perlin noise or similar for wind field variation (optional but adds realism)
+            // For simplicity, we'll use a basic angle calculation for now.
+
+            class WindParticle {
+                constructor() {
+                    this.reset();
+                    this.history = [];
+                }
+
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.5; // Initial gentle drift
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.life = 1;
+                    this.age = 0;
+                    this.maxAge = 100 + Math.random() * 100; // Lifespan in frames
+                    this.history = [];
+                }
+
+                getColor() {
+                    const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                    const speedNormalized = Math.min(speed / 3, 1); // Normalize speed
+                    let hue, saturation, lightness, alpha;
+                    alpha = 0.1 + speedNormalized * 0.6; // More visible when faster
+
+                    switch (colorScheme) {
+                        case 'sky_blue':
+                            hue = 190 + Math.random() * 30;
+                            saturation = 60 + speedNormalized * 30;
+                            lightness = 70 + speedNormalized * 15;
+                            break;
+                        case 'sunset':
+                            hue = 10 + Math.random() * 40;
+                            saturation = 80 + speedNormalized * 20;
+                            lightness = 55 + speedNormalized * 15;
+                             alpha = 0.2 + speedNormalized * 0.6;
+                            break;
+                        case 'forest':
+                            hue = 80 + Math.random() * 50;
+                            saturation = 40 + speedNormalized * 30;
+                            lightness = 40 + speedNormalized * 20;
+                             alpha = 0.1 + speedNormalized * 0.5;
+                            break;
+                        case 'monochrome':
+                            hue = 0;
+                            saturation = 0;
+                            lightness = 50 + speedNormalized * 40;
+                             alpha = 0.1 + speedNormalized * 0.6;
+                            break;
+                        default:
+                            hue = 190 + Math.random() * 30;
+                            saturation = 60 + speedNormalized * 30;
+                            lightness = 70 + speedNormalized * 15;
+                    }
+                    return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
+                }
+
+                update() {
+                    // Calculate distance and angle to cursor
+                    const dx = this.x - mouseX;
+                    const dy = this.y - mouseY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Wind force based on cursor velocity
+                    const forceMagnitude = Math.min(Math.sqrt(mouseVelX * mouseVelX + mouseVelY * mouseVelY), 50) / 50;
+                    const forceAngle = Math.atan2(mouseVelY, mouseVelX);
+
+                    // Influence radius
+                    const influenceRadius = 150;
+                    let influence = 0;
+                    if (distance < influenceRadius) {
+                        influence = (1 - distance / influenceRadius) * windStrength;
+                    }
+                    
+                    // Apply force from cursor movement
+                    this.vx += Math.cos(forceAngle) * influence * forceMagnitude * 0.5;
+                    this.vy += Math.sin(forceAngle) * influence * forceMagnitude * 0.5;
+                    
+                    // Apply general wind drift (replace with noise field later if desired)
+                    const driftAngle = Math.sin(this.y / 100) * 0.5; // Simple example: varies with y-pos
+                    this.vx += Math.cos(driftAngle) * 0.02 * windStrength;
+                    this.vy += Math.sin(driftAngle) * 0.02 * windStrength;
+
+                    // Apply friction
+                    this.vx *= 0.98;
+                    this.vy *= 0.98;
+
+                    // Update position
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Add current position to history
+                    this.history.push({ x: this.x, y: this.y });
+                    if (this.history.length > particleLength) {
+                        this.history.shift();
+                    }
+
+                    // Boundary check - reset particle if it goes too far off-screen
+                    if (this.x < -50 || this.x > canvas.width + 50 || this.y < -50 || this.y > canvas.height + 50) {
+                        this.reset();
+                    }
+                    
+                    // Age particle
+                    this.age++;
+                    if(this.age > this.maxAge) {
+                        this.reset();
+                    }
+                }
+
+                draw() {
+                    if (this.history.length < 2) return;
+                    
+                    ctx.strokeStyle = this.getColor();
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(this.history[0].x, this.history[0].y);
+                    for (let i = 1; i < this.history.length; i++) {
+                        ctx.lineTo(this.history[i].x, this.history[i].y);
+                    }
+                    ctx.stroke();
+                }
+            }
+
+            function createParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new WindParticle());
+                }
+            }
+
+            createParticles();
+
+            particleCountSlider.addEventListener('input', () => {
+                const newCount = parseInt(particleCountSlider.value);
+                if (newCount > particleCount) {
+                    for (let i = 0; i < newCount - particleCount; i++) {
+                        particles.push(new WindParticle());
+                    }
+                } else {
+                    particles = particles.slice(0, newCount);
+                }
+                particleCount = newCount;
+            });
+
+            windStrengthSlider.addEventListener('input', () => windStrength = parseFloat(windStrengthSlider.value));
+            particleLengthSlider.addEventListener('input', () => particleLength = parseFloat(particleLengthSlider.value));
+            colorSchemeSelect.addEventListener('change', () => colorScheme = colorSchemeSelect.value);
+            
+             document.addEventListener('mousemove', (e) => {
+                 lastMouseX = mouseX;
+                 lastMouseY = mouseY;
+                 mouseX = e.clientX;
+                 mouseY = e.clientY;
+                 mouseVelX = mouseX - lastMouseX;
+                 mouseVelY = mouseY - lastMouseY;
+                
+                 cursor.style.left = `${mouseX}px`;
+                 cursor.style.top = `${mouseY}px`;
+            });
+            
+            document.addEventListener('mousedown', () => {
+                 cursor.style.transform = 'translate(-50%, -50%) scale(1.3)';
+            });
+             document.addEventListener('mouseup', () => {
+                 cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
+
+            function animate() {
+                // Clear canvas with a slight fade effect
+                ctx.fillStyle = 'rgba(224, 242, 247, 0.15)'; 
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                 // Reset mouse velocity if mouse hasn't moved
+                 if (mouseX === lastMouseX && mouseY === lastMouseY) {
+                     mouseVelX *= 0.9;
+                     mouseVelY *= 0.9;
+                 }
+                 lastMouseX = mouseX;
+                 lastMouseY = mouseY;
+
+                particles.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                // Optionally reset particles on resize
+                createParticles(); 
+            });
+
+            animate();
+        });
+    </script>
+</body>
+</html> 

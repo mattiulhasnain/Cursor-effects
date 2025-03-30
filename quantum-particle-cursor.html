@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Particle Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #080820;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #f0f0ff;
+            text-shadow: 0 0 10px rgba(100, 100, 255, 0.5);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #ccccff;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .custom-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(150, 150, 255, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(100, 100, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Quantum Particle Cursor</h1>
+        <p>Move your cursor to control quantum particles. The particles exhibit wave-like behavior and quantum tunneling effects as they follow your cursor.</p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create custom cursor
+            const cursor = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            body.appendChild(cursor);
+            
+            // Set canvas size
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let mouseSpeed = 0;
+            let prevMouseX = mouseX;
+            let prevMouseY = mouseY;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Calculate mouse speed
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                mouseSpeed = Math.sqrt(dx * dx + dy * dy);
+                
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Quantum particle class
+            class QuantumParticle {
+                constructor() {
+                    // Initialize with random position
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    
+                    // Particle properties
+                    this.radius = 2 + Math.random() * 3;
+                    this.baseRadius = this.radius;
+                    this.color = this.getRandomColor();
+                    this.vx = (Math.random() - 0.5) * 2;
+                    this.vy = (Math.random() - 0.5) * 2;
+                    
+                    // Quantum properties
+                    this.phaseAngle = Math.random() * Math.PI * 2;
+                    this.phaseSpeed = 0.05 + Math.random() * 0.05;
+                    this.wavelength = 20 + Math.random() * 20;
+                    this.amplitude = 0.5 + Math.random() * 1.5;
+                    this.tunnelProbability = 0.001; // Chance to "tunnel" each frame
+                    this.entangled = null; // Reference to entangled particle
+                    this.observationState = null; // State when observed (up/down)
+                    
+                    // Interaction properties
+                    this.attraction = 0.1 + Math.random() * 0.1;
+                    this.maxSpeed = 5 + Math.random() * 5;
+                    this.friction = 0.97 + Math.random() * 0.02;
+                }
+                
+                getRandomColor() {
+                    // Generate colors in blue/purple spectrum
+                    const hue = 220 + Math.random() * 60; // 220-280: blue to purple
+                    const saturation = 70 + Math.random() * 30;
+                    const lightness = 60 + Math.random() * 20;
+                    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                }
+                
+                update() {
+                    // Update phase angle for wave-like behavior
+                    this.phaseAngle += this.phaseSpeed;
+                    
+                    // Apply wave-like oscillation to radius
+                    this.radius = this.baseRadius + Math.sin(this.phaseAngle) * this.amplitude;
+                    
+                    // Attraction to cursor (quantum particles are attracted to observation)
+                    const dx = mouseX - this.x;
+                    const dy = mouseY - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Avoid division by zero
+                    if (distance > 0) {
+                        // Attraction increases with mouse speed (uncertainty principle)
+                        const attractionFactor = this.attraction * (1 + mouseSpeed * 0.1);
+                        
+                        // Direction to cursor
+                        const dirX = dx / distance;
+                        const dirY = dy / distance;
+                        
+                        // Apply force with inverse square law (quantum force)
+                        const force = Math.min(attractionFactor * 1000 / (distance * distance), 0.5);
+                        
+                        this.vx += dirX * force;
+                        this.vy += dirY * force;
+                        
+                        // Wave-like behavior: perpendicular oscillation based on direction to cursor
+                        const perpX = -dirY;
+                        const perpY = dirX;
+                        const oscillation = Math.sin(distance / this.wavelength + this.phaseAngle) * this.amplitude;
+                        
+                        this.vx += perpX * oscillation * 0.05;
+                        this.vy += perpY * oscillation * 0.05;
+                    }
+                    
+                    // Apply max speed limit
+                    const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                    if (speed > this.maxSpeed) {
+                        this.vx = (this.vx / speed) * this.maxSpeed;
+                        this.vy = (this.vy / speed) * this.maxSpeed;
+                    }
+                    
+                    // Apply friction
+                    this.vx *= this.friction;
+                    this.vy *= this.friction;
+                    
+                    // Update position
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Quantum tunneling: small chance to teleport through boundaries
+                    if (Math.random() < this.tunnelProbability) {
+                        this.quantumTunnel();
+                    } else {
+                        // Boundary checks with bounce
+                        if (this.x < this.radius) {
+                            this.x = this.radius;
+                            this.vx *= -1;
+                        } else if (this.x > canvas.width - this.radius) {
+                            this.x = canvas.width - this.radius;
+                            this.vx *= -1;
+                        }
+                        
+                        if (this.y < this.radius) {
+                            this.y = this.radius;
+                            this.vy *= -1;
+                        } else if (this.y > canvas.height - this.radius) {
+                            this.y = canvas.height - this.radius;
+                            this.vy *= -1;
+                        }
+                    }
+                    
+                    // Entanglement effect: if this particle has an entangled partner,
+                    // they influence each other's state
+                    if (this.entangled) {
+                        // When distance is large, maintain opposite velocities (spooky action at a distance)
+                        const entangledDist = Math.sqrt(
+                            Math.pow(this.x - this.entangled.x, 2) + 
+                            Math.pow(this.y - this.entangled.y, 2)
+                        );
+                        
+                        if (entangledDist > 200) {
+                            // Apply entanglement effect: correlated but opposite movements
+                            const midX = (this.x + this.entangled.x) / 2;
+                            const midY = (this.y + this.entangled.y) / 2;
+                            
+                            // Move towards the midpoint but maintain opposite velocities
+                            this.vx += (midX - this.x) * 0.001;
+                            this.vy += (midY - this.y) * 0.001;
+                            this.entangled.vx += (midX - this.entangled.x) * 0.001;
+                            this.entangled.vy += (midY - this.entangled.y) * 0.001;
+                        }
+                    }
+                }
+                
+                quantumTunnel() {
+                    // Quantum tunneling simulation - teleport to the other side with a probability
+                    if (this.x < this.radius && this.vx < 0) {
+                        this.x = canvas.width - this.radius;
+                    } else if (this.x > canvas.width - this.radius && this.vx > 0) {
+                        this.x = this.radius;
+                    }
+                    
+                    if (this.y < this.radius && this.vy < 0) {
+                        this.y = canvas.height - this.radius;
+                    } else if (this.y > canvas.height - this.radius && this.vy > 0) {
+                        this.y = this.radius;
+                    }
+                }
+                
+                observe() {
+                    // When observed (e.g. near cursor), quantum state "collapses"
+                    if (!this.observationState) {
+                        this.observationState = Math.random() < 0.5 ? 'up' : 'down';
+                        
+                        // If entangled, partner's state immediately becomes the opposite
+                        if (this.entangled && !this.entangled.observationState) {
+                            this.entangled.observationState = 
+                                this.observationState === 'up' ? 'down' : 'up';
+                        }
+                    }
+                    
+                    return this.observationState;
+                }
+                
+                draw(ctx) {
+                    const observationDistance = 100; // Distance at which particles are "observed"
+                    const dx = mouseX - this.x;
+                    const dy = mouseY - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Get observation state if close to cursor
+                    const isObserved = distance < observationDistance;
+                    if (isObserved) {
+                        this.observe();
+                    } else {
+                        this.observationState = null; // Reset when not observed
+                    }
+                    
+                    ctx.beginPath();
+                    
+                    // Draw different states when observed
+                    if (isObserved && this.observationState) {
+                        // Draw observed particle with spin indicator
+                        ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2);
+                        ctx.fillStyle = this.observationState === 'up' ? 
+                            'rgba(100, 200, 255, 0.8)' : 'rgba(255, 100, 200, 0.8)';
+                        
+                        // Add a spin indicator (arrow)
+                        ctx.fill();
+                        ctx.beginPath();
+                        const arrowSize = this.radius * 2;
+                        const arrowAngle = this.observationState === 'up' ? 0 : Math.PI;
+                        
+                        ctx.moveTo(
+                            this.x + Math.cos(arrowAngle) * arrowSize,
+                            this.y + Math.sin(arrowAngle) * arrowSize
+                        );
+                        ctx.lineTo(
+                            this.x - Math.cos(arrowAngle) * arrowSize,
+                            this.y - Math.sin(arrowAngle) * arrowSize
+                        );
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    } else {
+                        // Draw unobserved particle (wave-like appearance)
+                        ctx.arc(this.x, this.y, Math.abs(this.radius), 0, Math.PI * 2);
+                        ctx.fillStyle = this.color;
+                        ctx.fill();
+                        
+                        // Draw wave-like glow
+                        const gradient = ctx.createRadialGradient(
+                            this.x, this.y, 0, this.x, this.y, this.radius * 3
+                        );
+                        gradient.addColorStop(0, 'rgba(150, 150, 255, 0.5)');
+                        gradient.addColorStop(1, 'rgba(150, 150, 255, 0)');
+                        
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius * 3, 0, Math.PI * 2);
+                        ctx.fillStyle = gradient;
+                        ctx.fill();
+                    }
+                    
+                    // Draw entanglement line if this particle is entangled
+                    if (this.entangled) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.x, this.y);
+                        ctx.lineTo(this.entangled.x, this.entangled.y);
+                        ctx.strokeStyle = 'rgba(150, 150, 255, 0.2)';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Create particles
+            const particles = [];
+            const particleCount = 50;
+            
+            function createParticles() {
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new QuantumParticle());
+                }
+                
+                // Create entangled pairs (25% of particles)
+                for (let i = 0; i < particleCount / 4; i++) {
+                    const p1 = particles[Math.floor(Math.random() * particles.length)];
+                    const p2 = particles[Math.floor(Math.random() * particles.length)];
+                    
+                    // Avoid self-entanglement and already entangled particles
+                    if (p1 !== p2 && !p1.entangled && !p2.entangled) {
+                        p1.entangled = p2;
+                        p2.entangled = p1;
+                    }
+                }
+            }
+            
+            // Update particles
+            function updateParticles() {
+                particles.forEach(particle => {
+                    particle.update();
+                });
+            }
+            
+            // Draw particles
+            function drawParticles() {
+                // Clear canvas
+                ctx.fillStyle = 'rgba(8, 8, 32, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(particle => {
+                    particle.draw(ctx);
+                });
+            }
+            
+            // Animation loop
+            function animate() {
+                updateParticles();
+                drawParticles();
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Handle clicks - create quantum burst
+            document.addEventListener('click', () => {
+                // Collapse all particles to observed state
+                particles.forEach(particle => {
+                    particle.observe();
+                    
+                    // Add burst velocity away from click
+                    const dx = particle.x - mouseX;
+                    const dy = particle.y - mouseY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance > 0) {
+                        const intensity = 1000 / (distance * distance);
+                        particle.vx += dx / distance * intensity;
+                        particle.vy += dy / distance * intensity;
+                    }
+                });
+                
+                // Create quantum collapse wave
+                const wave = {
+                    x: mouseX,
+                    y: mouseY,
+                    radius: 0,
+                    maxRadius: 200,
+                    speed: 5
+                };
+                
+                function expandWave() {
+                    // Draw expanding wave
+                    ctx.beginPath();
+                    ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(150, 150, 255, ${1 - wave.radius / wave.maxRadius})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Expand radius
+                    wave.radius += wave.speed;
+                    
+                    // Continue animation until max radius reached
+                    if (wave.radius < wave.maxRadius) {
+                        requestAnimationFrame(expandWave);
+                    }
+                }
+                
+                expandWave();
+            });
+            
+            // Initialize
+            createParticles();
+            animate();
+        });
+    </script>
+</body>
+</html> 

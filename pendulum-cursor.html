@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendulum Physics Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0d1117;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #58a6ff;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        input[type="range"] {
+            width: 150px;
+            cursor: pointer;
+        }
+        
+        button {
+            background-color: #58a6ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #4090e0;
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.8);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            mix-blend-mode: difference;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="content">
+        <h1>Pendulum Physics Cursor Effect</h1>
+        <p>Move your cursor to interact with the pendulums. This effect demonstrates principles of physics including gravitational force, periodic motion, and conservation of energy.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="gravity">Gravity</label>
+                <input type="range" id="gravity" min="0.1" max="2" step="0.1" value="0.5">
+            </div>
+            <div class="control-group">
+                <label for="friction">Air Friction</label>
+                <input type="range" id="friction" min="0.9" max="0.999" step="0.001" value="0.995">
+            </div>
+            <div class="control-group">
+                <label for="pendulums">Pendulums</label>
+                <input type="range" id="pendulums" min="5" max="30" step="1" value="15">
+            </div>
+            <button id="reset">Reset</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Create custom cursor
+            const body = document.querySelector('body');
+            const cursor = document.createElement('div');
+            cursor.className = 'cursor';
+            body.appendChild(cursor);
+            
+            // Mouse position
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Get control elements
+            const gravitySlider = document.getElementById('gravity');
+            const frictionSlider = document.getElementById('friction');
+            const pendulumsSlider = document.getElementById('pendulums');
+            const resetButton = document.getElementById('reset');
+            
+            // Physics settings
+            let gravity = parseFloat(gravitySlider.value);
+            let friction = parseFloat(frictionSlider.value);
+            let pendulumCount = parseInt(pendulumsSlider.value);
+            
+            // Update settings when controls change
+            gravitySlider.addEventListener('input', () => {
+                gravity = parseFloat(gravitySlider.value);
+            });
+            
+            frictionSlider.addEventListener('input', () => {
+                friction = parseFloat(frictionSlider.value);
+            });
+            
+            pendulumsSlider.addEventListener('input', () => {
+                const newCount = parseInt(pendulumsSlider.value);
+                if (newCount > pendulums.length) {
+                    // Add pendulums
+                    for (let i = pendulums.length; i < newCount; i++) {
+                        pendulums.push(createPendulum());
+                    }
+                } else if (newCount < pendulums.length) {
+                    // Remove pendulums
+                    pendulums = pendulums.slice(0, newCount);
+                }
+                pendulumCount = newCount;
+            });
+            
+            resetButton.addEventListener('click', () => {
+                pendulums = [];
+                initPendulums();
+            });
+            
+            // Pendulum class
+            class Pendulum {
+                constructor(x, y, length, angle) {
+                    this.origin = { x, y };
+                    this.length = length;
+                    this.angle = angle;
+                    this.angularVelocity = 0;
+                    this.angularAcceleration = 0;
+                    this.bobRadius = 15;
+                    this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+                    this.attracted = false;
+                    this.attractionStrength = 0.0002 + Math.random() * 0.0005;
+                }
+                
+                update() {
+                    // Calculate forces on pendulum
+                    // 1. Gravity force (proportional to sin of angle)
+                    this.angularAcceleration = -gravity / this.length * Math.sin(this.angle);
+                    
+                    // 2. Attraction to cursor (if close enough)
+                    const bobX = this.origin.x + Math.sin(this.angle) * this.length;
+                    const bobY = this.origin.y + Math.cos(this.angle) * this.length;
+                    
+                    const dx = mouseX - bobX;
+                    const dy = mouseY - bobY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const attractionRadius = 200;
+                    
+                    this.attracted = distance < attractionRadius;
+                    
+                    if (this.attracted) {
+                        // Calculate direction to cursor
+                        const angleToMouse = Math.atan2(dx, dy);
+                        
+                        // Calculate difference between current angle and angle to mouse
+                        let angleDiff = angleToMouse - this.angle;
+                        
+                        // Normalize angle difference to be between -π and π
+                        if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                        if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                        
+                        // Apply attraction force
+                        const attractionForce = this.attractionStrength * distance;
+                        this.angularAcceleration += angleDiff * attractionForce;
+                    }
+                    
+                    // Update angular velocity
+                    this.angularVelocity += this.angularAcceleration;
+                    
+                    // Apply friction (air resistance)
+                    this.angularVelocity *= friction;
+                    
+                    // Update angle
+                    this.angle += this.angularVelocity;
+                    
+                    // Calculate bob position
+                    this.bobX = this.origin.x + Math.sin(this.angle) * this.length;
+                    this.bobY = this.origin.y + Math.cos(this.angle) * this.length;
+                }
+                
+                draw() {
+                    // Draw rod
+                    ctx.beginPath();
+                    ctx.moveTo(this.origin.x, this.origin.y);
+                    ctx.lineTo(this.bobX, this.bobY);
+                    ctx.strokeStyle = this.attracted ? '#ffffff' : '#666666';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Draw bob (the weight at the end)
+                    ctx.beginPath();
+                    ctx.arc(this.bobX, this.bobY, this.bobRadius, 0, Math.PI * 2);
+                    
+                    // Color based on velocity
+                    const speed = Math.abs(this.angularVelocity);
+                    const hue = parseInt(this.color.split('(')[1].split(',')[0]);
+                    const saturation = 80 + speed * 1000;
+                    const lightness = 50 + speed * 500;
+                    
+                    ctx.fillStyle = this.attracted 
+                        ? `hsl(${hue}, ${saturation}%, ${lightness}%)`
+                        : this.color;
+                    
+                    ctx.fill();
+                    
+                    // Draw glowing effect if moving fast
+                    if (speed > 0.01) {
+                        ctx.beginPath();
+                        ctx.arc(this.bobX, this.bobY, this.bobRadius * (1 + speed * 5), 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${speed * 10})`;
+                        ctx.fill();
+                    }
+                    
+                    // Draw origin point (the pivot)
+                    ctx.beginPath();
+                    ctx.arc(this.origin.x, this.origin.y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#888888';
+                    ctx.fill();
+                }
+            }
+            
+            // Create pendulums
+            let pendulums = [];
+            
+            function createPendulum() {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * (canvas.height * 0.4);
+                const length = 100 + Math.random() * 200;
+                const angle = (Math.random() * 0.5 - 0.25) * Math.PI;
+                return new Pendulum(x, y, length, angle);
+            }
+            
+            function initPendulums() {
+                for (let i = 0; i < pendulumCount; i++) {
+                    pendulums.push(createPendulum());
+                }
+            }
+            
+            initPendulums();
+            
+            // Animation loop
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw pendulums
+                pendulums.forEach(pendulum => {
+                    pendulum.update();
+                    pendulum.draw();
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Add click effect
+            document.addEventListener('click', () => {
+                // Expand cursor briefly
+                cursor.style.transform = 'translate(-50%, -50%) scale(2)';
+                setTimeout(() => {
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 300);
+                
+                // Push pendulums
+                pendulums.forEach(pendulum => {
+                    const dx = pendulum.bobX - mouseX;
+                    const dy = pendulum.bobY - mouseY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const maxDistance = 300;
+                    
+                    if (distance < maxDistance) {
+                        // Calculate push angle
+                        const pushAngle = Math.atan2(dx, dy);
+                        
+                        // Calculate push strength (stronger when closer)
+                        const pushStrength = 0.1 * (1 - distance / maxDistance);
+                        
+                        // Apply push force
+                        const forceX = Math.sin(pushAngle) * pushStrength;
+                        const forceY = Math.cos(pushAngle) * pushStrength;
+                        
+                        pendulum.angularVelocity += forceX;
+                    }
+                });
+            });
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

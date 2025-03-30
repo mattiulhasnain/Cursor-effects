@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Cursor Effect - Interactive Learning Animation</title>
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --background: #0a192f;
+            --card-bg: rgba(28, 42, 57, 0.7);
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+            --node-color: rgba(102, 178, 255, 0.7);
+            --node-active: rgba(255, 126, 185, 0.9);
+            --connection-color: rgba(93, 187, 99, 0.5);
+            --connection-active: rgba(255, 255, 255, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            cursor: none;
+        }
+
+        .content {
+            position: relative;
+            padding: 20px;
+            max-width: 800px;
+            margin: 50px auto;
+            text-align: center;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+        }
+
+        .return-link {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 10px 20px;
+            background: rgba(93, 187, 99, 0.2);
+            border-radius: 30px;
+            z-index: 10;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+        }
+
+        .return-link:hover {
+            background: rgba(93, 187, 99, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(93, 187, 99, 0.7);
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 20px rgba(93, 187, 99, 0.7);
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .controls {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .control-btn {
+            background: rgba(93, 187, 99, 0.2);
+            color: var(--text);
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(93, 187, 99, 0.4);
+        }
+
+        .control-btn.active {
+            background: rgba(93, 187, 99, 0.6);
+        }
+
+        .stats {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 10;
+            font-size: 0.9rem;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            text-align: left;
+        }
+
+        .stats p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="content">
+        <h1>Neural Network Cursor</h1>
+        <p>Visualizes a neural network that learns from your cursor movements, creating increasingly complex patterns as it adapts to your behavior.</p>
+    </div>
+    
+    <div class="controls">
+        <button class="control-btn active" data-action="learn">Learning Mode</button>
+        <button class="control-btn" data-action="predict">Prediction Mode</button>
+        <button class="control-btn" data-action="reset">Reset Network</button>
+    </div>
+    
+    <div class="stats">
+        <p>Nodes: <span id="node-count">0</span></p>
+        <p>Connections: <span id="connection-count">0</span></p>
+        <p>Learning Cycles: <span id="cycle-count">0</span></p>
+        <p>Accuracy: <span id="accuracy">0%</span></p>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Cursor element
+            const cursor = document.querySelector('.cursor');
+            
+            // Stats elements
+            const nodeCountEl = document.getElementById('node-count');
+            const connectionCountEl = document.getElementById('connection-count');
+            const cycleCountEl = document.getElementById('cycle-count');
+            const accuracyEl = document.getElementById('accuracy');
+            
+            // Control buttons
+            const controlBtns = document.querySelectorAll('.control-btn');
+            
+            // Mouse tracking
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            let mouseSpeed = 0;
+            let mouseAngle = 0;
+            
+            // Neural network parameters
+            let mode = 'learn'; // 'learn' or 'predict'
+            let learningRate = 0.01;
+            let nodeCap = 50;
+            let connectionCap = 200;
+            let learningCycles = 0;
+            let accuracy = 0;
+            let predictions = [];
+            
+            // Network components
+            const nodes = [];
+            const connections = [];
+            
+            // Node class
+            class Node {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.targetX = x;
+                    this.targetY = y;
+                    this.radius = 4 + Math.random() * 3;
+                    this.value = Math.random();
+                    this.active = false;
+                    this.color = 'rgba(102, 178, 255, 0.7)';
+                    this.activationThreshold = 0.5 + Math.random() * 0.3;
+                    this.decay = 0.95 + Math.random() * 0.04;
+                    this.lastActive = 0;
+                }
+                
+                update() {
+                    // Move toward target position
+                    this.x += (this.targetX - this.x) * 0.05;
+                    this.y += (this.targetY - this.y) * 0.05;
+                    
+                    // Decay activation
+                    this.value *= this.decay;
+                    
+                    // Update active state
+                    if (this.value > this.activationThreshold) {
+                        this.active = true;
+                        this.lastActive = Date.now();
+                    } else if (Date.now() - this.lastActive > 500) {
+                        this.active = false;
+                    }
+                    
+                    // Update color based on activation
+                    if (this.active) {
+                        this.color = `rgba(255, 126, 185, ${Math.min(1, this.value)})`;
+                    } else {
+                        this.color = `rgba(102, 178, 255, ${0.3 + this.value * 0.4})`;
+                    }
+                }
+                
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius * (this.active ? 1.5 : 1), 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    
+                    if (this.active) {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius * 2.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 126, 185, ${0.1 * this.value})`;
+                        ctx.fill();
+                    }
+                }
+                
+                activate(value) {
+                    this.value = Math.min(1, this.value + value);
+                }
+                
+                moveTo(x, y) {
+                    this.targetX = x;
+                    this.targetY = y;
+                }
+            }
+            
+            // Connection class
+            class Connection {
+                constructor(nodeA, nodeB) {
+                    this.nodeA = nodeA;
+                    this.nodeB = nodeB;
+                    this.weight = Math.random() * 0.2 - 0.1; // Starting with small random weights
+                    this.active = false;
+                    this.color = 'rgba(93, 187, 99, 0.2)';
+                    this.width = 1;
+                }
+                
+                update() {
+                    // If source node is active, propagate activation
+                    if (this.nodeA.active) {
+                        this.nodeB.activate(this.nodeA.value * this.weight);
+                        this.active = true;
+                    } else {
+                        this.active = false;
+                    }
+                    
+                    // Update color and width based on activity
+                    if (this.active) {
+                        this.color = `rgba(255, 255, 255, ${0.2 + this.nodeA.value * 0.6})`;
+                        this.width = 1 + this.nodeA.value * 2;
+                    } else {
+                        this.color = `rgba(93, 187, 99, ${0.1 + Math.abs(this.weight) * 0.3})`;
+                        this.width = 0.5 + Math.abs(this.weight);
+                    }
+                }
+                
+                draw() {
+                    ctx.beginPath();
+                    ctx.moveTo(this.nodeA.x, this.nodeA.y);
+                    ctx.lineTo(this.nodeB.x, this.nodeB.y);
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = this.width;
+                    ctx.stroke();
+                    
+                    // Draw direction indicator
+                    if (Math.abs(this.weight) > 0.3) {
+                        const midX = (this.nodeA.x + this.nodeB.x) / 2;
+                        const midY = (this.nodeA.y + this.nodeB.y) / 2;
+                        const angle = Math.atan2(this.nodeB.y - this.nodeA.y, this.nodeB.x - this.nodeA.x);
+                        
+                        ctx.beginPath();
+                        ctx.arc(midX, midY, 2, 0, Math.PI * 2);
+                        ctx.fillStyle = this.weight > 0 ? 'rgba(93, 187, 99, 0.7)' : 'rgba(255, 126, 185, 0.7)';
+                        ctx.fill();
+                    }
+                }
+                
+                adjustWeight(delta) {
+                    this.weight += delta;
+                    // Limit weight range
+                    this.weight = Math.max(-1, Math.min(1, this.weight));
+                }
+            }
+            
+            // Initialize network
+            function initNetwork() {
+                // Create initial nodes
+                for (let i = 0; i < 20; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    nodes.push(new Node(x, y));
+                }
+                
+                // Create initial connections (sparse connectivity)
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        const targetIdx = Math.floor(Math.random() * nodes.length);
+                        if (targetIdx !== i) {
+                            connections.push(new Connection(nodes[i], nodes[targetIdx]));
+                        }
+                    }
+                }
+                
+                updateStats();
+            }
+            
+            // Add a new node near the cursor
+            function addNode() {
+                if (nodes.length >= nodeCap) return;
+                
+                const x = mouseX + (Math.random() * 100 - 50);
+                const y = mouseY + (Math.random() * 100 - 50);
+                const node = new Node(x, y);
+                nodes.push(node);
+                
+                // Connect to a few existing nodes
+                const connectionCount = Math.min(3, nodes.length - 1);
+                for (let i = 0; i < connectionCount; i++) {
+                    if (connections.length >= connectionCap) break;
+                    
+                    const targetIdx = Math.floor(Math.random() * (nodes.length - 1));
+                    connections.push(new Connection(node, nodes[targetIdx]));
+                    
+                    // Also create connection in reverse
+                    if (Math.random() < 0.5 && connections.length < connectionCap) {
+                        connections.push(new Connection(nodes[targetIdx], node));
+                    }
+                }
+                
+                updateStats();
+            }
+            
+            // Remove a connection that hasn't been active
+            function pruneConnections() {
+                if (connections.length > 5) {
+                    // Find the connection with the lowest weight magnitude
+                    let minWeightIdx = 0;
+                    let minWeight = Math.abs(connections[0].weight);
+                    
+                    for (let i = 1; i < connections.length; i++) {
+                        const weight = Math.abs(connections[i].weight);
+                        if (weight < minWeight) {
+                            minWeight = weight;
+                            minWeightIdx = i;
+                        }
+                    }
+                    
+                    // Remove it
+                    connections.splice(minWeightIdx, 1);
+                    updateStats();
+                }
+            }
+            
+            // Train the network based on mouse movement
+            function trainNetwork() {
+                // Calculate reward based on prediction accuracy
+                let reward = 0;
+                
+                if (predictions.length > 0) {
+                    const latestPrediction = predictions[predictions.length - 1];
+                    const dx = mouseX - latestPrediction.x;
+                    const dy = mouseY - latestPrediction.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Normalize distance to 0-1 (closer to 0 is better)
+                    reward = Math.max(0, 1 - distance / 200);
+                    
+                    // Update overall accuracy
+                    accuracy = accuracy * 0.95 + reward * 0.05;
+                    accuracyEl.textContent = `${Math.round(accuracy * 100)}%`;
+                }
+                
+                // Adjust weights based on activity and reward
+                for (const connection of connections) {
+                    if (connection.active) {
+                        // If both connected nodes are active, strengthen the connection
+                        if (connection.nodeA.active && connection.nodeB.active) {
+                            connection.adjustWeight(learningRate * reward);
+                        } else {
+                            connection.adjustWeight(-learningRate * (1 - reward));
+                        }
+                    }
+                }
+                
+                learningCycles++;
+                cycleCountEl.textContent = learningCycles;
+                
+                // Occasionally add nodes or prune connections
+                if (learningCycles % 30 === 0 && Math.random() < 0.3) {
+                    addNode();
+                }
+                
+                if (learningCycles % 50 === 0 && Math.random() < 0.2) {
+                    pruneConnections();
+                }
+            }
+            
+            // Make a prediction for the next cursor position
+            function predict() {
+                // Find the most active nodes
+                const activeNodes = nodes.filter(node => node.active);
+                
+                if (activeNodes.length === 0) return null;
+                
+                // Calculate predicted position based on active nodes
+                let sumX = 0;
+                let sumY = 0;
+                let sumWeight = 0;
+                
+                for (const node of activeNodes) {
+                    const weight = node.value;
+                    sumX += node.x * weight;
+                    sumY += node.y * weight;
+                    sumWeight += weight;
+                }
+                
+                if (sumWeight === 0) return null;
+                
+                return {
+                    x: sumX / sumWeight,
+                    y: sumY / sumWeight
+                };
+            }
+            
+            // Draw a prediction marker
+            function drawPrediction(prediction) {
+                ctx.beginPath();
+                ctx.arc(prediction.x, prediction.y, 10, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(prediction.x, prediction.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 126, 185, 0.7)';
+                ctx.fill();
+            }
+            
+            // Update mouse tracking
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor element
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Calculate speed and angle
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                mouseSpeed = Math.sqrt(dx * dx + dy * dy);
+                mouseAngle = Math.atan2(dy, dx);
+                
+                // Activate nodes near cursor
+                if (mode === 'learn') {
+                    activateNodesNearCursor();
+                }
+                
+                // Make a prediction and store it
+                if (mode === 'predict' && learningCycles > 100) {
+                    const prediction = predict();
+                    if (prediction) {
+                        predictions.push(prediction);
+                        
+                        // Keep only the latest prediction
+                        if (predictions.length > 5) {
+                            predictions.shift();
+                        }
+                    }
+                }
+            });
+            
+            // Handle mouse clicks
+            document.addEventListener('click', () => {
+                // Add a new node on click
+                if (mode === 'learn') {
+                    addNode();
+                }
+            });
+            
+            // Control buttons
+            controlBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const action = btn.dataset.action;
+                    
+                    if (action === 'learn' || action === 'predict') {
+                        mode = action;
+                        controlBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    } else if (action === 'reset') {
+                        resetNetwork();
+                    }
+                });
+            });
+            
+            // Activate nodes near the cursor
+            function activateNodesNearCursor() {
+                const activationRange = 100;
+                let closestNode = null;
+                let closestDist = activationRange;
+                
+                for (const node of nodes) {
+                    const dx = node.x - mouseX;
+                    const dy = node.y - mouseY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < activationRange) {
+                        // Nodes get more strongly activated the closer they are
+                        const activation = (1 - distance / activationRange) * 0.5;
+                        node.activate(activation);
+                        
+                        // Track the closest node
+                        if (distance < closestDist) {
+                            closestDist = distance;
+                            closestNode = node;
+                        }
+                    }
+                }
+                
+                // Pull the closest node toward the cursor
+                if (closestNode) {
+                    closestNode.moveTo(
+                        closestNode.x + (mouseX - closestNode.x) * 0.1,
+                        closestNode.y + (mouseY - closestNode.y) * 0.1
+                    );
+                }
+            }
+            
+            // Reset the network
+            function resetNetwork() {
+                nodes.length = 0;
+                connections.length = 0;
+                learningCycles = 0;
+                accuracy = 0;
+                predictions = [];
+                initNetwork();
+            }
+            
+            // Update stats display
+            function updateStats() {
+                nodeCountEl.textContent = nodes.length;
+                connectionCountEl.textContent = connections.length;
+            }
+            
+            // Animation loop
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw connections
+                for (const connection of connections) {
+                    connection.update();
+                    connection.draw();
+                }
+                
+                // Draw nodes
+                for (const node of nodes) {
+                    node.update();
+                    node.draw();
+                }
+                
+                // Draw predictions
+                if (mode === 'predict' && predictions.length > 0) {
+                    const latestPrediction = predictions[predictions.length - 1];
+                    drawPrediction(latestPrediction);
+                }
+                
+                // Training step in learning mode
+                if (mode === 'learn' && mouseSpeed > 1) {
+                    trainNetwork();
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Initialize and start
+            initNetwork();
+            animate();
+        });
+    </script>
+</body>
+</html> 

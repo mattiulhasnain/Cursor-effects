@@ -1,0 +1,2715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biological Growth Cursor Effect - Interactive Growth Simulation</title>
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --accent2: #ffcb57;
+            --background: #0a192f;
+            --background-light: #162d4a;
+            --card-bg: rgba(28, 42, 57, 0.8);
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            background: linear-gradient(135deg, var(--background), var(--background-light));
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            cursor: none;
+        }
+
+        .content {
+            position: relative;
+            padding: 20px;
+            max-width: 800px;
+            margin: 50px auto;
+            text-align: center;
+            z-index: 2;
+            backdrop-filter: blur(5px);
+            background: rgba(10, 25, 47, 0.5);
+            border-radius: 15px;
+            border: 1px solid rgba(93, 187, 99, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+        }
+
+        .return-link {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 10px 20px;
+            background: rgba(93, 187, 99, 0.2);
+            border-radius: 30px;
+            z-index: 10;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .return-link:hover {
+            background: rgba(93, 187, 99, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(93, 187, 99, 0.2);
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(93, 187, 99, 0.7);
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 20px rgba(93, 187, 99, 0.7);
+            transition: transform 0.1s ease-out, width 0.2s ease, height 0.2s ease;
+        }
+
+        .canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .controls-panel {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            padding: 15px;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 280px;
+        }
+
+        .controls-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            text-align: center;
+            color: var(--primary-light);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            margin-top: 15px;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider {
+            flex-grow: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(93, 187, 99, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: var(--primary-light);
+        }
+
+        .slider-value {
+            width: 30px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .control-btn {
+            background: rgba(93, 187, 99, 0.2);
+            color: var(--text);
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            padding: 8px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(93, 187, 99, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            background: rgba(93, 187, 99, 0.6);
+            box-shadow: 0 0 10px rgba(93, 187, 99, 0.3);
+        }
+
+        .utility-btn {
+            display: block;
+            width: 100%;
+            margin-bottom: 8px;
+            background: rgba(102, 178, 255, 0.2);
+            border: 1px solid rgba(102, 178, 255, 0.3);
+        }
+
+        .utility-btn:hover {
+            background: rgba(102, 178, 255, 0.4);
+        }
+
+        .clear-btn {
+            background: rgba(255, 126, 185, 0.2);
+            border: 1px solid rgba(255, 126, 185, 0.3);
+        }
+
+        .clear-btn:hover {
+            background: rgba(255, 126, 185, 0.4);
+        }
+        
+        .stats {
+            position: fixed;
+            bottom: 30px;
+            left: -250px; /* Start off-screen */
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 10;
+            font-size: 0.9rem;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            min-width: 180px;
+            transition: left 0.3s ease-in-out;
+        }
+        
+        .stats.visible {
+            left: 150px;
+        }
+        
+        .stats-key-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: var(--card-bg);
+            color: var(--primary-light);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            opacity: 0.8;
+            z-index: 9;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+        }
+        
+        .stats-title {
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--primary-light);
+            font-size: 1rem;
+        }
+        
+        .stats p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .stats-value {
+            color: var(--primary-light);
+            font-weight: 500;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--card-bg);
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="content">
+        <h1>Biological Growth Cursor</h1>
+        <p>Simulates organic growth patterns following your cursor, from fractal-like structures to plant growth and cell division.</p>
+    </div>
+    
+    <div class="controls-panel">
+        <div class="controls-title">Growth Patterns</div>
+        <div class="controls">
+            <button class="control-btn active" data-type="plant">Plant Growth</button>
+            <button class="control-btn" data-type="cellular">Cell Division</button>
+            <button class="control-btn" data-type="fractal">Fractal Branch</button>
+            <button class="control-btn" data-type="neural">Neural Growth</button>
+            <button class="control-btn" data-type="fungal">Fungal Network</button>
+            <button class="control-btn" data-type="crystal">Crystal Growth</button>
+        </div>
+        
+        <div class="control-group">
+            <label class="control-label">Growth Speed</label>
+            <div class="slider-container">
+                <input type="range" class="slider" id="growth-speed" min="1" max="10" value="5">
+                <span class="slider-value" id="growth-speed-value">5</span>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label class="control-label">Entity Lifespan</label>
+            <div class="slider-container">
+                <input type="range" class="slider" id="entity-lifespan" min="1" max="10" value="5">
+                <span class="slider-value" id="entity-lifespan-value">5</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">Max Entities</label>
+            <div class="slider-container">
+                <input type="range" class="slider" id="max-entities" min="100" max="2000" step="100" value="1000">
+                <span class="slider-value" id="max-entities-value">1000</span>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <button class="control-btn utility-btn" id="toggle-auto">Auto Generate: ON</button>
+            <button class="control-btn utility-btn" id="toggle-colorful">Enhanced Colors: OFF</button>
+            <button class="control-btn utility-btn clear-btn" data-type="clear">Clear Canvas</button>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <div class="stats-title">Growth Stats</div>
+        <p>Entities: <span id="entity-count" class="stats-value">0</span></p>
+        <p>Growth Stage: <span id="growth-stage" class="stats-value">1</span></p>
+        <p>Branches: <span id="branch-count" class="stats-value">0</span></p>
+        <p>FPS: <span id="fps-count" class="stats-value">0</span></p>
+    </div>
+    
+    <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    <div class="tooltip" id="tooltip"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Canvas setup
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Cursor element
+            const cursor = document.querySelector('.cursor');
+            const tooltip = document.getElementById('tooltip');
+            
+            // Stats elements
+            const entityCountEl = document.getElementById('entity-count');
+            const growthStageEl = document.getElementById('growth-stage');
+            const branchCountEl = document.getElementById('branch-count');
+            const fpsCountEl = document.getElementById('fps-count');
+            
+            // Control elements
+            const controlBtns = document.querySelectorAll('.control-btn');
+            const growthSpeedSlider = document.getElementById('growth-speed');
+            const growthSpeedValue = document.getElementById('growth-speed-value');
+            const entityLifespanSlider = document.getElementById('entity-lifespan');
+            const entityLifespanValue = document.getElementById('entity-lifespan-value');
+            const maxEntitiesSlider = document.getElementById('max-entities');
+            const maxEntitiesValue = document.getElementById('max-entities-value');
+            const toggleAutoBtn = document.getElementById('toggle-auto');
+            const toggleColorfulBtn = document.getElementById('toggle-colorful');
+            const statsElement = document.querySelector('.stats');
+            
+            // Mouse tracking
+            let mouseX = 0;
+            let mouseY = 0;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+            let mouseSpeed = 0;
+            let mouseOnScreen = false;
+            
+            // Growth settings
+            let growthType = 'plant'; // 'plant', 'cellular', 'fractal', 'neural'
+            let growthEntities = [];
+            let lastSpawnTime = 0;
+            let spawnInterval = 100; // ms
+            let maxEntities = 1000;
+            let growthStage = 1;
+            let branchCount = 0;
+            let entityCount = 0;
+            
+            // Growth parameters
+            let growthSpeed = 1.0;         // Multiplier for growth rate
+            let entityLifespan = 1.0;      // Multiplier for entity lifespan
+            let autoGenerate = true;       // Auto-generate entities when moving mouse
+            let enhancedColors = false;    // Use enhanced color schemes
+            
+            // Performance monitoring
+            let frameCount = 0;
+            let lastFpsUpdate = 0;
+            let fps = 0;
+            
+            // Particles for effects
+            let particles = [];
+            
+            // Colors
+            const baseColors = {
+                plant: {
+                    stem: 'rgba(93, 187, 99, 0.7)',
+                    leaf: 'rgba(141, 228, 175, 0.7)',
+                    flower: 'rgba(255, 126, 185, 0.7)'
+                },
+                cellular: {
+                    cell: 'rgba(102, 178, 255, 0.6)',
+                    membrane: 'rgba(255, 255, 255, 0.4)',
+                    nucleus: 'rgba(93, 187, 99, 0.7)'
+                },
+                fractal: {
+                    branch: 'rgba(93, 187, 99, 0.6)',
+                    node: 'rgba(255, 255, 255, 0.7)',
+                    tip: 'rgba(255, 126, 185, 0.8)'
+                },
+                neural: {
+                    axon: 'rgba(102, 178, 255, 0.6)',
+                    synapse: 'rgba(255, 126, 185, 0.7)',
+                    cell: 'rgba(255, 255, 255, 0.4)'
+                },
+                fungal: {
+                    hypha: 'rgba(225, 225, 225, 0.7)',
+                    spore: 'rgba(255, 223, 128, 0.7)',
+                    node: 'rgba(180, 180, 180, 0.6)'
+                },
+                crystal: {
+                    lattice: 'rgba(220, 240, 255, 0.7)',
+                    edge: 'rgba(255, 255, 255, 0.8)',
+                    core: 'rgba(150, 200, 255, 0.6)'
+                }
+            };
+            
+            const enhancedColorSchemes = {
+                plant: [
+                    { // Spring
+                        stem: 'rgba(93, 187, 99, 0.7)',
+                        leaf: 'rgba(141, 228, 175, 0.7)',
+                        flower: 'rgba(255, 126, 185, 0.7)'
+                    },
+                    { // Autumn
+                        stem: 'rgba(139, 69, 19, 0.7)',
+                        leaf: 'rgba(255, 165, 0, 0.7)',
+                        flower: 'rgba(255, 69, 0, 0.7)'
+                    },
+                    { // Tropical
+                        stem: 'rgba(0, 128, 128, 0.7)',
+                        leaf: 'rgba(0, 255, 127, 0.7)',
+                        flower: 'rgba(255, 215, 0, 0.7)'
+                    }
+                ],
+                cellular: [
+                    { // Default Blue
+                        cell: 'rgba(102, 178, 255, 0.6)',
+                        membrane: 'rgba(255, 255, 255, 0.4)',
+                        nucleus: 'rgba(93, 187, 99, 0.7)'
+                    },
+                    { // Red Blood Cell
+                        cell: 'rgba(255, 102, 102, 0.6)',
+                        membrane: 'rgba(255, 204, 204, 0.4)',
+                        nucleus: 'rgba(153, 0, 0, 0.7)'
+                    },
+                    { // Neuron
+                        cell: 'rgba(200, 200, 255, 0.6)',
+                        membrane: 'rgba(230, 230, 255, 0.4)',
+                        nucleus: 'rgba(153, 153, 255, 0.7)'
+                    }
+                ],
+                fractal: [
+                    { // Green
+                        branch: 'rgba(93, 187, 99, 0.6)',
+                        node: 'rgba(255, 255, 255, 0.7)',
+                        tip: 'rgba(255, 126, 185, 0.8)'
+                    },
+                    { // Gold
+                        branch: 'rgba(218, 165, 32, 0.6)',
+                        node: 'rgba(255, 215, 0, 0.7)',
+                        tip: 'rgba(255, 223, 0, 0.8)'
+                    },
+                    { // Purple
+                        branch: 'rgba(138, 43, 226, 0.6)',
+                        node: 'rgba(186, 85, 211, 0.7)',
+                        tip: 'rgba(230, 230, 250, 0.8)'
+                    }
+                ],
+                neural: [
+                    { // Blue
+                        axon: 'rgba(102, 178, 255, 0.6)',
+                        synapse: 'rgba(255, 126, 185, 0.7)',
+                        cell: 'rgba(255, 255, 255, 0.4)'
+                    },
+                    { // Green
+                        axon: 'rgba(0, 204, 102, 0.6)',
+                        synapse: 'rgba(255, 215, 0, 0.7)',
+                        cell: 'rgba(240, 255, 240, 0.4)'
+                    },
+                    { // Purple
+                        axon: 'rgba(147, 112, 219, 0.6)',
+                        synapse: 'rgba(255, 215, 0, 0.7)',
+                        cell: 'rgba(240, 230, 255, 0.4)'
+                    }
+                ],
+                fungal: [
+                    { // White/Beige
+                        hypha: 'rgba(225, 225, 225, 0.7)',
+                        spore: 'rgba(255, 223, 128, 0.7)',
+                        node: 'rgba(180, 180, 180, 0.6)'
+                    },
+                    { // Brown/Earth
+                        hypha: 'rgba(165, 135, 105, 0.7)',
+                        spore: 'rgba(200, 160, 120, 0.7)',
+                        node: 'rgba(140, 100, 80, 0.6)'
+                    },
+                    { // Bioluminescent
+                        hypha: 'rgba(160, 255, 200, 0.7)',
+                        spore: 'rgba(120, 255, 180, 0.8)',
+                        node: 'rgba(100, 200, 150, 0.6)'
+                    }
+                ],
+                crystal: [
+                    { // Ice Blue
+                        lattice: 'rgba(220, 240, 255, 0.7)',
+                        edge: 'rgba(255, 255, 255, 0.8)',
+                        core: 'rgba(150, 200, 255, 0.6)'
+                    },
+                    { // Amethyst
+                        lattice: 'rgba(200, 180, 255, 0.7)',
+                        edge: 'rgba(220, 200, 255, 0.8)',
+                        core: 'rgba(150, 100, 255, 0.6)'
+                    },
+                    { // Emerald
+                        lattice: 'rgba(180, 255, 200, 0.7)',
+                        edge: 'rgba(200, 255, 220, 0.8)',
+                        core: 'rgba(100, 200, 150, 0.6)'
+                    }
+                ]
+            };
+            
+            // Helper function to get colors based on settings
+            function getColors(type) {
+                if (!enhancedColors) {
+                    return baseColors[type];
+                }
+                
+                // Use a semi-random color scheme from enhanced colors
+                const schemes = enhancedColorSchemes[type];
+                const index = Math.floor(Math.random() * schemes.length);
+                return schemes[index];
+            }
+            
+            // FPS calculation
+            function calculateFPS(timestamp) {
+                if (!lastFpsUpdate) {
+                    lastFpsUpdate = timestamp;
+                    return 0;
+                }
+                
+                if (timestamp - lastFpsUpdate >= 1000) {
+                    fps = frameCount;
+                    frameCount = 0;
+                    lastFpsUpdate = timestamp;
+                    fpsCountEl.textContent = fps;
+                }
+                
+                frameCount++;
+                return fps;
+            }
+            
+            // Utility function to create particle effects
+            function createParticleEffect(x, y, color, count = 5, size = 3, duration = 500) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 0.5 + Math.random() * 2;
+                    const particle = {
+                        x,
+                        y,
+                        size: size * (0.5 + Math.random() * 0.5),
+                        color,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        alpha: 1,
+                        life: duration * (0.7 + Math.random() * 0.3)
+                    };
+                    
+                    particles.push(particle);
+                }
+            }
+            
+            // Utility function to draw particles
+            function updateAndDrawParticles(deltaTime) {
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha = p.life / (p.life + deltaTime);
+                    p.life -= deltaTime;
+                    
+                    if (p.life <= 0) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color.replace(/[\d\.]+\)$/, p.alpha + ')');
+                    ctx.fill();
+                }
+            }
+            
+            // Initialize sliders
+            function initControls() {
+                // Growth speed slider
+                growthSpeedSlider.addEventListener('input', () => {
+                    const value = parseInt(growthSpeedSlider.value);
+                    growthSpeed = value / 5; // 0.2 to 2.0
+                    growthSpeedValue.textContent = value;
+                });
+                
+                // Entity lifespan slider
+                entityLifespanSlider.addEventListener('input', () => {
+                    const value = parseInt(entityLifespanSlider.value);
+                    entityLifespan = value / 5; // 0.2 to 2.0
+                    entityLifespanValue.textContent = value;
+                });
+                
+                // Max entities slider
+                maxEntitiesSlider.addEventListener('input', () => {
+                    maxEntities = parseInt(maxEntitiesSlider.value);
+                    maxEntitiesValue.textContent = maxEntities;
+                });
+                
+                // Toggle auto-generate
+                toggleAutoBtn.addEventListener('click', () => {
+                    autoGenerate = !autoGenerate;
+                    toggleAutoBtn.textContent = `Auto Generate: ${autoGenerate ? 'ON' : 'OFF'}`;
+                });
+                
+                // Toggle enhanced colors
+                toggleColorfulBtn.addEventListener('click', () => {
+                    enhancedColors = !enhancedColors;
+                    toggleColorfulBtn.textContent = `Enhanced Colors: ${enhancedColors ? 'ON' : 'OFF'}`;
+                });
+                
+                // Growth type buttons
+                controlBtns.forEach(btn => {
+                    if (btn.dataset.type) {
+                        btn.addEventListener('click', () => {
+                            const type = btn.dataset.type;
+                            
+                            if (type === 'clear') {
+                                // Clear all entities
+                                growthEntities = [];
+                                entityCount = 0;
+                                branchCount = 0;
+                                growthStage = 1;
+                                updateStats();
+                            } else {
+                                // Set growth type
+                                growthType = type;
+                                
+                                // Update active button
+                                controlBtns.forEach(b => {
+                                    if (b.dataset.type && b.dataset.type !== 'clear') {
+                                        b.classList.remove('active');
+                                    }
+                                });
+                                btn.classList.add('active');
+                                
+                                // Update cursor appearance
+                                updateCursorAppearance();
+                            }
+                        });
+                        
+                        // Show tooltip on hover
+                        btn.addEventListener('mouseenter', (e) => {
+                            let tooltipText = '';
+                            switch(btn.dataset.type) {
+                                case 'plant': 
+                                    tooltipText = 'Plants grow stems, branches, leaves, and flowers';
+                                    break;
+                                case 'cellular':
+                                    tooltipText = 'Cells divide and grow into colonies';
+                                    break;
+                                case 'fractal':
+                                    tooltipText = 'Recursive branching patterns that form complex structures';
+                                    break;
+                                case 'neural':
+                                    tooltipText = 'Neural networks with growing axons and synapses';
+                                    break;
+                                case 'fungal':
+                                    tooltipText = 'Fungal networks with spreading hyphae and spore formation';
+                                    break;
+                                case 'crystal':
+                                    tooltipText = 'Crystalline structures with geometric growth patterns';
+                                    break;
+                                case 'clear':
+                                    tooltipText = 'Clear all growth patterns';
+                                    break;
+                            }
+                            
+                            tooltip.textContent = tooltipText;
+                            tooltip.style.left = `${e.pageX}px`;
+                            tooltip.style.top = `${e.pageY - 30}px`;
+                            tooltip.style.opacity = '1';
+                        });
+                        
+                        btn.addEventListener('mouseleave', () => {
+                            tooltip.style.opacity = '0';
+                        });
+                    }
+                });
+            }
+            
+            // Update cursor appearance based on growth type
+            function updateCursorAppearance() {
+                // Reset cursor style
+                cursor.style.width = '20px';
+                cursor.style.height = '20px';
+                cursor.style.backgroundColor = 'rgba(93, 187, 99, 0.7)';
+                cursor.style.boxShadow = '0 0 20px rgba(93, 187, 99, 0.7)';
+                cursor.style.mixBlendMode = 'screen';
+                
+                // Adjust based on growth type
+                switch(growthType) {
+                    case 'plant':
+                        cursor.style.backgroundColor = 'rgba(93, 187, 99, 0.7)';
+                        cursor.style.boxShadow = '0 0 20px rgba(93, 187, 99, 0.7)';
+                        break;
+                    case 'cellular':
+                        cursor.style.backgroundColor = 'rgba(102, 178, 255, 0.7)';
+                        cursor.style.boxShadow = '0 0 20px rgba(102, 178, 255, 0.7)';
+                        break;
+                    case 'fractal':
+                        cursor.style.backgroundColor = 'rgba(255, 126, 185, 0.7)';
+                        cursor.style.boxShadow = '0 0 20px rgba(255, 126, 185, 0.7)';
+                        break;
+                    case 'neural':
+                        cursor.style.backgroundColor = 'rgba(255, 215, 0, 0.7)';
+                        cursor.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.7)';
+                        break;
+                    case 'fungal':
+                        cursor.style.backgroundColor = 'rgba(225, 225, 225, 0.7)';
+                        cursor.style.boxShadow = '0 0 20px rgba(225, 225, 225, 0.7)';
+                        cursor.style.borderRadius = '40% 40% 50% 50%';
+                        break;
+                    case 'crystal':
+                        cursor.style.backgroundColor = 'rgba(220, 240, 255, 0.7)';
+                        cursor.style.boxShadow = '0 0 20px rgba(220, 240, 255, 0.7)';
+                        cursor.style.borderRadius = '4px';
+                        cursor.style.transform = 'translate(-50%, -50%) rotate(45deg)';
+                        break;
+                }
+                
+                // Add pulse animation for visual feedback
+                cursor.style.animation = 'pulse 1.5s infinite';
+                setTimeout(() => {
+                    cursor.style.animation = 'none';
+                    // Reset any special transforms after pulse animation
+                    if (growthType !== 'crystal') {
+                        cursor.style.transform = 'translate(-50%, -50%)';
+                        cursor.style.borderRadius = '50%';
+                    }
+                }, 1500);
+            }
+            
+            // Update stats display
+            function updateStats() {
+                entityCountEl.textContent = entityCount;
+                growthStageEl.textContent = growthStage;
+                branchCountEl.textContent = branchCount;
+            }
+            
+            // Create a new entity at the cursor position
+            function createEntity() {
+                const now = Date.now();
+                if (now - lastSpawnTime < spawnInterval) return;
+                lastSpawnTime = now;
+                
+                if (growthEntities.length >= maxEntities) return;
+                
+                let entity;
+                
+                switch (growthType) {
+                    case 'plant':
+                        entity = new Plant(mouseX, mouseY);
+                        break;
+                    case 'cellular':
+                        entity = new Cell(mouseX, mouseY);
+                        break;
+                    case 'fractal':
+                        entity = new Fractal(mouseX, mouseY);
+                        break;
+                    case 'neural':
+                        entity = new Neural(mouseX, mouseY);
+                        break;
+                    case 'fungal':
+                        entity = new Fungal(mouseX, mouseY);
+                        break;
+                    case 'crystal':
+                        entity = new Crystal(mouseX, mouseY);
+                        break;
+                }
+                
+                if (entity) {
+                    growthEntities.push(entity);
+                    entityCount++;
+                    
+                    // Create spawn effect
+                    createParticleEffect(
+                        mouseX, 
+                        mouseY, 
+                        cursor.style.backgroundColor, 
+                        8, 
+                        4, 
+                        800
+                    );
+                }
+            }
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                prevMouseX = mouseX;
+                prevMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor element
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Calculate speed
+                const dx = mouseX - prevMouseX;
+                const dy = mouseY - prevMouseY;
+                mouseSpeed = Math.sqrt(dx * dx + dy * dy);
+                
+                // Set mouse as on screen
+                mouseOnScreen = true;
+                
+                // Create entities at cursor position if moving fast enough
+                if (mouseSpeed > 2 && autoGenerate) {
+                    createEntity();
+                }
+            });
+            
+            // Handle mouse leaving the window
+            document.addEventListener('mouseleave', () => {
+                mouseOnScreen = false;
+            });
+            
+            // Handle mouse entering the window
+            document.addEventListener('mouseenter', () => {
+                mouseOnScreen = true;
+            });
+            
+            // Handle mouse clicks
+            document.addEventListener('click', () => {
+                // Create an entity on click
+                createEntity();
+            });
+            
+            // Initialize controls
+            initControls();
+            
+            // Set initial cursor appearance
+            updateCursorAppearance();
+            
+            // Add key hint for stats toggle
+            const keyHint = document.createElement('div');
+            keyHint.className = 'stats-key-hint';
+            keyHint.textContent = 'Press S to toggle stats';
+            document.body.appendChild(keyHint);
+            
+            // Add keyboard event listener for stats toggle
+            document.addEventListener('keydown', (e) => {
+                if (e.key.toLowerCase() === 's') {
+                    statsElement.classList.toggle('visible');
+                }
+            });
+            
+            // Now we'll implement the entity classes and animation loop
+            // These will be added in the next edit
+            
+            // Plant growth entity
+            class Plant {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.startX = x;
+                    this.startY = y;
+                    this.segments = [{ x, y, angle: -Math.PI/2, length: 0, maxLength: 20 + Math.random() * 30 }];
+                    this.branches = [];
+                    this.growthRate = (0.2 + Math.random() * 0.3) * growthSpeed;
+                    this.maxSegments = 5 + Math.floor(Math.random() * 5);
+                    this.branchProbability = 0.3;
+                    this.age = 0;
+                    this.maxAge = (500 + Math.random() * 500) * entityLifespan;
+                    this.isDead = false;
+                    this.hasFlower = Math.random() > 0.5;
+                    this.flowerSize = 0;
+                    this.maxFlowerSize = 5 + Math.random() * 10;
+                    this.flowerGrowthRate = 0.1 * growthSpeed;
+                    this.leafPositions = [];
+                    this.leafSize = 3 + Math.random() * 3;
+                    this.generation = 1;
+                    this.colors = getColors('plant');
+                    this.hasFruit = Math.random() > 0.8;
+                    this.fruitSize = 0;
+                    this.maxFruitSize = 4 + Math.random() * 6;
+                    this.leafAnimation = Math.random() * Math.PI * 2;
+                    this.attractToLight = Math.random() > 0.5;
+                    this.windFactor = Math.random() * 0.02;
+                    this.timeOffset = Math.random() * 1000;
+                }
+                
+                grow(timestamp) {
+                    if (this.isDead) return;
+                    
+                    this.age++;
+                    if (this.age > this.maxAge) {
+                        this.isDead = true;
+                        
+                        // Create decay particle effect
+                        if (Math.random() > 0.7) {
+                            const lastSegment = this.segments[this.segments.length - 1];
+                            const endX = lastSegment.x + Math.cos(lastSegment.angle) * lastSegment.length;
+                            const endY = lastSegment.y + Math.sin(lastSegment.angle) * lastSegment.length;
+                            
+                            createParticleEffect(
+                                endX, 
+                                endY, 
+                                this.colors.leaf, 
+                                5, 
+                                3, 
+                                1000
+                            );
+                        }
+                        
+                        return;
+                    }
+                    
+                    // If attractToLight is true, angle slightly towards light source (mouse)
+                    if (this.attractToLight && mouseOnScreen && this.segments.length > 0 && this.segments.length < this.maxSegments) {
+                        const currentSegment = this.segments[this.segments.length - 1];
+                        const endX = currentSegment.x + Math.cos(currentSegment.angle) * currentSegment.length;
+                        const endY = currentSegment.y + Math.sin(currentSegment.angle) * currentSegment.length;
+                        
+                        // Calculate angle to mouse
+                        const angleToMouse = Math.atan2(mouseY - endY, mouseX - endX);
+                        
+                        // Slightly adjust the angle of the next segment towards light
+                        const lastSegment = this.segments[this.segments.length - 1];
+                        lastSegment.angle += (angleToMouse - lastSegment.angle) * 0.01;
+                    }
+                    
+                    // Add gentle wind movement
+                    if (this.windFactor > 0) {
+                        const windTime = (timestamp + this.timeOffset) * 0.001;
+                        const windAngle = Math.sin(windTime) * this.windFactor;
+                        
+                        for (let i = 1; i < this.segments.length; i++) {
+                            this.segments[i].angle += windAngle * (i / this.segments.length);
+                        }
+                    }
+                    
+                    // Grow current segment
+                    const currentSegment = this.segments[this.segments.length - 1];
+                    if (currentSegment.length < currentSegment.maxLength) {
+                        currentSegment.length += this.growthRate;
+                    } else if (this.segments.length < this.maxSegments) {
+                        // Add new segment with slight angle variation
+                        const lastX = currentSegment.x + Math.cos(currentSegment.angle) * currentSegment.length;
+                        const lastY = currentSegment.y + Math.sin(currentSegment.angle) * currentSegment.length;
+                        const newAngle = currentSegment.angle + (Math.random() * 0.5 - 0.25);
+                        
+                        this.segments.push({
+                            x: lastX,
+                            y: lastY,
+                            angle: newAngle,
+                            length: 0,
+                            maxLength: Math.max(5, currentSegment.maxLength * 0.8)
+                        });
+                        
+                        // Add leaf at the joint
+                        if (Math.random() < 0.7) {
+                            const leafAngle = currentSegment.angle + (Math.random() > 0.5 ? Math.PI/4 : -Math.PI/4);
+                            this.leafPositions.push({
+                                x: lastX,
+                                y: lastY,
+                                angle: leafAngle,
+                                size: this.leafSize,
+                                animation: Math.random() * Math.PI * 2
+                            });
+                        }
+                        
+                        // Maybe branch
+                        if (Math.random() < this.branchProbability && this.generation < 3) {
+                            const branchAngle = currentSegment.angle + (Math.random() > 0.5 ? Math.PI/3 : -Math.PI/3);
+                            
+                            // Create a new plant as a branch
+                            const branch = new Plant(lastX, lastY);
+                            branch.segments[0].angle = branchAngle;
+                            branch.generation = this.generation + 1;
+                            branch.maxSegments = Math.max(2, this.maxSegments - 2);
+                            branch.growthRate = this.growthRate * 0.8;
+                            branch.maxAge = this.maxAge * 0.7;
+                            branch.colors = this.colors;
+                            
+                            this.branches.push(branch);
+                            branchCount++;
+                            
+                            // Create branching particle effect
+                            createParticleEffect(
+                                lastX, 
+                                lastY, 
+                                this.colors.leaf, 
+                                3, 
+                                2, 
+                                500
+                            );
+                        }
+                    } else if (this.hasFlower && this.flowerSize < this.maxFlowerSize) {
+                        // Grow flower at the tip
+                        this.flowerSize += this.flowerGrowthRate;
+                    } else if (this.hasFruit && this.flowerSize >= this.maxFlowerSize * 0.8 && this.fruitSize < this.maxFruitSize) {
+                        // Grow fruit after flower
+                        this.fruitSize += this.flowerGrowthRate * 0.5;
+                    }
+                    
+                    // Animate leaf movement
+                    if (timestamp) {
+                        this.leafAnimation += 0.02;
+                        for (const leaf of this.leafPositions) {
+                            leaf.animation += 0.02;
+                        }
+                    }
+                    
+                    // Grow branches
+                    for (const branch of this.branches) {
+                        branch.grow(timestamp);
+                    }
+                }
+                
+                draw() {
+                    // Draw stem segments
+                    ctx.strokeStyle = this.colors.stem;
+                    ctx.lineWidth = Math.max(1, 3 - this.generation);
+                    
+                    let lastX = this.startX;
+                    let lastY = this.startY;
+                    
+                    for (const segment of this.segments) {
+                        const endX = segment.x + Math.cos(segment.angle) * segment.length;
+                        const endY = segment.y + Math.sin(segment.angle) * segment.length;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(segment.x, segment.y);
+                        ctx.lineTo(endX, endY);
+                        ctx.stroke();
+                        
+                        lastX = endX;
+                        lastY = endY;
+                    }
+                    
+                    // Draw leaves
+                    ctx.fillStyle = this.colors.leaf;
+                    for (const leaf of this.leafPositions) {
+                        ctx.save();
+                        ctx.translate(leaf.x, leaf.y);
+                        
+                        // Add subtle leaf animation
+                        const leafWave = Math.sin(leaf.animation) * 0.1;
+                        ctx.rotate(leaf.angle + leafWave);
+                        
+                        // Draw leaf shape
+                        ctx.beginPath();
+                        ctx.ellipse(leaf.size/2, 0, leaf.size, leaf.size/2, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Add leaf veins for more detail
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(leaf.size, 0);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                        
+                        ctx.restore();
+                    }
+                    
+                    // Draw flower if exists and plant is mature
+                    if (this.hasFlower && this.flowerSize > 0) {
+                        const lastSegment = this.segments[this.segments.length - 1];
+                        const flowerX = lastSegment.x + Math.cos(lastSegment.angle) * lastSegment.length;
+                        const flowerY = lastSegment.y + Math.sin(lastSegment.angle) * lastSegment.length;
+                        
+                        // Draw petals
+                        const petalCount = 5 + Math.floor(Math.random() * 3);
+                        const petalSize = this.flowerSize * 0.7;
+                        
+                        for (let i = 0; i < petalCount; i++) {
+                            const angle = (i / petalCount) * Math.PI * 2;
+                            
+                            ctx.save();
+                            ctx.translate(flowerX, flowerY);
+                            ctx.rotate(angle);
+                            
+                            ctx.beginPath();
+                            ctx.ellipse(petalSize, 0, petalSize * 0.5, petalSize * 0.3, 0, 0, Math.PI * 2);
+                            ctx.fillStyle = this.colors.flower;
+                            ctx.fill();
+                            
+                            ctx.restore();
+                        }
+                        
+                        // Draw flower center
+                        ctx.fillStyle = 'rgba(255, 253, 180, 0.9)';
+                        ctx.beginPath();
+                        ctx.arc(flowerX, flowerY, this.flowerSize * 0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Add subtle glow effect
+                        ctx.beginPath();
+                        ctx.arc(flowerX, flowerY, this.flowerSize * 1.2, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 253, 180, 0.1)`;
+                        ctx.fill();
+                    }
+                    
+                    // Draw fruit if it exists and is growing
+                    if (this.hasFruit && this.fruitSize > 0) {
+                        const lastSegment = this.segments[this.segments.length - 1];
+                        const fruitX = lastSegment.x + Math.cos(lastSegment.angle) * lastSegment.length;
+                        const fruitY = lastSegment.y + Math.sin(lastSegment.angle) * lastSegment.length;
+                        
+                        // Draw fruit
+                        ctx.beginPath();
+                        ctx.arc(fruitX, fruitY, this.fruitSize, 0, Math.PI * 2);
+                        
+                        // Choose fruit color based on scheme
+                        let fruitColor;
+                        if (this.colors.stem.includes('139, 69, 19')) { // Autumn
+                            fruitColor = 'rgba(204, 51, 0, 0.8)';
+                        } else if (this.colors.stem.includes('0, 128, 128')) { // Tropical
+                            fruitColor = 'rgba(255, 165, 0, 0.8)';
+                        } else { // Default/Spring
+                            fruitColor = 'rgba(255, 0, 127, 0.7)';
+                        }
+                        
+                        ctx.fillStyle = fruitColor;
+                        ctx.fill();
+                        
+                        // Add highlight
+                        ctx.beginPath();
+                        ctx.arc(fruitX - this.fruitSize * 0.3, fruitY - this.fruitSize * 0.3, this.fruitSize * 0.2, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                        ctx.fill();
+                    }
+                    
+                    // Draw branches
+                    for (const branch of this.branches) {
+                        branch.draw();
+                    }
+                }
+            }
+            
+            // Cell division entity
+            class Cell {
+                constructor(x, y, radius = 10, generation = 1) {
+                    this.x = x;
+                    this.y = y;
+                    this.radius = radius;
+                    this.targetRadius = radius;
+                    this.growthRate = (0.1 + Math.random() * 0.1) * growthSpeed;
+                    this.divisionSize = 15 + Math.random() * 10;
+                    this.age = 0;
+                    this.maxAge = (300 + Math.random() * 300) * entityLifespan;
+                    this.isDead = false;
+                    this.generation = generation;
+                    this.maxGeneration = 4;
+                    this.children = [];
+                    this.dividing = false;
+                    this.divisionProgress = 0;
+                    this.divisionSpeed = 0.02 * growthSpeed;
+                    this.velocity = {
+                        x: (Math.random() - 0.5) * 0.5,
+                        y: (Math.random() - 0.5) * 0.5
+                    };
+                    this.colors = getColors('cellular');
+                    this.specialized = Math.random() > 0.7 && generation > 1;
+                    this.specialization = Math.floor(Math.random() * 3); // 0: normal, 1: nutrient, 2: defensive
+                    this.pulsePhase = Math.random() * Math.PI * 2;
+                    this.interactWithNeighbors = Math.random() > 0.3;
+                    this.connections = [];
+                }
+                
+                update(timestamp) {
+                    if (this.isDead) return;
+                    
+                    this.age++;
+                    
+                    // Pulse effect
+                    if (timestamp) {
+                        this.pulsePhase += 0.05;
+                        if (this.pulsePhase > Math.PI * 2) this.pulsePhase -= Math.PI * 2;
+                    }
+                    
+                    if (this.age > this.maxAge) {
+                        this.isDead = true;
+                        
+                        // Create cell death particle effect
+                        createParticleEffect(
+                            this.x, 
+                            this.y, 
+                            this.colors.cell, 
+                            8, 
+                            this.radius * 0.2, 
+                            800
+                        );
+                        
+                        return;
+                    }
+                    
+                    // Grow to target size
+                    if (this.radius < this.targetRadius) {
+                        this.radius += this.growthRate;
+                    }
+                    
+                    // Move slightly
+                    this.x += this.velocity.x;
+                    this.y += this.velocity.y;
+                    
+                    // Bounce off walls
+                    if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) {
+                        this.velocity.x *= -1;
+                    }
+                    if (this.y - this.radius < 0 || this.y + this.radius > canvas.height) {
+                        this.velocity.y *= -1;
+                    }
+                    
+                    // Check for division
+                    if (!this.dividing && this.radius >= this.divisionSize && this.generation < this.maxGeneration) {
+                        this.dividing = true;
+                    }
+                    
+                    // Process division
+                    if (this.dividing) {
+                        this.divisionProgress += this.divisionSpeed;
+                        
+                        if (this.divisionProgress >= 1) {
+                            // Create two daughter cells
+                            const angle = Math.random() * Math.PI * 2;
+                            const distance = this.radius * 0.8;
+                            
+                            const child1 = new Cell(
+                                this.x + Math.cos(angle) * distance,
+                                this.y + Math.sin(angle) * distance,
+                                this.radius * 0.6,
+                                this.generation + 1
+                            );
+                            child1.colors = this.colors;
+                            
+                            const child2 = new Cell(
+                                this.x + Math.cos(angle + Math.PI) * distance,
+                                this.y + Math.sin(angle + Math.PI) * distance,
+                                this.radius * 0.6,
+                                this.generation + 1
+                            );
+                            child2.colors = this.colors;
+                            
+                            // Chance for mutation in one child
+                            if (enhancedColors && Math.random() > 0.7) {
+                                const newColors = getColors('cellular');
+                                if (Math.random() > 0.5) {
+                                    child1.colors = newColors;
+                                } else {
+                                    child2.colors = newColors;
+                                }
+                            }
+                            
+                            this.children.push(child1, child2);
+                            
+                            // Create division particle effect
+                            createParticleEffect(
+                                this.x, 
+                                this.y, 
+                                this.colors.membrane, 
+                                6, 
+                                this.radius * 0.3, 
+                                600
+                            );
+                            
+                            // Mark parent as dead
+                            this.isDead = true;
+                            
+                            entityCount += 2;
+                            branchCount += 2;
+                        }
+                    }
+                    
+                    // If cell is specialized, perform special behavior
+                    if (this.specialized) {
+                        switch(this.specialization) {
+                            case 1: // Nutrient cell - grows larger
+                                this.targetRadius = this.divisionSize * 0.7;
+                                break;
+                            case 2: // Defensive cell - moves more actively
+                                this.velocity.x = Math.cos(timestamp * 0.001 + this.x * 0.1) * 0.7;
+                                this.velocity.y = Math.sin(timestamp * 0.001 + this.y * 0.1) * 0.7;
+                                break;
+                        }
+                    }
+                    
+                    // Form connections with nearby cells if interactive
+                    if (this.interactWithNeighbors && growthEntities.length > 1 && timestamp % 30 === 0) {
+                        this.connections = [];
+                        
+                        for (const entity of growthEntities) {
+                            if (entity !== this && entity instanceof Cell && !entity.isDead) {
+                                const dx = entity.x - this.x;
+                                const dy = entity.y - this.y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                
+                                if (distance < (this.radius + entity.radius) * 2.5) {
+                                    this.connections.push({
+                                        cell: entity,
+                                        distance: distance
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Update children
+                    for (const child of this.children) {
+                        child.update(timestamp);
+                    }
+                }
+                
+                draw() {
+                    if (this.isDead && this.children.length > 0) {
+                        // Draw children instead
+                        for (const child of this.children) {
+                            child.draw();
+                        }
+                        return;
+                    }
+                    
+                    if (this.isDead) return;
+                    
+                    // Draw connections to nearby cells first (behind the cells)
+                    if (this.interactWithNeighbors && this.connections.length > 0) {
+                        for (const connection of this.connections) {
+                            const other = connection.cell;
+                            const distance = connection.distance;
+                            
+                            // Calculate alpha based on distance
+                            const maxDist = (this.radius + other.radius) * 2.5;
+                            const alpha = 0.2 * (1 - distance / maxDist);
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(this.x, this.y);
+                            ctx.lineTo(other.x, other.y);
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                    
+                    // Calculate pulse effect
+                    const pulse = Math.sin(this.pulsePhase) * 0.1;
+                    const displayRadius = this.radius * (1 + pulse);
+                    
+                    // Draw cell membrane
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, displayRadius, 0, Math.PI * 2);
+                    
+                    // Adjust appearance based on specialization
+                    let cellColor = this.colors.cell;
+                    if (this.specialized) {
+                        switch(this.specialization) {
+                            case 1: // Nutrient
+                                cellColor = 'rgba(152, 251, 152, 0.6)'; // Pale green
+                                break;
+                            case 2: // Defensive
+                                cellColor = 'rgba(220, 20, 60, 0.6)'; // Crimson
+                                break;
+                        }
+                    }
+                    
+                    ctx.fillStyle = cellColor;
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, displayRadius, 0, Math.PI * 2);
+                    ctx.strokeStyle = this.colors.membrane;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Draw nucleus
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, displayRadius * 0.3, 0, Math.PI * 2);
+                    ctx.fillStyle = this.colors.nucleus;
+                    ctx.fill();
+                    
+                    // Draw organelles for specialized cells
+                    if (this.specialized) {
+                        for (let i = 0; i < 3; i++) {
+                            const angle = (i / 3) * Math.PI * 2;
+                            const orgX = this.x + Math.cos(angle) * displayRadius * 0.5;
+                            const orgY = this.y + Math.sin(angle) * displayRadius * 0.5;
+                            const orgSize = displayRadius * 0.2;
+                            
+                            ctx.beginPath();
+                            ctx.arc(orgX, orgY, orgSize, 0, Math.PI * 2);
+                            
+                            switch(this.specialization) {
+                                case 1: // Nutrient storage
+                                    ctx.fillStyle = 'rgba(50, 205, 50, 0.7)';
+                                    break;
+                                case 2: // Defensive granules
+                                    ctx.fillStyle = 'rgba(255, 99, 71, 0.7)';
+                                    break;
+                                default:
+                                    ctx.fillStyle = 'rgba(169, 169, 169, 0.5)';
+                            }
+                            
+                            ctx.fill();
+                        }
+                    }
+                    
+                    // Draw division process
+                    if (this.dividing) {
+                        const halfPI = Math.PI / 2;
+                        
+                        // Draw division line
+                        ctx.beginPath();
+                        ctx.moveTo(
+                            this.x - Math.cos(halfPI) * displayRadius,
+                            this.y - Math.sin(halfPI) * displayRadius
+                        );
+                        ctx.lineTo(
+                            this.x + Math.cos(halfPI) * displayRadius,
+                            this.y + Math.sin(halfPI) * displayRadius
+                        );
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        // Draw chromosome-like structures
+                        const chromosomeOffset = displayRadius * 0.6 * this.divisionProgress;
+                        
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y - chromosomeOffset * 0.5, displayRadius * 0.2, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255, 126, 185, 0.7)';
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y + chromosomeOffset * 0.5, displayRadius * 0.2, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255, 126, 185, 0.7)';
+                        ctx.fill();
+                        
+                        // Connect chromosomes with lines
+                        ctx.beginPath();
+                        ctx.moveTo(this.x - displayRadius * 0.2, this.y - chromosomeOffset * 0.3);
+                        ctx.lineTo(this.x - displayRadius * 0.2, this.y + chromosomeOffset * 0.3);
+                        ctx.moveTo(this.x + displayRadius * 0.2, this.y - chromosomeOffset * 0.3);
+                        ctx.lineTo(this.x + displayRadius * 0.2, this.y + chromosomeOffset * 0.3);
+                        ctx.strokeStyle = 'rgba(255, 126, 185, 0.4)';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Fractal branching entity
+            class Fractal {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.angle = -Math.PI / 2; // Start growing upward
+                    this.length = 0;
+                    this.maxLength = (50 + Math.random() * 30) * (0.8 + growthSpeed * 0.4);
+                    this.growthRate = (0.5 + Math.random() * 0.5) * growthSpeed;
+                    this.branches = [];
+                    this.generation = 1;
+                    this.maxGeneration = 4;
+                    this.branchAngle = Math.PI / (3 + Math.random() * 2);
+                    this.isDead = false;
+                    this.hasFinishedGrowing = false;
+                    this.age = 0;
+                    this.maxAge = (2000 + Math.random() * 1000) * entityLifespan;
+                    this.colors = getColors('fractal');
+                    this.complexity = 1 + Math.floor(Math.random() * 3); // 1-3, affects branching pattern
+                    this.oscillate = Math.random() > 0.5;
+                    this.oscillationPhase = Math.random() * Math.PI * 2;
+                    this.oscillationSpeed = 0.01 + Math.random() * 0.03;
+                    this.fading = false;
+                    this.fadeProgress = 0;
+                    this.branchDelay = 0;
+                }
+                
+                grow(timestamp) {
+                    if (this.isDead) return;
+                    
+                    // Age the fractal
+                    this.age++;
+                    if (this.age > this.maxAge) {
+                        if (!this.fading) {
+                            this.fading = true;
+                            this.fadeProgress = 0;
+                        }
+                    }
+                    
+                    // Fade out if it's time to die
+                    if (this.fading) {
+                        this.fadeProgress += 0.01;
+                        if (this.fadeProgress >= 1) {
+                            this.isDead = true;
+                            return;
+                        }
+                    }
+                    
+                    // Add oscillation effect if enabled
+                    if (this.oscillate && timestamp) {
+                        this.oscillationPhase += this.oscillationSpeed;
+                        const oscillationAmount = Math.sin(this.oscillationPhase) * 0.05;
+                        this.angle += oscillationAmount;
+                    }
+                    
+                    // Grow the main branch
+                    if (this.length < this.maxLength) {
+                        this.length += this.growthRate;
+                    } else if (!this.hasFinishedGrowing && this.generation < this.maxGeneration) {
+                        if (this.branchDelay < 10) {
+                            this.branchDelay++;
+                            return;
+                        }
+                        
+                        // Create branches when main branch is fully grown
+                        this.hasFinishedGrowing = true;
+                        
+                        // Create branch pattern based on complexity
+                        if (this.complexity === 1) {
+                            // Simple bifurcation (2 branches)
+                            this.createBranch(-this.branchAngle);
+                            this.createBranch(this.branchAngle);
+                        } else if (this.complexity === 2) {
+                            // Three-way branching
+                            this.createBranch(-this.branchAngle);
+                            this.createBranch(0);
+                            this.createBranch(this.branchAngle);
+                        } else {
+                            // Complex pattern with multiple branches at different angles
+                            const numBranches = 3 + Math.floor(Math.random() * 2);
+                            for (let i = 0; i < numBranches; i++) {
+                                const angle = (i / numBranches) * Math.PI - Math.PI/2;
+                                this.createBranch(angle);
+                            }
+                        }
+                        
+                        // Create branching particle effect
+                        createParticleEffect(
+                            this.x + Math.cos(this.angle) * this.length,
+                            this.y + Math.sin(this.angle) * this.length,
+                            this.colors.node,
+                            5,
+                            2,
+                            800
+                        );
+                    }
+                    
+                    // Grow all branches
+                    for (const branch of this.branches) {
+                        branch.grow(timestamp);
+                    }
+                }
+                
+                createBranch(angleOffset) {
+                    const endX = this.x + Math.cos(this.angle) * this.length;
+                    const endY = this.y + Math.sin(this.angle) * this.length;
+                    
+                    const branch = new Fractal(endX, endY);
+                    branch.angle = this.angle + angleOffset;
+                    branch.maxLength = this.maxLength * 0.7;
+                    branch.generation = this.generation + 1;
+                    branch.complexity = this.complexity;
+                    branch.colors = this.colors;
+                    
+                    this.branches.push(branch);
+                    branchCount++;
+                }
+                
+                draw() {
+                    // Calculate opacity based on fade state
+                    let opacity = 1;
+                    if (this.fading) {
+                        opacity = 1 - this.fadeProgress;
+                    }
+                    
+                    // Draw main branch
+                    const endX = this.x + Math.cos(this.angle) * this.length;
+                    const endY = this.y + Math.sin(this.angle) * this.length;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(endX, endY);
+                    
+                    // Apply color with opacity
+                    const branchColor = this.colors.branch.replace(/[\d\.]+\)$/, (opacity * 0.6) + ')');
+                    ctx.strokeStyle = branchColor;
+                    ctx.lineWidth = Math.max(1, 4 - this.generation);
+                    ctx.stroke();
+                    
+                    // Draw node at the start
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, Math.max(1, 3 - this.generation * 0.5), 0, Math.PI * 2);
+                    const nodeColor = this.colors.node.replace(/[\d\.]+\)$/, (opacity * 0.7) + ')');
+                    ctx.fillStyle = nodeColor;
+                    ctx.fill();
+                    
+                    // Draw tip
+                    if (!this.hasFinishedGrowing) {
+                        ctx.beginPath();
+                        ctx.arc(endX, endY, Math.max(1, 3 - this.generation * 0.5), 0, Math.PI * 2);
+                        const tipColor = this.colors.tip.replace(/[\d\.]+\)$/, (opacity * 0.8) + ')');
+                        ctx.fillStyle = tipColor;
+                        ctx.fill();
+                    }
+                    
+                    // Add a subtle glow effect for first generation
+                    if (this.generation === 1 && this.length > 10) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.x, this.y);
+                        ctx.lineTo(endX, endY);
+                        ctx.strokeStyle = this.colors.tip.replace(/[\d\.]+\)$/, '0.1)');
+                        ctx.lineWidth = 8 - this.generation * 2;
+                        ctx.stroke();
+                    }
+                    
+                    // Draw all branches
+                    for (const branch of this.branches) {
+                        branch.draw();
+                    }
+                }
+            }
+            
+            // Neural growth entity
+            class Neural {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.cell = {
+                        x: x,
+                        y: y,
+                        radius: 8 + Math.random() * 4,
+                        pulsePhase: Math.random() * Math.PI * 2
+                    };
+                    this.axons = [];
+                    this.synapses = [];
+                    this.age = 0;
+                    this.maxAge = (1000 + Math.random() * 1000) * entityLifespan;
+                    this.growthRate = (0.3 + Math.random() * 0.4) * growthSpeed;
+                    this.branchProbability = 0.005 * growthSpeed;
+                    this.synapseFormationDistance = 100;
+                    this.isDead = false;
+                    this.colors = getColors('neural');
+                    this.activeState = Math.random() > 0.5;
+                    this.activationInterval = 100 + Math.random() * 200;
+                    this.lastActivation = 0;
+                    this.fadeLevel = 0;
+                    this.hasTargets = false;
+                    this.targets = [];
+                    this.connectionAttempts = 0;
+                }
+                
+                update(timestamp) {
+                    if (this.isDead) return;
+                    
+                    this.age++;
+                    if (this.age > this.maxAge) {
+                        this.isDead = true;
+                        
+                        // Create cell death particle effect
+                        createParticleEffect(
+                            this.cell.x, 
+                            this.cell.y, 
+                            this.colors.cell, 
+                            8, 
+                            this.cell.radius * 0.3, 
+                            1000
+                        );
+                        
+                        return;
+                    }
+                    
+                    // Pulse the neuron cell body
+                    if (timestamp) {
+                        this.cell.pulsePhase += 0.05;
+                        if (this.cell.pulsePhase > Math.PI * 2) this.cell.pulsePhase -= Math.PI * 2;
+                    }
+                    
+                    // Find potential targets to connect to
+                    if (!this.hasTargets && this.connectionAttempts < 3) {
+                        this.findTargets();
+                        this.connectionAttempts++;
+                    }
+                    
+                    // Grow axons towards targets
+                    if (this.targets.length > 0 && this.axons.length < 3) {
+                        if (Math.random() < 0.03 * growthSpeed) {
+                            const target = this.targets[Math.floor(Math.random() * this.targets.length)];
+                            
+                            this.axons.push({
+                                startX: this.cell.x,
+                                startY: this.cell.y,
+                                points: [{ x: this.cell.x, y: this.cell.y }],
+                                targetEntity: target,
+                                targetX: target.cell.x,
+                                targetY: target.cell.y,
+                                growing: true,
+                                length: 0,
+                                speed: this.growthRate,
+                                angle: Math.atan2(target.cell.y - this.cell.y, target.cell.x - this.cell.x),
+                                reachedTarget: false,
+                                lastSegmentTime: timestamp || 0
+                            });
+                        }
+                    } else if (this.axons.length === 0) {
+                        // If no targets, grow in random directions
+                        if (Math.random() < 0.03 * growthSpeed) {
+                            const angle = Math.random() * Math.PI * 2;
+                            
+                            this.axons.push({
+                                startX: this.cell.x,
+                                startY: this.cell.y,
+                                points: [{ x: this.cell.x, y: this.cell.y }],
+                                targetEntity: null,
+                                targetX: this.cell.x + Math.cos(angle) * 200,
+                                targetY: this.cell.y + Math.sin(angle) * 200,
+                                growing: true,
+                                length: 0,
+                                speed: this.growthRate,
+                                angle: angle,
+                                reachedTarget: false,
+                                lastSegmentTime: timestamp || 0
+                            });
+                        }
+                    }
+                    
+                    // Update axon growth
+                    for (const axon of this.axons) {
+                        if (!axon.growing) continue;
+                        
+                        // If target is another neural cell, update its position
+                        if (axon.targetEntity && !axon.targetEntity.isDead) {
+                            axon.targetX = axon.targetEntity.cell.x;
+                            axon.targetY = axon.targetEntity.cell.y;
+                        }
+                        
+                        // Calculate direction to target
+                        const lastPoint = axon.points[axon.points.length - 1];
+                        const dx = axon.targetX - lastPoint.x;
+                        const dy = axon.targetY - lastPoint.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Adjust angle slightly towards target with some randomness
+                        const targetAngle = Math.atan2(dy, dx);
+                        const angleDiff = targetAngle - axon.angle;
+                        // Normalize angle difference to -PI to PI
+                        const normalizedDiff = Math.atan2(Math.sin(angleDiff), Math.cos(angleDiff));
+                        axon.angle += normalizedDiff * 0.1 + (Math.random() * 0.1 - 0.05);
+                        
+                        // Extend axon in the current direction
+                        axon.length += axon.speed;
+                        
+                        // Add new point every so often to create natural curves
+                        if (timestamp && timestamp - axon.lastSegmentTime > 50 / growthSpeed) {
+                            const newX = lastPoint.x + Math.cos(axon.angle) * 10;
+                            const newY = lastPoint.y + Math.sin(axon.angle) * 10;
+                            
+                            axon.points.push({ x: newX, y: newY });
+                            axon.lastSegmentTime = timestamp;
+                            
+                            // Random branching
+                            if (Math.random() < this.branchProbability && axon.points.length > 2) {
+                                const branchAngle = axon.angle + (Math.random() > 0.5 ? Math.PI/3 : -Math.PI/3);
+                                
+                                this.axons.push({
+                                    startX: newX,
+                                    startY: newY,
+                                    points: [{ x: newX, y: newY }],
+                                    targetEntity: null,
+                                    targetX: newX + Math.cos(branchAngle) * 100,
+                                    targetY: newY + Math.sin(branchAngle) * 100,
+                                    growing: true,
+                                    length: 0,
+                                    speed: axon.speed * 0.8,
+                                    angle: branchAngle,
+                                    reachedTarget: false,
+                                    lastSegmentTime: timestamp
+                                });
+                                
+                                branchCount++;
+                            }
+                        }
+                        
+                        // Check if axon has reached target
+                        if (distance < 10) {
+                            axon.growing = false;
+                            axon.reachedTarget = true;
+                            
+                            // Create synapse at connection point
+                            if (axon.targetEntity) {
+                                this.synapses.push({
+                                    x: lastPoint.x,
+                                    y: lastPoint.y,
+                                    size: 5 + Math.random() * 3,
+                                    pulsePhase: Math.random() * Math.PI * 2,
+                                    connected: true,
+                                    target: axon.targetEntity,
+                                    axonIndex: this.axons.indexOf(axon)
+                                });
+                                
+                                // Create synapse formation particle effect
+                                createParticleEffect(
+                                    lastPoint.x, 
+                                    lastPoint.y, 
+                                    this.colors.synapse, 
+                                    6, 
+                                    4, 
+                                    1000
+                                );
+                            }
+                        }
+                        
+                        // Stop growing if axon gets too long
+                        if (axon.points.length > 30) {
+                            axon.growing = false;
+                        }
+                    }
+                    
+                    // Neural activation (firing)
+                    if (timestamp && timestamp - this.lastActivation > this.activationInterval) {
+                        this.activeState = !this.activeState;
+                        this.lastActivation = timestamp;
+                        
+                        // If active, propagate through synapses
+                        if (this.activeState) {
+                            for (const synapse of this.synapses) {
+                                if (synapse.connected && synapse.target && !synapse.target.isDead) {
+                                    synapse.target.activeState = true;
+                                    synapse.target.lastActivation = timestamp;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Fade level for activation visualization
+                    if (this.activeState) {
+                        this.fadeLevel = Math.min(1, this.fadeLevel + 0.1);
+                    } else {
+                        this.fadeLevel = Math.max(0, this.fadeLevel - 0.05);
+                    }
+                    
+                    // Update synapse pulse
+                    for (const synapse of this.synapses) {
+                        synapse.pulsePhase += 0.1;
+                        if (synapse.pulsePhase > Math.PI * 2) synapse.pulsePhase -= Math.PI * 2;
+                    }
+                }
+                
+                findTargets() {
+                    this.hasTargets = true;
+                    
+                    for (const entity of growthEntities) {
+                        if (entity !== this && entity instanceof Neural && !entity.isDead) {
+                            const dx = entity.cell.x - this.cell.x;
+                            const dy = entity.cell.y - this.cell.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < this.synapseFormationDistance) {
+                                this.targets.push(entity);
+                                
+                                // Limit number of targets
+                                if (this.targets.length >= 3) break;
+                            }
+                        }
+                    }
+                }
+                
+                draw() {
+                    if (this.isDead) return;
+                    
+                    // Calculate pulse effect
+                    const pulse = Math.sin(this.cell.pulsePhase) * 0.1;
+                    const displayRadius = this.cell.radius * (1 + pulse);
+                    
+                    // Draw axons
+                    for (const axon of this.axons) {
+                        if (axon.points.length < 2) continue;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(axon.startX, axon.startY);
+                        
+                        for (const point of axon.points) {
+                            ctx.lineTo(point.x, point.y);
+                        }
+                        
+                        // Adjust color based on activation state
+                        const activeColor = `rgba(255, 215, 0, ${0.3 + this.fadeLevel * 0.6})`;
+                        const normalColor = this.colors.axon;
+                        ctx.strokeStyle = this.activeState ? activeColor : normalColor;
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        // Add glow effect when active
+                        if (this.fadeLevel > 0.3) {
+                            ctx.beginPath();
+                            ctx.moveTo(axon.startX, axon.startY);
+                            
+                            for (const point of axon.points) {
+                                ctx.lineTo(point.x, point.y);
+                            }
+                            
+                            ctx.strokeStyle = `rgba(255, 215, 0, ${this.fadeLevel * 0.2})`;
+                            ctx.lineWidth = 6;
+                            ctx.stroke();
+                        }
+                    }
+                    
+                    // Draw synapses at end of axons
+                    for (const synapse of this.synapses) {
+                        const synapsePulse = Math.sin(synapse.pulsePhase) * 0.2;
+                        const synapseSize = synapse.size * (1 + synapsePulse + this.fadeLevel * 0.2);
+                        
+                        ctx.beginPath();
+                        ctx.arc(synapse.x, synapse.y, synapseSize, 0, Math.PI * 2);
+                        
+                        const activeColor = `rgba(255, 215, 0, ${0.6 + this.fadeLevel * 0.4})`;
+                        const normalColor = this.colors.synapse;
+                        ctx.fillStyle = this.activeState ? activeColor : normalColor;
+                        ctx.fill();
+                        
+                        // Add glow effect when active
+                        if (this.fadeLevel > 0.3) {
+                            ctx.beginPath();
+                            ctx.arc(synapse.x, synapse.y, synapseSize * 1.5, 0, Math.PI * 2);
+                            ctx.fillStyle = `rgba(255, 215, 0, ${this.fadeLevel * 0.2})`;
+                            ctx.fill();
+                        }
+                    }
+                    
+                    // Draw cell body (soma)
+                    ctx.beginPath();
+                    ctx.arc(this.cell.x, this.cell.y, displayRadius, 0, Math.PI * 2);
+                    
+                    // Cell color changes with activation
+                    const activeColor = `rgba(255, 215, 0, ${0.6 + this.fadeLevel * 0.4})`;
+                    const normalColor = this.colors.cell;
+                    ctx.fillStyle = this.activeState ? activeColor : normalColor;
+                    ctx.fill();
+                    
+                    // Draw cell outline
+                    ctx.beginPath();
+                    ctx.arc(this.cell.x, this.cell.y, displayRadius, 0, Math.PI * 2);
+                    ctx.strokeStyle = this.colors.axon;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    
+                    // Add nucleus/organelle
+                    ctx.beginPath();
+                    ctx.arc(this.cell.x, this.cell.y, displayRadius * 0.5, 0, Math.PI * 2);
+                    ctx.fillStyle = this.colors.synapse.replace(/[\d\.]+\)$/, '0.4)');
+                    ctx.fill();
+                    
+                    // Add glow effect when active
+                    if (this.fadeLevel > 0.3) {
+                        ctx.beginPath();
+                        ctx.arc(this.cell.x, this.cell.y, displayRadius * 2, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 215, 0, ${this.fadeLevel * 0.15})`;
+                        ctx.fill();
+                    }
+                }
+            }
+            
+            // Fungal growth entity
+            class Fungal {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.hyphae = []; // Fungal filaments
+                    this.nodes = []; // Connection points where branching occurs
+                    this.spores = []; // Reproductive spores
+                    this.age = 0;
+                    this.maxAge = (1500 + Math.random() * 1000) * entityLifespan;
+                    this.growthRate = (0.4 + Math.random() * 0.3) * growthSpeed;
+                    this.isDead = false;
+                    this.colors = getColors('fungal');
+                    this.branchProbability = 0.03 * growthSpeed;
+                    this.sporeProbability = 0.01 * growthSpeed;
+                    this.maxHyphaeLength = 25;
+                    this.maxSpores = 8;
+                    this.pulsePhase = Math.random() * Math.PI * 2;
+                    
+                    // Create initial node
+                    this.nodes.push({
+                        x: x,
+                        y: y,
+                        age: 0,
+                        radius: 5 + Math.random() * 3,
+                        connections: 0,
+                        pulsePhase: Math.random() * Math.PI * 2
+                    });
+                    
+                    // Create initial growth directions
+                    const directions = 2 + Math.floor(Math.random() * 3);
+                    for (let i = 0; i < directions; i++) {
+                        const angle = (i / directions) * Math.PI * 2;
+                        this.createHypha(x, y, angle);
+                    }
+                }
+                
+                update(timestamp) {
+                    if (this.isDead) return;
+                    
+                    this.age++;
+                    if (this.age > this.maxAge) {
+                        this.isDead = true;
+                        
+                        // Create decay effect
+                        for (const node of this.nodes) {
+                            if (Math.random() > 0.7) {
+                                createParticleEffect(
+                                    node.x, 
+                                    node.y, 
+                                    this.colors.node, 
+                                    5, 
+                                    3, 
+                                    1000
+                                );
+                            }
+                        }
+                        
+                        return;
+                    }
+                    
+                    // Update pulse effect
+                    if (timestamp) {
+                        this.pulsePhase += 0.03;
+                        if (this.pulsePhase > Math.PI * 2) this.pulsePhase -= Math.PI * 2;
+                        
+                        // Update node pulses
+                        for (const node of this.nodes) {
+                            node.pulsePhase += 0.03;
+                            if (node.pulsePhase > Math.PI * 2) node.pulsePhase -= Math.PI * 2;
+                        }
+                    }
+                    
+                    // Update hyphae growth
+                    for (let i = this.hyphae.length - 1; i >= 0; i--) {
+                        const hypha = this.hyphae[i];
+                        
+                        // Grow hypha
+                        if (hypha.length < hypha.maxLength) {
+                            hypha.length += this.growthRate;
+                            
+                            // Calculate tip position
+                            const tipX = hypha.startX + Math.cos(hypha.angle) * hypha.length;
+                            const tipY = hypha.startY + Math.sin(hypha.angle) * hypha.length;
+                            
+                            // Occasionally branch
+                            if (hypha.length > 10 && Math.random() < this.branchProbability) {
+                                // Create branch point/node
+                                const nodeX = hypha.startX + Math.cos(hypha.angle) * hypha.length;
+                                const nodeY = hypha.startY + Math.sin(hypha.angle) * hypha.length;
+                                
+                                const node = {
+                                    x: nodeX,
+                                    y: nodeY,
+                                    age: 0,
+                                    radius: 3 + Math.random() * 2,
+                                    connections: 1, // Connected to current hypha
+                                    pulsePhase: Math.random() * Math.PI * 2
+                                };
+                                
+                                this.nodes.push(node);
+                                
+                                // Create branch (new hypha) at an angle
+                                const branchAngle = hypha.angle + (Math.random() > 0.5 ? Math.PI/4 : -Math.PI/4);
+                                this.createHypha(nodeX, nodeY, branchAngle);
+                                
+                                branchCount++;
+                                
+                                // Create branching effect
+                                if (Math.random() > 0.7) {
+                                    createParticleEffect(
+                                        nodeX, 
+                                        nodeY, 
+                                        this.colors.node, 
+                                        3, 
+                                        2, 
+                                        500
+                                    );
+                                }
+                            }
+                            
+                            // Occasionally create spore
+                            if (this.spores.length < this.maxSpores && 
+                                hypha.length > hypha.maxLength * 0.8 && 
+                                Math.random() < this.sporeProbability) {
+                                const sporeX = hypha.startX + Math.cos(hypha.angle) * hypha.length;
+                                const sporeY = hypha.startY + Math.sin(hypha.angle) * hypha.length;
+                                
+                                this.spores.push({
+                                    x: sporeX,
+                                    y: sporeY,
+                                    size: 0,
+                                    maxSize: 5 + Math.random() * 3,
+                                    growthRate: 0.1 * this.growthRate,
+                                    angle: Math.random() * Math.PI * 2,
+                                    rotationSpeed: (Math.random() - 0.5) * 0.02,
+                                    pulsePhase: Math.random() * Math.PI * 2
+                                });
+                                
+                                // Create spore formation effect
+                                createParticleEffect(
+                                    sporeX, 
+                                    sporeY, 
+                                    this.colors.spore, 
+                                    4, 
+                                    3, 
+                                    600
+                                );
+                            }
+                            
+                            // Adjust angle slightly for more natural growth
+                            hypha.angle += (Math.random() - 0.5) * 0.05;
+                        } else if (!hypha.hasFinishedGrowing) {
+                            // Create terminal node
+                            const nodeX = hypha.startX + Math.cos(hypha.angle) * hypha.length;
+                            const nodeY = hypha.startY + Math.sin(hypha.angle) * hypha.length;
+                            
+                            this.nodes.push({
+                                x: nodeX,
+                                y: nodeY,
+                                age: 0,
+                                radius: 2 + Math.random() * 1.5,
+                                connections: 1,
+                                pulsePhase: Math.random() * Math.PI * 2
+                            });
+                            
+                            hypha.hasFinishedGrowing = true;
+                            
+                            // Maybe create new growth from this point
+                            if (Math.random() < 0.4 && this.hyphae.length < 30) {
+                                const newAngle = hypha.angle + (Math.random() * Math.PI - Math.PI/2);
+                                this.createHypha(nodeX, nodeY, newAngle);
+                            }
+                        }
+                    }
+                    
+                    // Update spores
+                    for (const spore of this.spores) {
+                        if (spore.size < spore.maxSize) {
+                            spore.size += spore.growthRate;
+                        }
+                        
+                        // Rotate spore
+                        spore.angle += spore.rotationSpeed;
+                        
+                        // Update pulse
+                        spore.pulsePhase += 0.05;
+                        if (spore.pulsePhase > Math.PI * 2) spore.pulsePhase -= Math.PI * 2;
+                    }
+                    
+                    // Update node ages
+                    for (const node of this.nodes) {
+                        node.age++;
+                    }
+                }
+                
+                createHypha(startX, startY, angle) {
+                    if (this.hyphae.length >= 30) return; // Limit total hyphae
+                    
+                    this.hyphae.push({
+                        startX,
+                        startY,
+                        angle,
+                        length: 0,
+                        maxLength: this.maxHyphaeLength + Math.random() * 15,
+                        hasFinishedGrowing: false
+                    });
+                }
+                
+                draw() {
+                    if (this.isDead) return;
+                    
+                    // Draw hyphae
+                    ctx.strokeStyle = this.colors.hypha;
+                    ctx.lineWidth = 2;
+                    
+                    for (const hypha of this.hyphae) {
+                        const endX = hypha.startX + Math.cos(hypha.angle) * hypha.length;
+                        const endY = hypha.startY + Math.sin(hypha.angle) * hypha.length;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(hypha.startX, hypha.startY);
+                        ctx.lineTo(endX, endY);
+                        ctx.stroke();
+                    }
+                    
+                    // Draw nodes
+                    for (const node of this.nodes) {
+                        // Add pulse effect
+                        const pulse = Math.sin(node.pulsePhase) * 0.2;
+                        const displayRadius = node.radius * (1 + pulse);
+                        
+                        ctx.beginPath();
+                        ctx.arc(node.x, node.y, displayRadius, 0, Math.PI * 2);
+                        ctx.fillStyle = this.colors.node;
+                        ctx.fill();
+                    }
+                    
+                    // Draw spores
+                    for (const spore of this.spores) {
+                        const pulse = Math.sin(spore.pulsePhase) * 0.15;
+                        const displaySize = spore.size * (1 + pulse);
+                        
+                        ctx.save();
+                        ctx.translate(spore.x, spore.y);
+                        ctx.rotate(spore.angle);
+                        
+                        // Draw spore
+                        ctx.beginPath();
+                        ctx.arc(0, 0, displaySize, 0, Math.PI * 2);
+                        ctx.fillStyle = this.colors.spore;
+                        ctx.fill();
+                        
+                        // Add spore detail
+                        ctx.beginPath();
+                        ctx.arc(displaySize * 0.3, -displaySize * 0.3, displaySize * 0.3, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.fill();
+                        
+                        ctx.restore();
+                    }
+                    
+                    // Add glow effect around nodes for bioluminescent fungi
+                    if (this.colors.hypha.includes('160, 255, 200')) {
+                        for (const node of this.nodes) {
+                            ctx.beginPath();
+                            ctx.arc(node.x, node.y, node.radius * 4, 0, Math.PI * 2);
+                            ctx.fillStyle = `rgba(160, 255, 200, ${0.1 + Math.sin(this.pulsePhase) * 0.05})`;
+                            ctx.fill();
+                        }
+                    }
+                }
+            }
+            
+            // Crystal growth entity
+            class Crystal {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.faces = []; // Crystal faces
+                    this.age = 0;
+                    this.maxAge = (2000 + Math.random() * 1500) * entityLifespan;
+                    this.growthRate = (0.3 + Math.random() * 0.3) * growthSpeed;
+                    this.isDead = false;
+                    this.colors = getColors('crystal');
+                    this.faceProbability = 0.03 * growthSpeed;
+                    this.type = Math.floor(Math.random() * 4); // 0: cube, 1: hexagonal, 2: triangular, 3: rhombic
+                    this.rotation = Math.random() * Math.PI * 2;
+                    this.rotationSpeed = (Math.random() - 0.5) * 0.01;
+                    this.scale = 0;
+                    this.maxScale = 15 + Math.random() * 15;
+                    this.pulsePhase = Math.random() * Math.PI * 2;
+                    this.hasMatured = false;
+                    this.initialFaces = 0;
+                    this.facesCreated = false;
+                    this.oscillation = {
+                        angle: 0,
+                        speed: 0.02 + Math.random() * 0.02,
+                        amplitude: 0.1 + Math.random() * 0.1
+                    };
+                    this.latticeLines = [];
+                    
+                    // Create initial crystal structure
+                    this.createInitialStructure();
+                }
+                
+                createInitialStructure() {
+                    // Different shapes based on crystal type
+                    switch(this.type) {
+                        case 0: // Cube-like
+                            this.initialFaces = 4;
+                            for (let i = 0; i < 4; i++) {
+                                const angle = (i / 4) * Math.PI * 2;
+                                this.createFace(angle, 1.0);
+                            }
+                            break;
+                            
+                        case 1: // Hexagonal
+                            this.initialFaces = 6;
+                            for (let i = 0; i < 6; i++) {
+                                const angle = (i / 6) * Math.PI * 2;
+                                this.createFace(angle, 1.0);
+                            }
+                            break;
+                            
+                        case 2: // Triangular
+                            this.initialFaces = 3;
+                            for (let i = 0; i < 3; i++) {
+                                const angle = (i / 3) * Math.PI * 2;
+                                this.createFace(angle, 1.0);
+                            }
+                            break;
+                            
+                        case 3: // Rhombic
+                            this.initialFaces = 4;
+                            for (let i = 0; i < 4; i++) {
+                                const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+                                this.createFace(angle, 1.0);
+                            }
+                            break;
+                    }
+                    
+                    this.facesCreated = true;
+                    
+                    // Create lattice lines
+                    const lineCount = 2 + Math.floor(Math.random() * 3);
+                    for (let i = 0; i < lineCount; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        this.latticeLines.push({
+                            angle: angle,
+                            length: 0,
+                            maxLength: this.maxScale * 0.8,
+                            width: 0.5 + Math.random()
+                        });
+                    }
+                }
+                
+                createFace(angle, sizeRatio = 0.7) {
+                    const edgeRatio = Math.random() * 0.2 + 0.1; // Edge size relative to face
+                    
+                    this.faces.push({
+                        angle: angle,
+                        sizeRatio: sizeRatio,
+                        scale: 0,
+                        maxScale: this.maxScale * sizeRatio,
+                        growthDelay: this.faces.length * 20, // Delayed growth for each face
+                        growthStart: false,
+                        edgeRatio: edgeRatio,
+                        pulsePhase: Math.random() * Math.PI * 2,
+                        oscillationOffset: Math.random() * Math.PI * 2
+                    });
+                    
+                    branchCount++;
+                }
+                
+                update(timestamp) {
+                    if (this.isDead) return;
+                    
+                    // Aging
+                    this.age++;
+                    if (this.age > this.maxAge) {
+                        this.isDead = true;
+                        
+                        // Create shattering effect on death
+                        const particleCount = 10 + Math.floor(Math.random() * 10);
+                        for (let i = 0; i < particleCount; i++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const distance = Math.random() * this.maxScale;
+                            const particleX = this.x + Math.cos(angle) * distance;
+                            const particleY = this.y + Math.sin(angle) * distance;
+                            
+                            createParticleEffect(
+                                particleX, 
+                                particleY, 
+                                this.colors.edge, 
+                                3 + Math.random() * 3, 
+                                2 + Math.random() * 2, 
+                                800 + Math.random() * 500
+                            );
+                        }
+                        
+                        return;
+                    }
+                    
+                    // Update pulse and oscillation
+                    if (timestamp) {
+                        this.pulsePhase += 0.02;
+                        if (this.pulsePhase > Math.PI * 2) this.pulsePhase -= Math.PI * 2;
+                        
+                        this.oscillation.angle += this.oscillation.speed;
+                        
+                        // Update face pulses
+                        for (const face of this.faces) {
+                            face.pulsePhase += 0.02;
+                            if (face.pulsePhase > Math.PI * 2) face.pulsePhase -= Math.PI * 2;
+                        }
+                    }
+                    
+                    // Initial growth of the crystal
+                    if (this.scale < this.maxScale) {
+                        this.scale += this.growthRate;
+                        
+                        // Create growth particle effect
+                        if (Math.random() > 0.96) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const distance = this.scale * 0.8;
+                            createParticleEffect(
+                                this.x + Math.cos(angle) * distance, 
+                                this.y + Math.sin(angle) * distance, 
+                                this.colors.edge, 
+                                2, 
+                                1, 
+                                400
+                            );
+                        }
+                    } else if (!this.hasMatured) {
+                        this.hasMatured = true;
+                        
+                        // Create completion effect
+                        const particleCount = 15;
+                        for (let i = 0; i < particleCount; i++) {
+                            const angle = (i / particleCount) * Math.PI * 2;
+                            const distance = this.scale;
+                            createParticleEffect(
+                                this.x + Math.cos(angle) * distance, 
+                                this.y + Math.sin(angle) * distance, 
+                                this.colors.edge, 
+                                3, 
+                                2, 
+                                800
+                            );
+                        }
+                    }
+                    
+                    // Rotate crystal
+                    this.rotation += this.rotationSpeed;
+                    
+                    // Update face growth
+                    for (const face of this.faces) {
+                        if (this.age > face.growthDelay) {
+                            face.growthStart = true;
+                        }
+                        
+                        if (face.growthStart && face.scale < face.maxScale) {
+                            face.scale += this.growthRate * 0.8;
+                        }
+                    }
+                    
+                    // Occasional face addition for growing crystals
+                    if (this.hasMatured && this.facesCreated && this.faces.length < this.initialFaces + 6 && Math.random() < this.faceProbability) {
+                        const angle = Math.random() * Math.PI * 2;
+                        this.createFace(angle);
+                        
+                        // Create growth particle effect
+                        createParticleEffect(
+                            this.x + Math.cos(angle) * this.scale, 
+                            this.y + Math.sin(angle) * this.scale, 
+                            this.colors.edge, 
+                            4, 
+                            3, 
+                            600
+                        );
+                    }
+                    
+                    // Update lattice lines
+                    for (const line of this.latticeLines) {
+                        if (line.length < line.maxLength) {
+                            line.length += this.growthRate * 0.5;
+                        }
+                    }
+                }
+                
+                draw() {
+                    if (this.isDead) return;
+                    
+                    // Apply pulse and oscillation effects
+                    const pulse = Math.sin(this.pulsePhase) * 0.05;
+                    const oscillationEffect = Math.sin(this.oscillation.angle) * this.oscillation.amplitude;
+                    
+                    // Save canvas state
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rotation + oscillationEffect);
+                    
+                    // Draw inner crystal core
+                    ctx.beginPath();
+                    
+                    switch(this.type) {
+                        case 0: // Square
+                            ctx.rect(-this.scale * (1 + pulse) * 0.5, -this.scale * (1 + pulse) * 0.5, 
+                                    this.scale * (1 + pulse), this.scale * (1 + pulse));
+                            break;
+                        case 1: // Hexagon
+                            this.drawPolygon(6, this.scale * (1 + pulse) * 0.5);
+                            break;
+                        case 2: // Triangle
+                            this.drawPolygon(3, this.scale * (1 + pulse) * 0.5);
+                            break;
+                        case 3: // Diamond
+                            ctx.rotate(Math.PI / 4);
+                            ctx.rect(-this.scale * (1 + pulse) * 0.5, -this.scale * (1 + pulse) * 0.5, 
+                                    this.scale * (1 + pulse), this.scale * (1 + pulse));
+                            ctx.rotate(-Math.PI / 4);
+                            break;
+                    }
+                    
+                    ctx.fillStyle = this.colors.core;
+                    ctx.fill();
+                    
+                    // Draw lattice lines
+                    ctx.strokeStyle = this.colors.edge.replace('0.8', '0.3');
+                    
+                    for (const line of this.latticeLines) {
+                        ctx.lineWidth = line.width;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(Math.cos(line.angle) * line.length, Math.sin(line.angle) * line.length);
+                        ctx.stroke();
+                    }
+                    
+                    // Draw crystal faces
+                    for (const face of this.faces) {
+                        if (!face.growthStart || face.scale < 1) continue;
+                        
+                        const facePulse = Math.sin(face.pulsePhase) * 0.05;
+                        const faceOscillation = Math.sin(this.oscillation.angle + face.oscillationOffset) * (this.oscillation.amplitude * 0.7);
+                        
+                        ctx.save();
+                        ctx.rotate(face.angle + faceOscillation);
+                        
+                        // Draw face
+                        ctx.beginPath();
+                        switch(this.type) {
+                            case 0: // Square face
+                                ctx.rect(face.scale * 0.5, -face.scale * 0.25, 
+                                        face.scale * 0.5, face.scale * 0.5);
+                                break;
+                            case 1: // Hexagonal face
+                                ctx.beginPath();
+                                ctx.moveTo(this.scale * 0.5, 0);
+                                ctx.lineTo(this.scale * 0.5 + face.scale * 0.3, -face.scale * 0.2);
+                                ctx.lineTo(this.scale * 0.5 + face.scale * 0.3, face.scale * 0.2);
+                                ctx.closePath();
+                                break;
+                            case 2: // Triangle face
+                                ctx.beginPath();
+                                ctx.moveTo(this.scale * 0.5, 0);
+                                ctx.lineTo(this.scale * 0.5 + face.scale * 0.4, -face.scale * 0.2);
+                                ctx.lineTo(this.scale * 0.5 + face.scale * 0.4, face.scale * 0.2);
+                                ctx.closePath();
+                                break;
+                            case 3: // Diamond face
+                                ctx.save();
+                                ctx.translate(this.scale * 0.5, 0);
+                                ctx.rotate(Math.PI / 4);
+                                ctx.rect(-face.scale * 0.25, -face.scale * 0.25, 
+                                        face.scale * 0.5, face.scale * 0.5);
+                                ctx.restore();
+                                break;
+                        }
+                        
+                        // Fill the face
+                        ctx.fillStyle = this.colors.lattice;
+                        ctx.fill();
+                        
+                        // Draw edge highlight
+                        ctx.strokeStyle = this.colors.edge;
+                        ctx.lineWidth = face.scale * face.edgeRatio * (1 + facePulse);
+                        ctx.stroke();
+                        
+                        ctx.restore();
+                    }
+                    
+                    // Add subtle glow effect
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.scale * 1.5, 0, Math.PI * 2);
+                    
+                    // Custom glow based on crystal type
+                    if (this.colors.core.includes('150, 200, 255')) {
+                        // Ice Blue
+                        ctx.fillStyle = `rgba(170, 220, 255, ${0.1 + Math.sin(this.pulsePhase) * 0.05})`;
+                    } else if (this.colors.core.includes('150, 100, 255')) {
+                        // Amethyst
+                        ctx.fillStyle = `rgba(180, 150, 255, ${0.1 + Math.sin(this.pulsePhase) * 0.05})`;
+                    } else {
+                        // Emerald
+                        ctx.fillStyle = `rgba(150, 230, 180, ${0.1 + Math.sin(this.pulsePhase) * 0.05})`;
+                    }
+                    
+                    ctx.fill();
+                    
+                    // Restore canvas state
+                    ctx.restore();
+                }
+                
+                drawPolygon(sides, radius) {
+                    ctx.beginPath();
+                    for (let i = 0; i < sides; i++) {
+                        const angle = (i / sides) * Math.PI * 2;
+                        const x = Math.cos(angle) * radius;
+                        const y = Math.sin(angle) * radius;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    ctx.closePath();
+                }
+            }
+            
+            // Animation loop
+            let lastFrameTime = 0;
+            function animate(timestamp) {
+                // Calculate FPS
+                calculateFPS(timestamp);
+                
+                // Calculate delta time for animations
+                const deltaTime = timestamp - lastFrameTime;
+                lastFrameTime = timestamp;
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw entities
+                for (let i = growthEntities.length - 1; i >= 0; i--) {
+                    const entity = growthEntities[i];
+                    
+                    // Update based on entity type
+                    if (entity instanceof Plant) {
+                        entity.grow(timestamp);
+                    } else if (entity instanceof Cell) {
+                        entity.update(timestamp);
+                    } else if (entity instanceof Fractal) {
+                        entity.grow(timestamp);
+                    } else if (entity instanceof Neural) {
+                        entity.update(timestamp);
+                    } else if (entity instanceof Fungal) {
+                        entity.update(timestamp);
+                    } else if (entity instanceof Crystal) {
+                        entity.update(timestamp);
+                    }
+                    
+                    // Draw the entity
+                    entity.draw();
+                    
+                    // Remove dead entities
+                    if (entity.isDead && (!entity.children || entity.children.length === 0)) {
+                        growthEntities.splice(i, 1);
+                        entityCount--;
+                    }
+                }
+                
+                // Update and draw particles
+                updateAndDrawParticles(deltaTime);
+                
+                // Increase growth stage based on number of entities
+                growthStage = Math.min(10, Math.floor(entityCount / 10) + 1);
+                
+                updateStats();
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Start animation
+            animate(0);
+        });
+    </script>
+</body>
+</html> 

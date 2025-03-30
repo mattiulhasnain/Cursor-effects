@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Morphing Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #0F1C2E;
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #7EE7FC;
+            font-weight: 700;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .morph-cursor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1000;
+            mix-blend-mode: screen;
+        }
+        
+        .svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .shape {
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transform-origin: center;
+            filter: url(#glow);
+            opacity: 0.7;
+        }
+        
+        .shape-1 {
+            stroke: #FF3C78;
+        }
+        
+        .shape-2 {
+            stroke: #7EE7FC;
+        }
+        
+        .shape-3 {
+            stroke: #FFED4F;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(to right, #FF3C78, #7EE7FC);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: none;
+            margin: 10px;
+            font-size: 1rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>SVG Morphing Cursor</h1>
+        <p>Move your cursor to see SVG shapes transform and morph. The shapes react to your movement direction and speed, creating organic flowing animations.</p>
+        <button id="shape-toggle">Change Shapes</button>
+        <button id="color-toggle">Shift Colors</button>
+    </div>
+    
+    <div class="svg-container">
+        <!-- SVG shapes will be injected here -->
+    </div>
+    
+    <svg class="morph-cursor" width="50" height="50" viewBox="0 0 50 50">
+        <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feFlood flood-color="#7EE7FC" flood-opacity="0.5" result="glow" />
+                <feComposite in="glow" in2="blur" operator="in" result="coloredBlur" />
+                <feComposite in="SourceGraphic" in2="coloredBlur" operator="over" />
+            </filter>
+        </defs>
+        <path id="cursor-path" d="M25,25 L35,25 A10,10 0 1,1 25,35 L25,25 Z" fill="#7EE7FC" filter="url(#glow)" />
+    </svg>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Constants
+            const svgContainer = document.querySelector('.svg-container');
+            const morpher = document.querySelector('.morph-cursor');
+            const cursorPath = document.getElementById('cursor-path');
+            
+            // SVG path shapes for cursor
+            const cursorShapes = [
+                "M25,25 L35,25 A10,10 0 1,1 25,35 L25,25 Z", // Angular shape
+                "M25,25 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0", // Circle
+                "M25,15 Q40,25 25,35 Q10,25 25,15", // Leaf
+                "M15,25 L25,15 L35,25 L25,35 Z", // Diamond
+                "M17,17 L33,17 L33,33 L17,33 Z" // Square
+            ];
+            
+            // Mouse position with easing
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let lastMouseX = mouseX;
+            let lastMouseY = mouseY;
+            let velocityX = 0;
+            let velocityY = 0;
+            let currentShape = 0;
+            let colorPhase = 0;
+            
+            // SVG shape settings
+            const shapeCount = 30;
+            const shapes = [];
+            const svgNS = "http://www.w3.org/2000/svg";
+            
+            // Create SVG element for background shapes
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            
+            // Add SVG filter for glow effect
+            const defs = document.createElementNS(svgNS, "defs");
+            const filter = document.createElementNS(svgNS, "filter");
+            filter.setAttribute("id", "shape-glow");
+            filter.innerHTML = `
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feFlood flood-opacity="0.3" result="glow" />
+                <feComposite in="glow" in2="blur" operator="in" result="coloredBlur" />
+                <feComposite in="SourceGraphic" in2="coloredBlur" operator="over" />
+            `;
+            defs.appendChild(filter);
+            svg.appendChild(defs);
+            
+            // Create random shapes
+            for (let i = 0; i < shapeCount; i++) {
+                // Create path element
+                const path = document.createElementNS(svgNS, "path");
+                
+                // Random path data (simple shape)
+                let shapeType = Math.floor(Math.random() * 3);
+                let pathData;
+                
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                const size = Math.random() * 50 + 50;
+                
+                switch (shapeType) {
+                    case 0: // Circle
+                        pathData = `M${x},${y} m-${size/2},0 a${size/2},${size/2} 0 1,0 ${size},0 a${size/2},${size/2} 0 1,0 -${size},0`;
+                        break;
+                    case 1: // Triangle
+                        pathData = `M${x},${y-size/2} L${x+size/2},${y+size/2} L${x-size/2},${y+size/2} Z`;
+                        break;
+                    case 2: // Quadratic curves
+                        pathData = `M${x-size/2},${y} Q${x},${y-size/2} ${x+size/2},${y} Q${x},${y+size/2} ${x-size/2},${y}`;
+                        break;
+                }
+                
+                path.setAttribute("d", pathData);
+                path.setAttribute("class", `shape shape-${i % 3 + 1}`);
+                path.setAttribute("transform", "scale(1)");
+                
+                svg.appendChild(path);
+                
+                // Store shape data
+                shapes.push({
+                    element: path,
+                    x: x,
+                    y: y,
+                    originalPath: pathData,
+                    size: size,
+                    rotation: 0,
+                    scale: 1,
+                    morphLevel: 0,
+                    type: shapeType,
+                    speed: Math.random() * 0.01 + 0.005
+                });
+            }
+            
+            svgContainer.appendChild(svg);
+            
+            // Update mouse position and calculate velocity
+            document.addEventListener('mousemove', (e) => {
+                // Calculate velocity (for shape morphing)
+                velocityX = e.clientX - mouseX;
+                velocityY = e.clientY - mouseY;
+                
+                // Update position
+                lastMouseX = mouseX;
+                lastMouseY = mouseY;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Move cursor SVG
+                morpher.style.transform = `translate(${mouseX - 25}px, ${mouseY - 25}px)`;
+                
+                // Morph cursor based on velocity
+                const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+                const maxSpeed = 20;
+                const morphFactor = Math.min(speed / maxSpeed, 1);
+                
+                // Rotate cursor based on movement direction
+                const angle = Math.atan2(velocityY, velocityX) * 180 / Math.PI;
+                morpher.style.transform += ` rotate(${angle}deg)`;
+                
+                // Scale cursor based on speed
+                const scale = 1 + morphFactor * 0.5;
+                morpher.style.transform += ` scale(${scale})`;
+                
+                // Change cursor color based on position
+                const hue = (mouseX / window.innerWidth * 180 + mouseY / window.innerHeight * 180 + colorPhase) % 360;
+                cursorPath.style.fill = `hsl(${hue}, 100%, 70%)`;
+                
+                // Update SVG filter flood color
+                document.querySelector('#glow feFlood').setAttribute('flood-color', `hsl(${hue}, 100%, 70%)`);
+            });
+            
+            // Animation loop
+            function animate() {
+                // Increment color phase for animated color cycling
+                colorPhase += 0.5;
+                
+                // Animate shapes
+                shapes.forEach((shape, index) => {
+                    // Calculate distance to cursor
+                    const dx = mouseX - shape.x;
+                    const dy = mouseY - shape.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const maxDistance = 400;
+                    
+                    if (distance < maxDistance) {
+                        // Calculate influence (closer = stronger)
+                        const influence = 1 - (distance / maxDistance);
+                        
+                        // Rotate shape based on cursor position
+                        shape.rotation += (Math.atan2(dy, dx) * 180 / Math.PI - shape.rotation) * influence * 0.1;
+                        
+                        // Scale shape based on cursor distance
+                        shape.scale += ((1 + influence * 0.5) - shape.scale) * 0.1;
+                        
+                        // Set morph level based on velocity
+                        const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+                        shape.morphLevel += ((Math.min(speed / 10, 1) * influence) - shape.morphLevel) * 0.1;
+                        
+                        // Apply transformations
+                        shape.element.setAttribute("transform", 
+                            `translate(${(dx * influence * 0.1)}, ${(dy * influence * 0.1)}) ` +
+                            `rotate(${shape.rotation}, ${shape.x}, ${shape.y}) ` +
+                            `scale(${shape.scale})`
+                        );
+                        
+                        // Morph shape by distorting the path
+                        let morphedPath;
+                        switch (shape.type) {
+                            case 0: // Circle to ellipse
+                                const radiusX = shape.size/2 * (1 + shape.morphLevel * Math.cos(Date.now() * shape.speed));
+                                const radiusY = shape.size/2 * (1 + shape.morphLevel * Math.sin(Date.now() * shape.speed));
+                                morphedPath = `M${shape.x},${shape.y} m-${radiusX},0 a${radiusX},${radiusY} 0 1,0 ${radiusX*2},0 a${radiusX},${radiusY} 0 1,0 -${radiusX*2},0`;
+                                break;
+                            case 1: // Triangle with curved sides
+                                const offset = shape.morphLevel * 20 * Math.sin(Date.now() * shape.speed);
+                                morphedPath = `M${shape.x},${shape.y-shape.size/2} ` +
+                                    `Q${shape.x + offset},${shape.y} ${shape.x+shape.size/2},${shape.y+shape.size/2} ` +
+                                    `Q${shape.x},${shape.y + offset} ${shape.x-shape.size/2},${shape.y+shape.size/2} ` +
+                                    `Q${shape.x - offset},${shape.y} ${shape.x},${shape.y-shape.size/2}`;
+                                break;
+                            case 2: // Morphing quadratic curves
+                                const control1X = shape.x + Math.sin(Date.now() * shape.speed) * shape.size/2 * shape.morphLevel;
+                                const control1Y = shape.y - shape.size/2;
+                                const control2X = shape.x;
+                                const control2Y = shape.y + Math.cos(Date.now() * shape.speed) * shape.size/2 * shape.morphLevel;
+                                morphedPath = `M${shape.x-shape.size/2},${shape.y} ` +
+                                    `Q${control1X},${control1Y} ${shape.x+shape.size/2},${shape.y} ` +
+                                    `Q${control2X},${control2Y} ${shape.x-shape.size/2},${shape.y}`;
+                                break;
+                        }
+                        
+                        shape.element.setAttribute("d", morphedPath);
+                        
+                        // Change color and opacity based on cursor proximity
+                        const shapeIndex = index % 3 + 1;
+                        const baseHue = shapeIndex === 1 ? 350 : (shapeIndex === 2 ? 190 : 55); // Red, Cyan, Yellow
+                        const hue = (baseHue + colorPhase) % 360;
+                        shape.element.style.stroke = `hsl(${hue}, 100%, 70%)`;
+                        shape.element.style.opacity = 0.3 + influence * 0.7;
+                        shape.element.style.strokeWidth = 2 + influence * 3;
+                    } else {
+                        // Gradually return to original state when far from cursor
+                        shape.rotation *= 0.95;
+                        shape.scale += (1 - shape.scale) * 0.05;
+                        shape.morphLevel *= 0.95;
+                        
+                        shape.element.setAttribute("transform", 
+                            `rotate(${shape.rotation}, ${shape.x}, ${shape.y}) scale(${shape.scale})`
+                        );
+                        
+                        // Gradually return to original path
+                        if (shape.morphLevel < 0.05) {
+                            shape.element.setAttribute("d", shape.originalPath);
+                        }
+                        
+                        // Reset opacity and stroke width
+                        shape.element.style.opacity = 0.3;
+                        shape.element.style.strokeWidth = 2;
+                    }
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Handle click event
+            document.addEventListener('click', (e) => {
+                // Expand cursor temporarily
+                morpher.style.transform += ' scale(2)';
+                setTimeout(() => {
+                    morpher.style.transform = `translate(${mouseX - 25}px, ${mouseY - 25}px)`;
+                }, 300);
+                
+                // Create ripple effect on shapes
+                shapes.forEach(shape => {
+                    const dx = shape.x - e.clientX;
+                    const dy = shape.y - e.clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const maxDistance = 500;
+                    
+                    if (distance < maxDistance) {
+                        // Calculate delay based on distance
+                        const delay = distance * 2;
+                        
+                        setTimeout(() => {
+                            // Apply pulse effect
+                            shape.scale = 1.5;
+                            shape.morphLevel = 1;
+                            
+                            // Highlight shape
+                            const shapeIndex = shapes.indexOf(shape) % 3 + 1;
+                            const baseHue = shapeIndex === 1 ? 350 : (shapeIndex === 2 ? 190 : 55);
+                            shape.element.style.stroke = `hsl(${baseHue}, 100%, 70%)`;
+                            shape.element.style.opacity = 1;
+                            shape.element.style.strokeWidth = 5;
+                        }, delay);
+                    }
+                });
+            });
+            
+            // Shape toggle button
+            document.getElementById('shape-toggle').addEventListener('click', () => {
+                // Change cursor shape
+                currentShape = (currentShape + 1) % cursorShapes.length;
+                cursorPath.setAttribute('d', cursorShapes[currentShape]);
+                
+                // Change all shapes types
+                shapes.forEach(shape => {
+                    shape.type = (shape.type + 1) % 3;
+                    // Reset to non-morphed state to allow new shape to be computed
+                    shape.morphLevel = 0;
+                    shape.element.setAttribute('d', shape.originalPath);
+                });
+            });
+            
+            // Color toggle button
+            document.getElementById('color-toggle').addEventListener('click', () => {
+                // Shift color phase by 120 degrees
+                colorPhase += 120;
+                
+                // Update all shapes with new color scheme
+                shapes.forEach((shape, index) => {
+                    const shapeIndex = index % 3 + 1;
+                    const baseHue = shapeIndex === 1 ? 350 : (shapeIndex === 2 ? 190 : 55);
+                    const hue = (baseHue + colorPhase) % 360;
+                    shape.element.style.stroke = `hsl(${hue}, 100%, 70%)`;
+                });
+                
+                // Update cursor color
+                const hue = (mouseX / window.innerWidth * 180 + mouseY / window.innerHeight * 180 + colorPhase) % 360;
+                cursorPath.style.fill = `hsl(${hue}, 100%, 70%)`;
+                document.querySelector('#glow feFlood').setAttribute('flood-color', `hsl(${hue}, 100%, 70%)`);
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Update shape positions relative to new window size
+                shapes.forEach(shape => {
+                    // Calculate new position ratio
+                    const ratioX = shape.x / window.innerWidth;
+                    const ratioY = shape.y / window.innerHeight;
+                    
+                    // Apply new position
+                    shape.x = ratioX * window.innerWidth;
+                    shape.y = ratioY * window.innerHeight;
+                    
+                    // Update path data with new position
+                    let newPath;
+                    switch (shape.type) {
+                        case 0: // Circle
+                            newPath = `M${shape.x},${shape.y} m-${shape.size/2},0 a${shape.size/2},${shape.size/2} 0 1,0 ${shape.size},0 a${shape.size/2},${shape.size/2} 0 1,0 -${shape.size},0`;
+                            break;
+                        case 1: // Triangle
+                            newPath = `M${shape.x},${shape.y-shape.size/2} L${shape.x+shape.size/2},${shape.y+shape.size/2} L${shape.x-shape.size/2},${shape.y+shape.size/2} Z`;
+                            break;
+                        case 2: // Quadratic curves
+                            newPath = `M${shape.x-shape.size/2},${shape.y} Q${shape.x},${shape.y-shape.size/2} ${shape.x+shape.size/2},${shape.y} Q${shape.x},${shape.y+shape.size/2} ${shape.x-shape.size/2},${shape.y}`;
+                            break;
+                    }
+                    
+                    shape.originalPath = newPath;
+                    shape.element.setAttribute('d', newPath);
+                });
+            });
+            
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 

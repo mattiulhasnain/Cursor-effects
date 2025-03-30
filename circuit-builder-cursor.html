@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Circuit Builder Cursor Effect - Create live electronic circuits as you move your cursor, with components that activate when connected">
+    <title>Circuit Builder Cursor Effect - Interactive Cursor Animation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --circuit-active: #ffcc00;
+            --circuit-inactive: #555555;
+            --background: #0a192f;
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            cursor: none; /* Hide default cursor */
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zm20.97 0l9.315 9.314-1.414 1.414L34.828 0h2.83zM22.344 0L13.03 9.314l1.414 1.414L25.172 0h-2.83zM32 0l12.142 12.142-1.414 1.414L30 2.828 17.272 15.556l-1.414-1.414L28 0h4zM.284 0l28 28-1.414 1.414L0 2.544V0h.284zM0 5.373l25.456 25.455-1.414 1.415L0 8.2V5.374zm0 5.656l22.627 22.627-1.414 1.414L0 13.86v-2.83zm0 5.656l19.8 19.8-1.415 1.413L0 19.514v-2.83zm0 5.657l16.97 16.97-1.414 1.415L0 25.172v-2.83zM0 28l14.142 14.142-1.414 1.414L0 30.828V28zm0 5.657L11.314 44.97 9.9 46.386l-9.9-9.9v-2.828zm0 5.657L8.485 47.8 7.07 49.214 0 42.143v-2.83zm0 5.657l5.657 5.657-1.414 1.415L0 47.8v-2.83zm0 5.657l2.828 2.83-1.414 1.413L0 53.456v-2.83zM54.627 60L30 35.373 5.373 60H8.2L30 38.2 51.8 60h2.827zm-5.656 0L30 41.03 11.03 60h2.828L30 43.858 46.142 60h2.83zm-5.656 0L30 46.686 16.686 60h2.83L30 49.515 40.485 60h2.83zm-5.657 0L30 52.343 22.344 60h2.83L30 55.172 34.828 60h2.83zM32 60l-2-2-2 2h4zM59.716 0l-28 28 1.414 1.414L60 2.544V0h-.284zM60 5.373L34.544 30.828l1.414 1.415L60 8.2V5.374zm0 5.656L37.373 33.656l1.414 1.414L60 13.86v-2.83zm0 5.656l-19.8 19.8 1.415 1.413L60 19.514v-2.83zm0 5.657l-16.97 16.97 1.414 1.415L60 25.172v-2.83zM60 28L45.858 42.142l1.414 1.414L60 30.828V28zm0 5.657L48.686 44.97l1.415 1.415 9.9-9.9v-2.828zm0 5.657L51.515 47.8l1.414 1.414L60 42.143v-2.83zm0 5.657l-5.657 5.657 1.414 1.415L60 47.8v-2.83zm0 5.657l-2.828 2.83 1.414 1.413L60 53.456v-2.83zM39.9 16.385l1.414-1.414L30 3.658 18.686 14.97l1.415 1.415 9.9-9.9 9.9 9.9zm-2.83 2.828l1.415-1.414L30 9.313 21.515 17.8l1.414 1.413L30 11.8l7.07 7.414v-.002zm-2.827 2.83l1.414-1.416L30 14.97l-5.657 5.657 1.414 1.415L30 17.8l4.243 4.242zm-2.83 2.827l1.415-1.414L30 20.626l-2.828 2.83 1.414 1.414L30 23.456l1.414 1.414zM56.87 59.414L58.284 58 30 29.716 1.716 58l1.414 1.414L30 32.544l26.87 26.87z' fill='rgba(93, 187, 99, 0.05)' fill-rule='evenodd'/%3E%3C/svg%3E"),
+                radial-gradient(circle at 30% 10%, rgba(93, 187, 99, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 70% 90%, rgba(102, 178, 255, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .description {
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--background);
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .back-button:hover::before {
+            opacity: 1;
+        }
+
+        .content-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .content-area {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .content-box {
+            background: rgba(28, 42, 57, 0.7);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .content-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .content-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-light);
+        }
+
+        .content-box p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .controls {
+            background: rgba(28, 42, 57, 0.7);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .controls h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-light);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .control-item {
+            background: rgba(10, 25, 47, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(93, 187, 99, 0.1);
+        }
+
+        .control-item h4 {
+            margin-bottom: 0.5rem;
+            color: var(--secondary-light);
+        }
+
+        .control-item p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Circuit canvas */
+        .circuit-workspace {
+            background: rgba(20, 30, 50, 0.8);
+            border-radius: 12px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .circuit-workspace h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-light);
+        }
+
+        .circuit-canvas {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background: rgba(10, 20, 40, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .circuit-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        /* Circuit components */
+        .component {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(50, 60, 80, 0.8);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--circuit-inactive);
+            font-size: 20px;
+            border: 2px solid var(--circuit-inactive);
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+
+        .component.active {
+            color: var(--circuit-active);
+            border-color: var(--circuit-active);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+        }
+
+        .wire {
+            position: absolute;
+            height: 3px;
+            background: var(--circuit-inactive);
+            transform-origin: left center;
+            z-index: 4;
+        }
+
+        .wire.active {
+            background: var(--circuit-active);
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+
+        .connection-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--circuit-inactive);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 6;
+            cursor: pointer;
+        }
+
+        .connection-point.active {
+            background: var(--circuit-active);
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+
+        /* Custom cursor */
+        .circuit-cursor {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid var(--primary);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: width 0.2s, height 0.2s;
+        }
+
+        .circuit-cursor::before {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .circuit-cursor.connection-mode {
+            background-color: rgba(255, 204, 0, 0.2);
+            border-color: var(--circuit-active);
+            width: 30px;
+            height: 30px;
+        }
+
+        .circuit-cursor.component-mode {
+            background-color: rgba(93, 187, 99, 0.2);
+            border-color: var(--primary);
+            width: 32px;
+            height: 32px;
+            border-style: dashed;
+        }
+
+        .component-palette {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(20, 30, 50, 0.6);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .palette-item {
+            width: 40px;
+            height: 40px;
+            background: rgba(50, 60, 80, 0.8);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            font-size: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .palette-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary-light);
+        }
+
+        .component-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 20, 40, 0.8);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            max-width: 250px;
+        }
+
+        .component-info h4 {
+            color: var(--primary-light);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Circuit Builder Cursor</h1>
+            <p class="description">
+                Create interactive electronic circuits as you move your cursor around the workspace. Place components, connect them with wires, and watch them activate when properly connected. Build functioning digital circuits with logic gates, switches, and LED outputs.
+            </p>
+            <a href="index.html" class="back-button">← Back to All Effects</a>
+        </header>
+
+        <div class="content-area">
+            <div class="content-box">
+                <h3>Interactive Circuit Building</h3>
+                <p>
+                    This cursor effect transforms your mouse into an electronic engineering tool. Place components from the palette and connect them with wires to create functioning digital circuits.
+                </p>
+                <p>
+                    When components are correctly connected, they'll light up and activate, allowing you to build everything from simple LED circuits to complex logic gates.
+                </p>
+            </div>
+            <div class="content-box">
+                <h3>Digital Electronics</h3>
+                <p>
+                    Experiment with various circuit components including power sources, resistors, capacitors, LEDs, and logic gates. Each component behaves according to real electronic principles.
+                </p>
+                <p>
+                    Build switches that control lights, create oscillating circuits, or design logic systems with AND, OR, and NOT gates. The possibilities are limited only by your imagination!
+                </p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <h3>User Controls</h3>
+            <div class="controls-grid">
+                <div class="control-item">
+                    <h4>Click Component</h4>
+                    <p>Click a component in the palette to select it, then click in the workspace to place it.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Click & Drag</h4>
+                    <p>Click on a connection point and drag to another component to create a wire that connects them.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Double Click</h4>
+                    <p>Double-click a component to toggle its state or configure its properties.</p>
+                </div>
+                <div class="control-item">
+                    <h4>Right Click</h4>
+                    <p>Right-click on a component or wire to delete it from the workspace.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="circuit-workspace">
+            <h3>Circuit Workspace</h3>
+            <div class="component-palette">
+                <div class="palette-item" data-component="battery">🔋</div>
+                <div class="palette-item" data-component="resistor">⏱️</div>
+                <div class="palette-item" data-component="led">💡</div>
+                <div class="palette-item" data-component="switch">🔄</div>
+                <div class="palette-item" data-component="and">AND</div>
+                <div class="palette-item" data-component="or">OR</div>
+                <div class="palette-item" data-component="not">NOT</div>
+            </div>
+            
+            <div class="circuit-canvas">
+                <div class="circuit-grid"></div>
+                <!-- Circuit components will be added here dynamically -->
+            </div>
+            
+            <div class="component-info">
+                <h4>Build Your Circuit</h4>
+                <p>Select components from the palette above and place them on the grid. Connect them by dragging from one connection point to another.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom cursor element -->
+    <div class="circuit-cursor"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Circuit workspace elements
+            const circuitCanvas = document.querySelector('.circuit-canvas');
+            const componentPalette = document.querySelector('.component-palette');
+            const componentInfo = document.querySelector('.component-info');
+            const cursor = document.querySelector('.circuit-cursor');
+            
+            // State variables
+            let selectedComponent = null;
+            let isDragging = false;
+            let startConnectionPoint = null;
+            let mousePosition = { x: 0, y: 0 };
+            let components = [];
+            let wires = [];
+            let connectionPoints = [];
+            
+            // Component definitions
+            const componentTypes = {
+                battery: {
+                    symbol: '🔋',
+                    outputs: [{x: 40, y: 20}],
+                    inputs: [],
+                    value: true, // Always on
+                    info: 'Power Source: Provides electricity to the circuit.'
+                },
+                resistor: {
+                    symbol: '⏱️',
+                    outputs: [{x: 40, y: 20}],
+                    inputs: [{x: 0, y: 20}],
+                    value: true, // Passes current
+                    info: 'Resistor: Reduces the flow of electricity.'
+                },
+                led: {
+                    symbol: '💡',
+                    outputs: [],
+                    inputs: [{x: 0, y: 20}],
+                    value: false, // Initially off
+                    info: 'LED: Lights up when connected to power.'
+                },
+                switch: {
+                    symbol: '🔄',
+                    outputs: [{x: 40, y: 20}],
+                    inputs: [{x: 0, y: 20}],
+                    value: false, // Initially off
+                    info: 'Switch: Toggle on/off to control current flow.'
+                },
+                and: {
+                    symbol: 'AND',
+                    outputs: [{x: 40, y: 20}],
+                    inputs: [{x: 0, y: 10}, {x: 0, y: 30}],
+                    value: false, // Initially false
+                    info: 'AND Gate: Output is on only when both inputs are on.'
+                },
+                or: {
+                    symbol: 'OR',
+                    outputs: [{x: 40, y: 20}],
+                    inputs: [{x: 0, y: 10}, {x: 0, y: 30}],
+                    value: false, // Initially false
+                    info: 'OR Gate: Output is on when either input is on.'
+                },
+                not: {
+                    symbol: 'NOT',
+                    outputs: [{x: 40, y: 20}],
+                    inputs: [{x: 0, y: 20}],
+                    value: true, // Initially true (inverts input)
+                    info: 'NOT Gate: Inverts the input signal.'
+                }
+            };
+            
+            // Initialize custom cursor
+            function updateCursor(e) {
+                mousePosition.x = e.clientX;
+                mousePosition.y = e.clientY;
+                cursor.style.left = `${e.clientX}px`;
+                cursor.style.top = `${e.clientY}px`;
+                
+                // Check if cursor is over a connection point and update cursor appearance
+                const isOverConnectionPoint = connectionPoints.some(point => {
+                    const rect = point.getBoundingClientRect();
+                    return (
+                        e.clientX >= rect.left &&
+                        e.clientX <= rect.right &&
+                        e.clientY >= rect.top &&
+                        e.clientY <= rect.bottom
+                    );
+                });
+                
+                if (isOverConnectionPoint || isDragging) {
+                    cursor.classList.add('connection-mode');
+                } else {
+                    cursor.classList.remove('connection-mode');
+                }
+            }
+            
+            // Handle component selection from palette
+            function handlePaletteClick(e) {
+                const paletteItem = e.target.closest('.palette-item');
+                if (!paletteItem) return;
+                
+                selectedComponent = paletteItem.dataset.component;
+                
+                // Update component info
+                const componentType = componentTypes[selectedComponent];
+                componentInfo.innerHTML = `
+                    <h4>${selectedComponent.charAt(0).toUpperCase() + selectedComponent.slice(1)}</h4>
+                    <p>${componentType.info}</p>
+                    <p>Click in the workspace to place this component.</p>
+                `;
+                
+                // Update cursor style
+                cursor.classList.add('component-mode');
+            }
+            
+            // Create a new component at the clicked position
+            function createComponent(componentType, x, y) {
+                // Create component element
+                const component = document.createElement('div');
+                component.className = 'component';
+                component.dataset.type = componentType;
+                component.dataset.value = componentTypes[componentType].value;
+                component.textContent = componentTypes[componentType].symbol;
+                component.style.left = `${x}px`;
+                component.style.top = `${y}px`;
+                
+                // Add to workspace
+                circuitCanvas.appendChild(component);
+                components.push(component);
+                
+                // Create connection points
+                const inputs = componentTypes[componentType].inputs;
+                const outputs = componentTypes[componentType].outputs;
+                
+                inputs.forEach(input => {
+                    const point = createConnectionPoint(
+                        x + input.x,
+                        y + input.y,
+                        'input',
+                        component
+                    );
+                });
+                
+                outputs.forEach(output => {
+                    const point = createConnectionPoint(
+                        x + output.x,
+                        y + output.y,
+                        'output',
+                        component
+                    );
+                });
+                
+                return component;
+            }
+            
+            // Create connection point for a component
+            function createConnectionPoint(x, y, type, component) {
+                const point = document.createElement('div');
+                point.className = 'connection-point';
+                point.dataset.type = type;
+                point.dataset.componentId = components.indexOf(component);
+                point.style.left = `${x}px`;
+                point.style.top = `${y}px`;
+                
+                circuitCanvas.appendChild(point);
+                connectionPoints.push(point);
+                
+                // Add event listeners for connections
+                point.addEventListener('mousedown', startConnection);
+                
+                return point;
+            }
+            
+            // Start dragging a connection from a connection point
+            function startConnection(e) {
+                e.preventDefault();
+                isDragging = true;
+                startConnectionPoint = e.target;
+                
+                // Create temporary wire
+                const wire = document.createElement('div');
+                wire.className = 'wire temp-wire';
+                
+                // Position at the starting connection point
+                const startRect = startConnectionPoint.getBoundingClientRect();
+                const canvasRect = circuitCanvas.getBoundingClientRect();
+                
+                const startX = startRect.left + startRect.width / 2 - canvasRect.left;
+                const startY = startRect.top + startRect.height / 2 - canvasRect.top;
+                
+                wire.style.left = `${startX}px`;
+                wire.style.top = `${startY}px`;
+                wire.style.width = '0px';
+                wire.style.transform = 'rotate(0deg)';
+                
+                wire.dataset.startX = startX;
+                wire.dataset.startY = startY;
+                
+                circuitCanvas.appendChild(wire);
+                
+                // Add mouse move event for dragging
+                document.addEventListener('mousemove', dragConnection);
+                document.addEventListener('mouseup', endConnection);
+            }
+            
+            // Drag connection wire
+            function dragConnection(e) {
+                if (!isDragging) return;
+                
+                const wire = document.querySelector('.temp-wire');
+                if (!wire) return;
+                
+                const canvasRect = circuitCanvas.getBoundingClientRect();
+                const startX = parseFloat(wire.dataset.startX);
+                const startY = parseFloat(wire.dataset.startY);
+                const endX = e.clientX - canvasRect.left;
+                const endY = e.clientY - canvasRect.top;
+                
+                // Calculate wire length and angle
+                const dx = endX - startX;
+                const dy = endY - startY;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                // Update wire style
+                wire.style.width = `${length}px`;
+                wire.style.transform = `rotate(${angle}deg)`;
+            }
+            
+            // End the connection dragging
+            function endConnection(e) {
+                if (!isDragging) return;
+                
+                const endPoint = e.target.closest('.connection-point');
+                const tempWire = document.querySelector('.temp-wire');
+                
+                // If we dropped on a valid connection point and it's not the same one we started from
+                if (endPoint && endPoint !== startConnectionPoint) {
+                    // Check if connection is valid (input to output or output to input)
+                    const startType = startConnectionPoint.dataset.type;
+                    const endType = endPoint.dataset.type;
+                    
+                    if (startType !== endType) { // Can't connect two inputs or two outputs
+                        // Determine which is input and which is output
+                        const inputPoint = startType === 'input' ? startConnectionPoint : endPoint;
+                        const outputPoint = startType === 'output' ? startConnectionPoint : endPoint;
+                        
+                        // Create permanent wire
+                        const wire = document.createElement('div');
+                        wire.className = 'wire';
+                        
+                        // Get positions
+                        const outputRect = outputPoint.getBoundingClientRect();
+                        const inputRect = inputPoint.getBoundingClientRect();
+                        const canvasRect = circuitCanvas.getBoundingClientRect();
+                        
+                        const startX = outputRect.left + outputRect.width / 2 - canvasRect.left;
+                        const startY = outputRect.top + outputRect.height / 2 - canvasRect.top;
+                        const endX = inputRect.left + inputRect.width / 2 - canvasRect.left;
+                        const endY = inputRect.top + inputRect.height / 2 - canvasRect.top;
+                        
+                        // Calculate wire length and angle
+                        const dx = endX - startX;
+                        const dy = endY - startY;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        
+                        // Set wire position and transform
+                        wire.style.left = `${startX}px`;
+                        wire.style.top = `${startY}px`;
+                        wire.style.width = `${length}px`;
+                        wire.style.transform = `rotate(${angle}deg)`;
+                        
+                        // Store connection data
+                        wire.dataset.outputPointId = connectionPoints.indexOf(outputPoint);
+                        wire.dataset.inputPointId = connectionPoints.indexOf(inputPoint);
+                        wire.dataset.outputComponentId = outputPoint.dataset.componentId;
+                        wire.dataset.inputComponentId = inputPoint.dataset.componentId;
+                        
+                        circuitCanvas.appendChild(wire);
+                        wires.push(wire);
+                        
+                        // Evaluate circuit state after new connection
+                        evaluateCircuit();
+                    }
+                }
+                
+                // Remove temporary wire
+                if (tempWire) {
+                    tempWire.remove();
+                }
+                
+                // Reset dragging state
+                isDragging = false;
+                startConnectionPoint = null;
+                
+                // Remove event listeners
+                document.removeEventListener('mousemove', dragConnection);
+                document.removeEventListener('mouseup', endConnection);
+            }
+            
+            // Handle clicks on the circuit canvas
+            function handleCanvasClick(e) {
+                // If we have a component selected, place it
+                if (selectedComponent && !isDragging) {
+                    const canvasRect = circuitCanvas.getBoundingClientRect();
+                    const x = e.clientX - canvasRect.left - 20; // Center component
+                    const y = e.clientY - canvasRect.top - 20; // Center component
+                    
+                    createComponent(selectedComponent, x, y);
+                    
+                    // Clear selection after placing
+                    selectedComponent = null;
+                    cursor.classList.remove('component-mode');
+                    
+                    // Reset component info
+                    componentInfo.innerHTML = `
+                        <h4>Build Your Circuit</h4>
+                        <p>Select components from the palette above and place them on the grid. Connect them by dragging from one connection point to another.</p>
+                    `;
+                }
+            }
+            
+            // Handle right-click to delete components or wires
+            function handleContextMenu(e) {
+                e.preventDefault();
+                
+                const wire = e.target.closest('.wire:not(.temp-wire)');
+                const component = e.target.closest('.component');
+                
+                if (wire) {
+                    // Remove wire
+                    const wireIndex = wires.indexOf(wire);
+                    if (wireIndex !== -1) {
+                        wires.splice(wireIndex, 1);
+                    }
+                    wire.remove();
+                    evaluateCircuit();
+                } else if (component) {
+                    // Remove component and its connection points
+                    const componentIndex = components.indexOf(component);
+                    if (componentIndex !== -1) {
+                        components.splice(componentIndex, 1);
+                        
+                        // Remove connection points
+                        const pointsToRemove = connectionPoints.filter(
+                            point => parseInt(point.dataset.componentId) === componentIndex
+                        );
+                        
+                        pointsToRemove.forEach(point => {
+                            const pointIndex = connectionPoints.indexOf(point);
+                            connectionPoints.splice(pointIndex, 1);
+                            point.remove();
+                        });
+                        
+                        // Remove wires connected to this component
+                        const wiresToRemove = wires.filter(wire => 
+                            parseInt(wire.dataset.outputComponentId) === componentIndex ||
+                            parseInt(wire.dataset.inputComponentId) === componentIndex
+                        );
+                        
+                        wiresToRemove.forEach(wire => {
+                            const wireIndex = wires.indexOf(wire);
+                            wires.splice(wireIndex, 1);
+                            wire.remove();
+                        });
+                        
+                        // Update remaining component indices
+                        components.forEach((comp, idx) => {
+                            connectionPoints.filter(
+                                point => parseInt(point.dataset.componentId) > componentIndex
+                            ).forEach(point => {
+                                point.dataset.componentId = parseInt(point.dataset.componentId) - 1;
+                            });
+                            
+                            wires.forEach(wire => {
+                                if (parseInt(wire.dataset.outputComponentId) > componentIndex) {
+                                    wire.dataset.outputComponentId = parseInt(wire.dataset.outputComponentId) - 1;
+                                }
+                                if (parseInt(wire.dataset.inputComponentId) > componentIndex) {
+                                    wire.dataset.inputComponentId = parseInt(wire.dataset.inputComponentId) - 1;
+                                }
+                            });
+                        });
+                        
+                        component.remove();
+                        evaluateCircuit();
+                    }
+                }
+                
+                return false;
+            }
+            
+            // Handle double-click to toggle switches
+            function handleDoubleClick(e) {
+                const component = e.target.closest('.component');
+                if (!component) return;
+                
+                const type = component.dataset.type;
+                
+                // Toggle switches
+                if (type === 'switch') {
+                    const currentValue = component.dataset.value === 'true';
+                    component.dataset.value = !currentValue;
+                    
+                    updateComponentDisplay(component, !currentValue);
+                    evaluateCircuit();
+                }
+            }
+            
+            // Update component display based on its value
+            function updateComponentDisplay(component, value) {
+                if (value) {
+                    component.classList.add('active');
+                } else {
+                    component.classList.remove('active');
+                }
+            }
+            
+            // Evaluate the state of the entire circuit
+            function evaluateCircuit() {
+                // Reset all components except batteries and switches
+                components.forEach(component => {
+                    const type = component.dataset.type;
+                    if (type !== 'battery' && type !== 'switch') {
+                        component.dataset.value = false;
+                        updateComponentDisplay(component, false);
+                    }
+                });
+                
+                // Reset all wires
+                wires.forEach(wire => {
+                    wire.classList.remove('active');
+                });
+                
+                // Reset all connection points
+                connectionPoints.forEach(point => {
+                    point.classList.remove('active');
+                });
+                
+                // Start from power sources (batteries)
+                const batteriesAndSwitches = components.filter(component => 
+                    component.dataset.type === 'battery' || 
+                    (component.dataset.type === 'switch' && component.dataset.value === 'true')
+                );
+                
+                // Propagate power through the circuit
+                let changed = true;
+                while (changed) {
+                    changed = false;
+                    
+                    wires.forEach(wire => {
+                        const outputComponentId = parseInt(wire.dataset.outputComponentId);
+                        const inputComponentId = parseInt(wire.dataset.inputComponentId);
+                        
+                        const outputComponent = components[outputComponentId];
+                        const inputComponent = components[inputComponentId];
+                        
+                        if (!outputComponent || !inputComponent) return;
+                        
+                        // Check if output component is active
+                        const outputValue = outputComponent.dataset.value === 'true';
+                        
+                        if (outputValue) {
+                            // Set input component active based on component type
+                            let shouldActivate = true;
+                            
+                            // Handle logic gates
+                            if (inputComponent.dataset.type === 'and') {
+                                // Count active inputs
+                                const inputsCount = componentTypes.and.inputs.length;
+                                const activeInputs = wires.filter(w => 
+                                    parseInt(w.dataset.inputComponentId) === inputComponentId &&
+                                    components[parseInt(w.dataset.outputComponentId)].dataset.value === 'true'
+                                ).length;
+                                
+                                shouldActivate = activeInputs === inputsCount;
+                            } else if (inputComponent.dataset.type === 'or') {
+                                shouldActivate = true; // One active input is enough
+                            } else if (inputComponent.dataset.type === 'not') {
+                                shouldActivate = false; // Invert the input
+                            }
+                            
+                            if (shouldActivate && inputComponent.dataset.value !== 'true') {
+                                inputComponent.dataset.value = true;
+                                updateComponentDisplay(inputComponent, true);
+                                changed = true;
+                            }
+                            
+                            // Activate wire and connection points
+                            wire.classList.add('active');
+                            const outputPoint = connectionPoints[parseInt(wire.dataset.outputPointId)];
+                            const inputPoint = connectionPoints[parseInt(wire.dataset.inputPointId)];
+                            
+                            if (outputPoint) outputPoint.classList.add('active');
+                            if (inputPoint) inputPoint.classList.add('active');
+                        }
+                    });
+                }
+            }
+            
+            // Event listeners
+            document.addEventListener('mousemove', updateCursor);
+            componentPalette.addEventListener('click', handlePaletteClick);
+            circuitCanvas.addEventListener('click', handleCanvasClick);
+            circuitCanvas.addEventListener('contextmenu', handleContextMenu);
+            circuitCanvas.addEventListener('dblclick', handleDoubleClick);
+            
+            // Hide cursor when leaving the window
+            document.addEventListener('mouseleave', () => {
+                cursor.style.display = 'none';
+            });
+            
+            document.addEventListener('mouseenter', () => {
+                cursor.style.display = 'block';
+            });
+            
+            // Create a simple example circuit
+            function createExampleCircuit() {
+                // Create a battery
+                const battery = createComponent('battery', 50, 180);
+                
+                // Create a switch
+                const switchComp = createComponent('switch', 150, 180);
+                
+                // Create an LED
+                const led = createComponent('led', 250, 180);
+                
+                // Create connection points
+                setTimeout(() => {
+                    // Get connection points
+                    const batteryOutput = connectionPoints.find(point => 
+                        point.dataset.type === 'output' && 
+                        parseInt(point.dataset.componentId) === 0
+                    );
+                    
+                    const switchInput = connectionPoints.find(point => 
+                        point.dataset.type === 'input' && 
+                        parseInt(point.dataset.componentId) === 1
+                    );
+                    
+                    const switchOutput = connectionPoints.find(point => 
+                        point.dataset.type === 'output' && 
+                        parseInt(point.dataset.componentId) === 1
+                    );
+                    
+                    const ledInput = connectionPoints.find(point => 
+                        point.dataset.type === 'input' && 
+                        parseInt(point.dataset.componentId) === 2
+                    );
+                    
+                    // Create wires
+                    if (batteryOutput && switchInput) {
+                        // Battery to switch wire
+                        const wire1 = document.createElement('div');
+                        wire1.className = 'wire';
+                        
+                        // Get positions
+                        const outputRect = batteryOutput.getBoundingClientRect();
+                        const inputRect = switchInput.getBoundingClientRect();
+                        const canvasRect = circuitCanvas.getBoundingClientRect();
+                        
+                        const startX = outputRect.left + outputRect.width / 2 - canvasRect.left;
+                        const startY = outputRect.top + outputRect.height / 2 - canvasRect.top;
+                        const endX = inputRect.left + inputRect.width / 2 - canvasRect.left;
+                        const endY = inputRect.top + inputRect.height / 2 - canvasRect.top;
+                        
+                        // Calculate wire length and angle
+                        const dx = endX - startX;
+                        const dy = endY - startY;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        
+                        // Set wire position and transform
+                        wire1.style.left = `${startX}px`;
+                        wire1.style.top = `${startY}px`;
+                        wire1.style.width = `${length}px`;
+                        wire1.style.transform = `rotate(${angle}deg)`;
+                        
+                        // Store connection data
+                        wire1.dataset.outputPointId = connectionPoints.indexOf(batteryOutput);
+                        wire1.dataset.inputPointId = connectionPoints.indexOf(switchInput);
+                        wire1.dataset.outputComponentId = batteryOutput.dataset.componentId;
+                        wire1.dataset.inputComponentId = switchInput.dataset.componentId;
+                        
+                        circuitCanvas.appendChild(wire1);
+                        wires.push(wire1);
+                    }
+                    
+                    if (switchOutput && ledInput) {
+                        // Switch to LED wire
+                        const wire2 = document.createElement('div');
+                        wire2.className = 'wire';
+                        
+                        // Get positions
+                        const outputRect = switchOutput.getBoundingClientRect();
+                        const inputRect = ledInput.getBoundingClientRect();
+                        const canvasRect = circuitCanvas.getBoundingClientRect();
+                        
+                        const startX = outputRect.left + outputRect.width / 2 - canvasRect.left;
+                        const startY = outputRect.top + outputRect.height / 2 - canvasRect.top;
+                        const endX = inputRect.left + inputRect.width / 2 - canvasRect.left;
+                        const endY = inputRect.top + inputRect.height / 2 - canvasRect.top;
+                        
+                        // Calculate wire length and angle
+                        const dx = endX - startX;
+                        const dy = endY - startY;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        
+                        // Set wire position and transform
+                        wire2.style.left = `${startX}px`;
+                        wire2.style.top = `${startY}px`;
+                        wire2.style.width = `${length}px`;
+                        wire2.style.transform = `rotate(${angle}deg)`;
+                        
+                        // Store connection data
+                        wire2.dataset.outputPointId = connectionPoints.indexOf(switchOutput);
+                        wire2.dataset.inputPointId = connectionPoints.indexOf(ledInput);
+                        wire2.dataset.outputComponentId = switchOutput.dataset.componentId;
+                        wire2.dataset.inputComponentId = ledInput.dataset.componentId;
+                        
+                        circuitCanvas.appendChild(wire2);
+                        wires.push(wire2);
+                    }
+                    
+                    // Update component info
+                    componentInfo.innerHTML = `
+                        <h4>Example Circuit</h4>
+                        <p>A simple battery → switch → LED circuit has been created for you. Double-click the switch to toggle it and see the LED light up!</p>
+                    `;
+                    
+                    // Evaluate circuit
+                    evaluateCircuit();
+                }, 500);
+            }
+            
+            // Load example circuit after a short delay
+            setTimeout(createExampleCircuit, 1000);
+        });
+    </script>
+</body>
+</html> 

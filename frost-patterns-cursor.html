@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frost Patterns Cursor Effect</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, #051937, #004d7a);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #f5f5f5;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+        
+        .frost-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+        
+        .frost-crystal {
+            position: absolute;
+            pointer-events: none;
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+        }
+        
+        /* Glass panel background elements */
+        .glass-panels {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .glass-panel {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .snowflake-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .snowflake {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .return-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Frost Patterns Cursor Effect</h1>
+        <p>Move your cursor to create beautiful crystalline frost patterns that grow and spread across the screen, mimicking the natural formation of ice crystals on a cold window.</p>
+    </div>
+    
+    <div class="glass-panels" id="glass-panels"></div>
+    <div class="frost-container" id="frost-container"></div>
+    <div class="snowflake-background" id="snowflake-background"></div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.querySelector('body');
+            const cursor = document.querySelector('.cursor');
+            const frostContainer = document.getElementById('frost-container');
+            const glassPanels = document.getElementById('glass-panels');
+            const snowflakeBackground = document.getElementById('snowflake-background');
+            
+            // Create glass panels
+            for (let i = 0; i < 9; i++) {
+                const panel = document.createElement('div');
+                panel.className = 'glass-panel';
+                glassPanels.appendChild(panel);
+            }
+            
+            // Create background snowflakes
+            for (let i = 0; i < 50; i++) {
+                const size = 1 + Math.random() * 3;
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.style.width = `${size}px`;
+                snowflake.style.height = `${size}px`;
+                snowflake.style.left = `${Math.random() * 100}%`;
+                snowflake.style.top = `${Math.random() * 100}%`;
+                snowflake.style.opacity = 0.3 + Math.random() * 0.5;
+                snowflakeBackground.appendChild(snowflake);
+            }
+            
+            // Mouse position
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            // Frost crystal settings
+            const maxFrostClusters = 30;
+            const frostClusters = [];
+            const frostInterval = 100; // ms between frost creation
+            let lastFrostTime = 0;
+            
+            // SVG patterns for frost crystals
+            const frostPatterns = [
+                // Simple snowflake
+                `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <g stroke="rgba(255, 255, 255, 0.9)" fill="none">
+                        <path d="M10,0 L10,20 M0,10 L20,10 M3,3 L17,17 M3,17 L17,3" stroke-width="1" />
+                    </g>
+                </svg>`,
+                
+                // Crystal branch
+                `<svg width="15" height="15" viewBox="0 0 15 15" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5,0 L7.5,15 M7.5,3 L10.5,1 M7.5,3 L4.5,1 M7.5,7.5 L12,5 M7.5,7.5 L3,5 M7.5,12 L13.5,9 M7.5,12 L1.5,9" stroke="rgba(255, 255, 255, 0.9)" stroke-width="0.5" fill="none" />
+                </svg>`,
+                
+                // Y-shaped crystal
+                `<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6,0 L6,12 M6,0 L2,4 M6,0 L10,4" stroke="rgba(255, 255, 255, 0.9)" stroke-width="0.5" fill="none" />
+                </svg>`,
+                
+                // Dot
+                `<svg width="4" height="4" viewBox="0 0 4 4" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="2" cy="2" r="1.5" fill="rgba(255, 255, 255, 0.9)" />
+                </svg>`
+            ];
+            
+            // Update mouse position
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+            });
+            
+            // Create a frost cluster
+            function createFrostCluster(x, y) {
+                // Check if we're at max clusters
+                if (frostClusters.length >= maxFrostClusters) {
+                    // Remove oldest cluster
+                    const oldestCluster = frostClusters.shift();
+                    
+                    // Remove all crystals in this cluster
+                    oldestCluster.crystals.forEach(crystal => {
+                        if (crystal.element && crystal.element.parentNode) {
+                            crystal.element.parentNode.removeChild(crystal.element);
+                        }
+                    });
+                }
+                
+                // Create cluster container
+                const clusterElement = document.createElement('div');
+                clusterElement.className = 'frost-cluster';
+                clusterElement.style.position = 'absolute';
+                clusterElement.style.left = `${x}px`;
+                clusterElement.style.top = `${y}px`;
+                frostContainer.appendChild(clusterElement);
+                
+                // Random growth parameters
+                const maxCrystals = 30 + Math.floor(Math.random() * 50);
+                const growthSpeed = 50 + Math.random() * 100; // ms between new crystals
+                const maxRadius = 50 + Math.random() * 100;
+                
+                // Create cluster object
+                const cluster = {
+                    element: clusterElement,
+                    x: x,
+                    y: y,
+                    crystals: [],
+                    maxCrystals: maxCrystals,
+                    growthSpeed: growthSpeed,
+                    lastGrowthTime: Date.now(),
+                    maxRadius: maxRadius,
+                    complete: false
+                };
+                
+                // Create initial crystal at center
+                createFrostCrystal(cluster, 0, 0, 0);
+                
+                frostClusters.push(cluster);
+                return cluster;
+            }
+            
+            // Create a frost crystal within a cluster
+            function createFrostCrystal(cluster, offsetX, offsetY, depth) {
+                if (cluster.crystals.length >= cluster.maxCrystals) {
+                    cluster.complete = true;
+                    return null;
+                }
+                
+                // Check if we're too far from center
+                const distance = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+                if (distance > cluster.maxRadius) {
+                    return null;
+                }
+                
+                // Choose a random pattern, favoring smaller crystals at greater distances
+                const distanceRatio = distance / cluster.maxRadius;
+                let patternIndex;
+                
+                if (distanceRatio > 0.8) {
+                    // Far from center - prefer small dots
+                    patternIndex = Math.random() < 0.8 ? 3 : Math.floor(Math.random() * 3);
+                } else if (distanceRatio > 0.5) {
+                    // Medium distance - mix of patterns
+                    patternIndex = Math.random() < 0.5 ? Math.floor(Math.random() * 3) : 3;
+                } else {
+                    // Close to center - prefer larger patterns
+                    patternIndex = Math.floor(Math.random() * frostPatterns.length);
+                }
+                
+                const pattern = frostPatterns[patternIndex];
+                
+                // Create crystal element
+                const crystalElement = document.createElement('div');
+                crystalElement.className = 'frost-crystal';
+                crystalElement.innerHTML = pattern;
+                crystalElement.style.left = `${offsetX}px`;
+                crystalElement.style.top = `${offsetY}px`;
+                
+                // Random rotation
+                const rotation = Math.random() * 360;
+                crystalElement.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+                
+                // Fade in effect
+                crystalElement.style.opacity = '0';
+                setTimeout(() => {
+                    crystalElement.style.opacity = '1';
+                    crystalElement.style.transition = 'opacity 0.3s ease';
+                }, 10);
+                
+                cluster.element.appendChild(crystalElement);
+                
+                // Create crystal object
+                const crystal = {
+                    element: crystalElement,
+                    offsetX: offsetX,
+                    offsetY: offsetY,
+                    depth: depth
+                };
+                
+                cluster.crystals.push(crystal);
+                return crystal;
+            }
+            
+            // Grow frost from an existing crystal
+            function growFrostFromCrystal(cluster, parentCrystal) {
+                if (cluster.complete) return;
+                
+                const x = parentCrystal.offsetX;
+                const y = parentCrystal.offsetY;
+                const depth = parentCrystal.depth + 1;
+                
+                // Branch factor decreases with depth
+                const branchFactor = Math.max(1, 3 - Math.floor(depth / 2));
+                
+                // Create branches in random directions
+                for (let i = 0; i < branchFactor; i++) {
+                    // Random angle for branch
+                    const angle = Math.random() * Math.PI * 2;
+                    
+                    // Branch length decreases with depth
+                    const length = 8 - Math.min(6, depth);
+                    
+                    // New position
+                    const newX = x + Math.cos(angle) * length;
+                    const newY = y + Math.sin(angle) * length;
+                    
+                    // Check if there's already a crystal close to this position
+                    const tooClose = cluster.crystals.some(c => {
+                        const dx = c.offsetX - newX;
+                        const dy = c.offsetY - newY;
+                        return Math.sqrt(dx * dx + dy * dy) < 5;
+                    });
+                    
+                    if (!tooClose) {
+                        createFrostCrystal(cluster, newX, newY, depth);
+                    }
+                }
+            }
+            
+            // Update function for animation
+            function update() {
+                const currentTime = Date.now();
+                
+                // Create new frost at intervals when near glass panels
+                if (currentTime - lastFrostTime > frostInterval) {
+                    // Check if mouse is over any glass panel
+                    const panels = Array.from(glassPanels.children);
+                    for (const panel of panels) {
+                        const rect = panel.getBoundingClientRect();
+                        
+                        if (mouseX >= rect.left && mouseX <= rect.right &&
+                            mouseY >= rect.top && mouseY <= rect.bottom) {
+                            
+                            // Create frost relative to panel
+                            const panelX = mouseX - rect.left;
+                            const panelY = mouseY - rect.top;
+                            
+                            createFrostCluster(mouseX, mouseY);
+                            lastFrostTime = currentTime;
+                            break;
+                        }
+                    }
+                }
+                
+                // Grow existing frost clusters
+                for (const cluster of frostClusters) {
+                    if (cluster.complete) continue;
+                    
+                    if (currentTime - cluster.lastGrowthTime > cluster.growthSpeed) {
+                        // Choose a random crystal to grow from
+                        const crystals = cluster.crystals.filter(c => c.depth < 8); // Limit depth
+                        
+                        if (crystals.length > 0) {
+                            const parentIndex = Math.floor(Math.random() * crystals.length);
+                            growFrostFromCrystal(cluster, crystals[parentIndex]);
+                        } else {
+                            cluster.complete = true;
+                        }
+                        
+                        cluster.lastGrowthTime = currentTime;
+                    }
+                }
+                
+                requestAnimationFrame(update);
+            }
+            
+            update();
+        });
+    </script>
+</body>
+</html> 

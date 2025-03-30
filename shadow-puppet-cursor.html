@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow Puppet Cursor</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: #111111;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            cursor: none;
+            color: white;
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #cccccc, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            pointer-events: all;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover, .control-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #ffffff;
+            transform: translateY(-2px);
+        }
+        
+        #screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #111111;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        #light {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        .puppet {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 3;
+            transition: transform 0.1s ease;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+        }
+        
+        .shadow-object {
+            position: absolute;
+            background-color: #000;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            pointer-events: all;
+            z-index: 10;
+        }
+        
+        .return-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #ffffff;
+            transform: translateY(-2px);
+        }
+        
+        .cursor {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Shadow Puppet Cursor</h1>
+        <p>Create interactive shadow puppets with your cursor. Move your cursor to control the puppet and cast shadows on the virtual screen.</p>
+        
+        <div class="controls">
+            <button class="control-btn active" data-puppet="hand">Hand</button>
+            <button class="control-btn" data-puppet="rabbit">Rabbit</button>
+            <button class="control-btn" data-puppet="bird">Bird</button>
+            <button class="control-btn" data-puppet="dog">Dog</button>
+            <button class="control-btn" data-puppet="custom">Custom Shape</button>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" data-action="add-object">Add Shadow Object</button>
+            <button class="control-btn" data-action="clear-objects">Clear Objects</button>
+        </div>
+    </div>
+    
+    <a href="index.html" class="return-link">← Return to Collection</a>
+    
+    <div id="screen"></div>
+    <div id="light"></div>
+    <div id="puppet-container"></div>
+    <div class="cursor"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elements
+            const cursor = document.querySelector('.cursor');
+            const light = document.getElementById('light');
+            const screen = document.getElementById('screen');
+            const puppetContainer = document.getElementById('puppet-container');
+            
+            // Mouse position
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            
+            // Track mouse movement
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                cursor.style.left = `${mouseX}px`;
+                cursor.style.top = `${mouseY}px`;
+                
+                // Move light
+                light.style.left = `${mouseX}px`;
+                light.style.top = `${mouseY}px`;
+                
+                // Update shadows
+                updateShadows();
+            });
+            
+            // Puppets SVG paths
+            const puppetSVGs = {
+                hand: `
+                    <svg class="puppet" width="100" height="100" viewBox="0 0 100 100" fill="black">
+                        <path d="M30,50 C30,40 35,30 50,30 C65,30 70,40 70,50 L70,80 C70,85 65,90 50,90 C35,90 30,85 30,80 Z" />
+                        <rect x="30" y="50" width="8" height="30" rx="4" />
+                        <rect x="42" y="50" width="8" height="35" rx="4" />
+                        <rect x="54" y="50" width="8" height="38" rx="4" />
+                        <rect x="66" y="50" width="8" height="32" rx="4" />
+                    </svg>
+                `,
+                rabbit: `
+                    <svg class="puppet" width="120" height="140" viewBox="0 0 120 140" fill="black">
+                        <ellipse cx="60" cy="80" rx="25" ry="40" />
+                        <ellipse cx="60" cy="40" rx="15" ry="20" />
+                        <ellipse cx="45" cy="25" rx="8" ry="25" />
+                        <ellipse cx="75" cy="25" rx="8" ry="25" />
+                        <ellipse cx="52" cy="35" rx="4" ry="4" fill="white" />
+                        <ellipse cx="68" cy="35" rx="4" ry="4" fill="white" />
+                        <ellipse cx="60" cy="45" rx="3" ry="3" />
+                        <path d="M50,55 C55,65 65,65 70,55" fill="none" stroke="white" stroke-width="1" />
+                    </svg>
+                `,
+                bird: `
+                    <svg class="puppet" width="140" height="100" viewBox="0 0 140 100" fill="black">
+                        <ellipse cx="70" cy="50" rx="30" ry="20" />
+                        <ellipse cx="95" cy="40" rx="20" ry="15" />
+                        <path d="M95,45 L110,30" stroke="black" stroke-width="3" />
+                        <path d="M95,45 L110,45" stroke="black" stroke-width="3" />
+                        <path d="M95,45 L110,60" stroke="black" stroke-width="3" />
+                        <path d="M40,50 L20,30" stroke="black" stroke-width="4" />
+                        <path d="M40,50 L15,50" stroke="black" stroke-width="4" />
+                        <path d="M40,50 L20,70" stroke="black" stroke-width="4" />
+                        <ellipse cx="98" cy="38" rx="3" ry="3" fill="white" />
+                    </svg>
+                `,
+                dog: `
+                    <svg class="puppet" width="140" height="100" viewBox="0 0 140 100" fill="black">
+                        <ellipse cx="70" cy="55" rx="35" ry="25" />
+                        <ellipse cx="100" cy="40" rx="25" ry="20" />
+                        <ellipse cx="110" cy="40" rx="8" ry="12" />
+                        <ellipse cx="95" cy="35" rx="3" ry="3" fill="white" />
+                        <path d="M90,50 C90,55 95,60 100,55" />
+                        <ellipse cx="40" cy="55" rx="10" ry="5" />
+                        <ellipse cx="35" cy="80" rx="5" ry="15" />
+                        <ellipse cx="105" cy="80" rx="5" ry="15" />
+                    </svg>
+                `,
+                custom: `
+                    <svg class="puppet" width="100" height="100" viewBox="0 0 100 100">
+                        <path d="M25,25 L75,25 L75,75 L25,75 Z" fill="black" />
+                        <circle cx="40" cy="40" r="10" fill="white" />
+                        <circle cx="60" cy="40" r="10" fill="white" />
+                        <circle cx="40" cy="40" r="5" fill="black" />
+                        <circle cx="60" cy="40" r="5" fill="black" />
+                        <path d="M35,60 C45,70 55,70 65,60" fill="none" stroke="white" stroke-width="3" />
+                    </svg>
+                `
+            };
+            
+            // Set active puppet
+            let activePuppet = 'hand';
+            updatePuppet(activePuppet);
+            
+            // Update puppet
+            function updatePuppet(puppetType) {
+                activePuppet = puppetType;
+                
+                // Clear previous puppet
+                puppetContainer.innerHTML = '';
+                
+                // Create new puppet
+                puppetContainer.innerHTML = puppetSVGs[puppetType];
+                
+                // Position puppet at cursor
+                const puppet = document.querySelector('.puppet');
+                if (puppet) {
+                    puppet.style.left = `${mouseX}px`;
+                    puppet.style.top = `${mouseY}px`;
+                    
+                    // Adjust puppet size
+                    if (puppetType === 'hand') {
+                        puppet.style.width = '60px';
+                        puppet.style.height = '80px';
+                    } else if (puppetType === 'rabbit') {
+                        puppet.style.width = '70px';
+                        puppet.style.height = '100px';
+                    } else if (puppetType === 'bird') {
+                        puppet.style.width = '90px';
+                        puppet.style.height = '70px';
+                    } else if (puppetType === 'dog') {
+                        puppet.style.width = '100px';
+                        puppet.style.height = '80px';
+                    }
+                }
+            }
+            
+            // Shadow objects array
+            const shadowObjects = [];
+            
+            // Add a shadow object
+            function addShadowObject() {
+                const size = 20 + Math.random() * 60;
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                
+                const object = document.createElement('div');
+                object.className = 'shadow-object';
+                object.style.width = `${size}px`;
+                object.style.height = `${size}px`;
+                object.style.left = `${x}px`;
+                object.style.top = `${y}px`;
+                
+                screen.appendChild(object);
+                shadowObjects.push(object);
+                
+                // Make draggable
+                enableDragging(object);
+            }
+            
+            // Enable dragging for shadow objects
+            function enableDragging(element) {
+                let isDragging = false;
+                let offsetX, offsetY;
+                
+                element.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    offsetX = e.clientX - parseInt(element.style.left);
+                    offsetY = e.clientY - parseInt(element.style.top);
+                    e.stopPropagation();
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (isDragging) {
+                        element.style.left = `${e.clientX - offsetX}px`;
+                        element.style.top = `${e.clientY - offsetY}px`;
+                    }
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                });
+            }
+            
+            // Update shadows based on light position
+            function updateShadows() {
+                // Update puppet position
+                const puppet = document.querySelector('.puppet');
+                if (puppet) {
+                    puppet.style.left = `${mouseX}px`;
+                    puppet.style.top = `${mouseY}px`;
+                    
+                    // Add puppet movement effect
+                    const angle = Math.sin(Date.now() * 0.001) * 10;
+                    puppet.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+                }
+                
+                // Update shadow directions for objects
+                shadowObjects.forEach(obj => {
+                    const objX = parseInt(obj.style.left);
+                    const objY = parseInt(obj.style.top);
+                    
+                    // Calculate direction from light to object
+                    const dirX = objX - mouseX;
+                    const dirY = objY - mouseY;
+                    const distance = Math.sqrt(dirX * dirX + dirY * dirY);
+                    
+                    // Shadow length based on distance
+                    const shadowLength = 20 + distance * 0.2;
+                    
+                    // Calculate normalized direction
+                    const normX = dirX / distance;
+                    const normY = dirY / distance;
+                    
+                    // Apply shadow
+                    obj.style.boxShadow = `${normX * shadowLength}px ${normY * shadowLength}px ${shadowLength}px rgba(0, 0, 0, 0.7)`;
+                    
+                    // Scale shadow based on distance
+                    const scale = 1 + (distance * 0.001);
+                    obj.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                });
+            }
+            
+            // Clear all shadow objects
+            function clearShadowObjects() {
+                shadowObjects.forEach(obj => {
+                    screen.removeChild(obj);
+                });
+                shadowObjects.length = 0;
+            }
+            
+            // Control buttons
+            document.querySelectorAll('.control-btn[data-puppet]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.control-btn[data-puppet]').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    btn.classList.add('active');
+                    updatePuppet(btn.dataset.puppet);
+                });
+            });
+            
+            document.querySelectorAll('.control-btn[data-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (btn.dataset.action === 'add-object') {
+                        addShadowObject();
+                    } else if (btn.dataset.action === 'clear-objects') {
+                        clearShadowObjects();
+                    }
+                });
+            });
+            
+            // Initial shadow objects
+            for (let i = 0; i < 5; i++) {
+                addShadowObject();
+            }
+            
+            // Animation loop
+            function animate() {
+                // Continue updating shadows for smooth movement
+                updateShadows();
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            // Handle resizing
+            window.addEventListener('resize', () => {
+                // Adjust light size
+                light.style.width = `${window.innerWidth * 0.3}px`;
+                light.style.height = `${window.innerWidth * 0.3}px`;
+            });
+            
+            // Initial light size
+            light.style.width = `${window.innerWidth * 0.3}px`;
+            light.style.height = `${window.innerWidth * 0.3}px`;
+        });
+    </script>
+</body>
+</html> 

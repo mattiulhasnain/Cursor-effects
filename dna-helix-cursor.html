@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Helix Cursor Effect - Interactive 3D Molecular Animation</title>
+    <style>
+        :root {
+            --primary: #5dbb63;
+            --primary-light: #8de4af;
+            --primary-dark: #2d7d46;
+            --secondary: #66b2ff;
+            --secondary-light: #99ccff;
+            --accent: #ff7eb9;
+            --background: #0a192f;
+            --card-bg: rgba(28, 42, 57, 0.7);
+            --text: #f0f8ff;
+            --text-muted: rgba(240, 248, 255, 0.8);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #020c18, #0a192f);
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            cursor: none;
+            color: var(--text);
+        }
+        
+        .content {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #4682b4, #8de4af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(70, 130, 180, 0.3);
+            animation: glow 3s infinite alternate;
+        }
+        
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px rgba(70, 130, 180, 0.3); }
+            100% { text-shadow: 0 0 20px rgba(141, 228, 175, 0.5); }
+        }
+        
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--card-bg);
+            padding: 12px 18px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(70, 130, 180, 0.4);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .control-group:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(70, 130, 180, 0.3);
+            border-color: rgba(93, 187, 99, 0.6);
+        }
+        
+        label {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            letter-spacing: 0.02em;
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 130px;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(28, 42, 57, 0.8);
+            outline: none;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        input[type="range"]:hover {
+            background: rgba(28, 42, 57, 1);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(93, 187, 99, 0.5);
+            transition: all 0.3s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(93, 187, 99, 0.7);
+        }
+        
+        select, button {
+            width: 130px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background-color: rgba(28, 42, 57, 0.9);
+            color: var(--text);
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
+        }
+        
+        select:hover, button:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(93, 187, 99, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        button {
+            background: linear-gradient(135deg, rgba(93, 187, 99, 0.7), rgba(102, 178, 255, 0.7));
+            font-weight: 500;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        @keyframes modeChange {
+            0% { opacity: 0; transform: translate(-50%, 20px); }
+            15% { opacity: 1; transform: translate(-50%, 0); }
+            85% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -10px); }
+        }
+        
+        .mode-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(28, 42, 57, 0.9);
+            color: var(--text);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            animation: modeChange 2.5s ease-in-out;
+            animation-fill-mode: forwards;
+            pointer-events: none;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+        
+        .mode-indicator span {
+            font-weight: 600;
+            color: var(--primary-light);
+        }
+        
+        .return-link {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 10px 20px;
+            background: rgba(93, 187, 99, 0.2);
+            border-radius: 30px;
+            z-index: 10;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            pointer-events: auto;
+        }
+
+        .return-link:hover {
+            background: rgba(93, 187, 99, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .keyboard-shortcut {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .key {
+            display: inline-block;
+            padding: 3px 8px;
+            margin: 0 5px;
+            background-color: rgba(28, 42, 57, 0.9);
+            border-radius: 5px;
+            border: 1px solid rgba(93, 187, 99, 0.3);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(93, 187, 99, 0.7);
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 20px rgba(93, 187, 99, 0.7);
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <canvas id="dnaCanvas"></canvas>
+    <div class="cursor"></div>
+    
+    <div class="content">
+        <h1>Interactive DNA Helix Animation</h1>
+        <p>Explore the double helix structure of DNA with this interactive 3D visualization. Move your cursor to rotate and interact with the DNA model. Adjust the parameters below to customize the visualization and discover different modes.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="lengthSlider">Helix Length</label>
+                <input type="range" id="lengthSlider" min="20" max="150" value="60">
+            </div>
+            
+            <div class="control-group">
+                <label for="rotationSlider">Rotation Speed</label>
+                <input type="range" id="rotationSlider" min="0" max="100" value="30">
+            </div>
+            
+             <div class="control-group">
+                <label for="radiusSlider">Helix Radius</label>
+                <input type="range" id="radiusSlider" min="30" max="120" value="80">
+            </div>
+            
+            <div class="control-group">
+                <label for="basePairStyle">Base Pair Style</label>
+                <select id="basePairStyle">
+                    <option value="lines">Lines</option>
+                    <option value="nucleotides" selected>Nucleotides</option>
+                    <option value="dots">Dots</option>
+                    <option value="gradient">Gradient</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="colorScheme">Color Scheme</label>
+                <select id="colorScheme">
+                    <option value="classic" selected>Classic</option>
+                    <option value="vibrant">Vibrant</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="monochrome">Monochrome</option>
+                    <option value="rainbow">Rainbow</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <button id="toggleSpecialMode">Toggle 3D Mode</button>
+            </div>
+        </div>
+        
+        <div class="keyboard-shortcut">
+            Keyboard shortcuts: 
+            <span class="key">P</span> Pulse 
+            <span class="key">R</span> Rainbow 
+            <span class="key">W</span> Wireframe 
+            <span class="key">S</span> Stretch 
+            <span class="key">C</span> Compact
+        </div>
+    </div>
+    
+    <a href="index.html" class="return-link">← Back to Gallery</a>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('dnaCanvas');
+            const ctx = canvas.getContext('2d');
+            const lengthSlider = document.getElementById('lengthSlider');
+            const rotationSlider = document.getElementById('rotationSlider');
+            const radiusSlider = document.getElementById('radiusSlider');
+            const basePairStyleSelect = document.getElementById('basePairStyle');
+            const colorSchemeSelect = document.getElementById('colorScheme');
+            const toggleButton = document.getElementById('toggleSpecialMode');
+            const cursorElement = document.querySelector('.cursor');
+
+            // Set canvas dimensions
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Mouse tracking variables
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            let targetMouseX = mouseX;
+            let targetMouseY = mouseY;
+            let lastMouseMoveTime = 0;
+            
+            // Animation variables
+            let rotationAngle = 0;
+            let time = 0;
+            
+            // DNA structure parameters
+            let helixLength = parseInt(lengthSlider.value);
+            let rotationSpeed = parseInt(rotationSlider.value) / 100;
+            let helixRadius = parseInt(radiusSlider.value);
+            let basePairStyle = basePairStyleSelect.value;
+            let colorScheme = colorSchemeSelect.value;
+            
+            // Special mode states
+            let specialMode = 'normal';
+            let activeEffects = new Set();
+            let transitionProgress = 0;
+            let isTransitioning = false;
+            
+            // Color schemes
+            const colorSchemes = {
+                classic: {
+                    backbone: '#4682b4',
+                    basePair: '#8de4af',
+                    highlight: '#ff7eb9',
+                    secondaryHighlight: '#ffa07a'
+                },
+                vibrant: {
+                    backbone: '#00b4d8',
+                    basePair: '#38b000',
+                    highlight: '#ff006e',
+                    secondaryHighlight: '#fb8500'
+                },
+                pastel: {
+                    backbone: '#8ecae6',
+                    basePair: '#a8dadc',
+                    highlight: '#ffafcc',
+                    secondaryHighlight: '#cdb4db'
+                },
+                monochrome: {
+                    backbone: '#78a6c8',
+                    basePair: '#e9ecef',
+                    highlight: '#3a6ea5',
+                    secondaryHighlight: '#cbd3da'
+                },
+                rainbow: {
+                    backbone: '#4682b4',
+                    basePair: '#8de4af',
+                    highlight: '#ff7eb9',
+                    secondaryHighlight: '#ffa07a'
+                }
+            };
+            
+            // Nucleotide base pairs
+            const nucleotides = {
+                A: { color: '#ff7eb9', complementary: 'T' },
+                T: { color: '#8de4af', complementary: 'A' },
+                G: { color: '#66b2ff', complementary: 'C' },
+                C: { color: '#ffa07a', complementary: 'G' }
+            };
+            
+            // Base sequence - simplified for demo
+            const baseSequence = generateRandomSequence(helixLength * 2);
+            
+            // Collection of DNA helix points
+            let helixPoints = [];
+            
+            // Initialize helix points
+            function createHelixPoints() {
+                helixPoints = [];
+                
+                const pointsPerTurn = 20; // Controls the "tightness" of the helix
+                const totalPoints = helixLength * pointsPerTurn;
+                
+                for (let i = 0; i < totalPoints; i++) {
+                    helixPoints.push(new HelixPoint(i, totalPoints));
+                }
+            }
+            
+            // Generate random DNA sequence
+            function generateRandomSequence(length) {
+                const bases = ['A', 'T', 'G', 'C'];
+                let sequence = [];
+                
+                for (let i = 0; i < length; i++) {
+                    const randomBase = bases[Math.floor(Math.random() * bases.length)];
+                    sequence.push(randomBase);
+                }
+                
+                return sequence;
+            }
+            
+            // Helix point class
+            class HelixPoint {
+                constructor(index, totalPoints) {
+                    this.index = index;
+                    this.totalPoints = totalPoints;
+                    this.normalizedIndex = index / totalPoints;
+                    
+                    // Position parameters
+                    this.x = 0;
+                    this.y = 0;
+                    this.z = 0;
+                    this.projectionScale = 1;
+                    
+                    // Dynamic parameters
+                    this.angleOffset = Math.PI * 2 * (index % 20) / 20;
+                    this.yOffset = index / 20;
+                    this.twistFactor = 0;
+                    this.waveFactor = 0;
+                    
+                    // Visual attributes
+                    this.size = 3;
+                    this.opacity = 1;
+                    this.hue = (index / totalPoints * 360) % 360;
+                    this.baseIndex = Math.floor(this.yOffset);
+                    
+                    // For effects
+                    this.velocityX = 0;
+                    this.velocityY = 0;
+                    this.originalAngleOffset = this.angleOffset;
+                    this.originalYOffset = this.yOffset;
+                }
+                
+                update(time) {
+                    // Base position along the helix
+                    const normalizedMouseX = (mouseX / canvas.width) * 2 - 1;
+                    const normalizedMouseY = (mouseY / canvas.height) * 2 - 1;
+                    
+                    // Calculate wave factor based on special mode
+                    if (activeEffects.has('pulse')) {
+                        this.waveFactor = Math.sin(time * 2 + this.normalizedIndex * 10) * 0.2;
+                    } else {
+                        this.waveFactor = 0;
+                    }
+                    
+                    // Calculate twist factor based on special mode
+                    if (activeEffects.has('stretch')) {
+                        // Stretch effect - extend the helix based on mouse Y position
+                        const stretchFactor = 1 + normalizedMouseY * 0.5;
+                        this.yOffset = this.originalYOffset * stretchFactor;
+                    } else if (activeEffects.has('compact')) {
+                        // Compact effect - compress the helix based on mouse position
+                        const compactFactor = 1 - (1 - Math.cos(time / 2)) * 0.3;
+                        this.yOffset = this.originalYOffset * compactFactor;
+                    } else {
+                        this.yOffset = this.originalYOffset;
+                    }
+                    
+                    // 3D position calculation
+                    const effectiveRadius = helixRadius * (1 + this.waveFactor);
+                    const angle = this.angleOffset + rotationAngle;
+                    
+                    // Calculate 3D coordinates
+                    const x3d = Math.cos(angle) * effectiveRadius;
+                    const y3d = this.yOffset * 20 - helixLength * 10; // Center vertically
+                    const z3d = Math.sin(angle) * effectiveRadius;
+                    
+                    // Perspective projection
+                    const perspective = 500;
+                    const depth = perspective / (perspective + z3d + 200); // +200 to avoid division by zero
+                    
+                    // Project to 2D screen space
+                    this.x = canvas.width / 2 + x3d * depth + normalizedMouseX * 100;
+                    this.y = canvas.height / 2 + y3d * depth - normalizedMouseY * 50;
+                    this.z = z3d;
+                    this.projectionScale = depth;
+                    
+                    // Adjust visual attributes based on depth and effects
+                    this.size = Math.max(2, 4 * depth);
+                    this.opacity = Math.min(1, depth * 1.5);
+                    
+                    // Update hue for rainbow effect
+                    if (activeEffects.has('rainbow')) {
+                        this.hue = (this.normalizedIndex * 360 + time * 20) % 360;
+                    }
+                }
+                
+                draw(ctx, isStrand1) {
+                    let colors = colorSchemes[colorScheme];
+                    
+                    // Base color depends on strand and active effects
+                    let fillColor = isStrand1 ? colors.backbone : colors.secondaryHighlight;
+                    
+                    if (activeEffects.has('rainbow')) {
+                        fillColor = `hsl(${this.hue}, 70%, 60%)`;
+                    } else if (activeEffects.has('wireframe')) {
+                        // In wireframe mode, points are smaller and more transparent
+                        this.size *= 0.7;
+                        this.opacity *= 0.7;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = fillColor;
+                    ctx.globalAlpha = this.opacity;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            }
+            
+            // Initial creation of helix points
+            createHelixPoints();
+
+            // Event listeners
+            lengthSlider.addEventListener('input', () => {
+                helixLength = parseInt(lengthSlider.value);
+                createHelixPoints();
+            });
+            
+            rotationSlider.addEventListener('input', () => {
+                rotationSpeed = parseInt(rotationSlider.value) / 100;
+            });
+            
+            radiusSlider.addEventListener('input', () => {
+                helixRadius = parseInt(radiusSlider.value);
+            });
+            
+            basePairStyleSelect.addEventListener('change', () => {
+                basePairStyle = basePairStyleSelect.value;
+            });
+            
+            colorSchemeSelect.addEventListener('change', () => {
+                colorScheme = colorSchemeSelect.value;
+                showModeIndicator(`Color Scheme: <span>${colorScheme}</span>`);
+            });
+            
+            toggleButton.addEventListener('click', () => {
+                cycleSpecialMode();
+            });
+            
+            // Track mouse movement
+            canvas.addEventListener('mousemove', (e) => {
+                targetMouseX = e.clientX;
+                targetMouseY = e.clientY;
+                lastMouseMoveTime = Date.now();
+                
+                // Update custom cursor
+                cursorElement.style.left = `${e.clientX}px`;
+                cursorElement.style.top = `${e.clientY}px`;
+            });
+            
+            // Handle clicks to change color scheme
+            canvas.addEventListener('click', () => {
+                const schemes = Object.keys(colorSchemes);
+                const currentIndex = schemes.indexOf(colorScheme);
+                const nextIndex = (currentIndex + 1) % schemes.length;
+                colorScheme = schemes[nextIndex];
+                colorSchemeSelect.value = colorScheme;
+                showModeIndicator(`Color Scheme: <span>${colorScheme}</span>`);
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                switch (e.key.toLowerCase()) {
+                    case 'p':
+                        toggleEffect('pulse');
+                        break;
+                    case 'r':
+                        toggleEffect('rainbow');
+                        break;
+                    case 'w':
+                        toggleEffect('wireframe');
+                        break;
+                    case 's':
+                        toggleEffect('stretch');
+                        break;
+                    case 'c':
+                        toggleEffect('compact');
+                        break;
+                    case ' ':
+                        cycleSpecialMode();
+                        break;
+                }
+            });
+            
+            // Window resize handler
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            // Effect toggling
+            function toggleEffect(effect) {
+                if (activeEffects.has(effect)) {
+                    activeEffects.delete(effect);
+                    showModeIndicator(`Effect <span>${effect}</span> disabled`);
+                } else {
+                    // Disable incompatible effects
+                    if (effect === 'stretch' || effect === 'compact') {
+                        activeEffects.delete('stretch');
+                        activeEffects.delete('compact');
+                    }
+                    activeEffects.add(effect);
+                    showModeIndicator(`Effect <span>${effect}</span> enabled`);
+                }
+            }
+            
+            // Cycle through special modes
+            function cycleSpecialMode() {
+                const modes = ['normal', '3d-enhanced', 'scientific'];
+                    const currentIndex = modes.indexOf(specialMode);
+                    specialMode = modes[(currentIndex + 1) % modes.length];
+                    
+                // Reset effects
+                activeEffects.clear();
+                
+                // Apply effects based on the new mode
+                if (specialMode === '3d-enhanced') {
+                    activeEffects.add('pulse');
+                } else if (specialMode === 'scientific') {
+                    activeEffects.add('wireframe');
+                }
+                
+                showModeIndicator(`Mode: <span>${specialMode}</span>`);
+                
+                // Trigger transition animation
+                isTransitioning = true;
+                transitionProgress = 0;
+            }
+            
+            // Show mode indicator
+            function showModeIndicator(text) {
+                // Create or get existing indicator
+                let indicator = document.getElementById('mode-indicator');
+                if (!indicator) {
+                    indicator = document.createElement('div');
+                    indicator.id = 'mode-indicator';
+                    indicator.className = 'mode-indicator';
+                    document.body.appendChild(indicator);
+                }
+                
+                // Set text and ensure visible
+                indicator.innerHTML = text;
+                indicator.style.display = 'block';
+                indicator.style.opacity = '0';
+                
+                // Reset animation
+                void indicator.offsetWidth;
+                indicator.style.animation = 'modeChange 2.5s ease-in-out';
+            }
+            
+            // Draw helix strands
+            function drawStrands() {
+                const strand1 = helixPoints.filter((_, i) => i % 2 === 0);
+                const strand2 = helixPoints.filter((_, i) => i % 2 === 1);
+                
+                // Sort points by depth for correct rendering
+                const allPoints = [...helixPoints].sort((a, b) => a.z - b.z);
+                
+                // Clear canvas with a gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#020c18');
+                gradient.addColorStop(1, '#0a192f');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw the DNA strands
+                drawStrand(strand1, colorSchemes[colorScheme].backbone);
+                drawStrand(strand2, colorSchemes[colorScheme].secondaryHighlight);
+                
+                // Draw base pairs connecting the strands
+                drawBasePairs(strand1, strand2);
+                
+                // Draw individual points (nucleotides)
+                for (const point of allPoints) {
+                    point.draw(ctx, allPoints.indexOf(point) % 2 === 0);
+                }
+                
+                // Add subtle glow effect around cursor
+                if (!activeEffects.has('wireframe')) {
+                    const glowRadius = 150;
+                    const gradient = ctx.createRadialGradient(
+                        mouseX, mouseY, 0,
+                        mouseX, mouseY, glowRadius
+                    );
+                    
+                    const glowColor = activeEffects.has('rainbow')
+                        ? `hsla(${(time * 20) % 360}, 70%, 50%, 0.15)`
+                        : `${colorSchemes[colorScheme].backbone}40`;
+                    
+                    gradient.addColorStop(0, glowColor);
+                    gradient.addColorStop(1, 'transparent');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(mouseX - glowRadius, mouseY - glowRadius, glowRadius * 2, glowRadius * 2);
+                }
+            }
+            
+            // Draw a single DNA strand
+            function drawStrand(points, color) {
+                // Skip if no points
+                if (points.length === 0) return;
+                
+                if (activeEffects.has('wireframe')) {
+                    // In wireframe mode, draw dashed lines
+                    ctx.setLineDash([2, 4]);
+                    ctx.lineWidth = 1;
+                } else {
+                    // Normal strand
+                    ctx.setLineDash([]);
+                    ctx.lineWidth = 2;
+                }
+                
+                // Begin path for the strand
+                 ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                
+                // Draw a smooth curve through the points
+                for (let i = 1; i < points.length; i++) {
+                    const curr = points[i];
+                    const prev = points[i - 1];
+                    
+                    // Only connect points that are reasonably close
+                    if (Math.abs(curr.yOffset - prev.yOffset) < 3) {
+                        ctx.lineTo(curr.x, curr.y);
+                      } else {
+                        ctx.moveTo(curr.x, curr.y);
+                    }
+                }
+                
+                // Apply color based on active effects
+                if (activeEffects.has('rainbow')) {
+                    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    for (let i = 0; i < 10; i++) {
+                        const hue = (i / 10 * 360 + time * 20) % 360;
+                        gradient.addColorStop(i / 10, `hsla(${hue}, 70%, 60%, 0.8)`);
+                    }
+                    ctx.strokeStyle = gradient;
+                } else if (activeEffects.has('wireframe')) {
+                    ctx.strokeStyle = `${color}80`;
+                } else {
+                    ctx.strokeStyle = color;
+                }
+                
+                 ctx.stroke();
+                ctx.setLineDash([]); // Reset dash pattern
+            }
+            
+            // Draw the base pairs connecting the strands
+            function drawBasePairs(points1, points2) {
+                const spacing = Math.floor(points1.length / helixLength);
+                
+                for (let i = 0; i < points1.length; i += spacing) {
+                    // Skip if out of bounds
+                    if (i + 1 >= points1.length) continue;
+                    
+                    const point1 = points1[i];
+                    const point2 = points2[i];
+                    
+                    // Skip if points are too far apart (happens during transitions)
+                    if (Math.abs(point1.yOffset - point2.yOffset) > 3) continue;
+                    
+                    // Get base pair info
+                    const baseIndex = Math.floor(i / spacing) % baseSequence.length;
+                    const baseType = baseSequence[baseIndex];
+                    const complementaryBase = nucleotides[baseType].complementary;
+                    
+                    // Determine color and style based on active effects and selected style
+                    let pairColor;
+                    
+                    if (activeEffects.has('rainbow')) {
+                        // Rainbow mode - color based on position
+                        const hue = (i / points1.length * 360 + time * 10) % 360;
+                        pairColor = `hsla(${hue}, 70%, 60%, ${point1.opacity * 0.8})`;
+                    } else {
+                        pairColor = colorSchemes[colorScheme].basePair;
+                    }
+                    
+                    // Draw based on selected style
+                    if (basePairStyle === 'nucleotides') {
+                        // Draw as nucleotide base pairs
+                        const midX = (point1.x + point2.x) / 2;
+                        const midY = (point1.y + point2.y) / 2;
+                        
+                        // Calculate size based on depth
+                        const avgDepth = (point1.projectionScale + point2.projectionScale) / 2;
+                        const baseSize = Math.max(2, 6 * avgDepth);
+                        
+                        // Draw first base
+                            ctx.beginPath();
+                        ctx.arc(
+                            point1.x * 0.7 + midX * 0.3,
+                            point1.y * 0.7 + midY * 0.3,
+                            baseSize,
+                            0,
+                            Math.PI * 2
+                        );
+                        ctx.fillStyle = activeEffects.has('rainbow') 
+                            ? pairColor 
+                            : nucleotides[baseType].color;
+                        ctx.globalAlpha = point1.opacity * 0.9;
+                            ctx.fill();
+                        
+                        // Draw complementary base
+                             ctx.beginPath();
+                        ctx.arc(
+                            point2.x * 0.7 + midX * 0.3,
+                            point2.y * 0.7 + midY * 0.3,
+                            baseSize,
+                            0,
+                            Math.PI * 2
+                        );
+                        ctx.fillStyle = activeEffects.has('rainbow') 
+                            ? pairColor 
+                            : nucleotides[complementaryBase].color;
+                        ctx.globalAlpha = point2.opacity * 0.9;
+                            ctx.fill();
+                        
+                        // Draw hydrogen bonds
+                            ctx.beginPath();
+                        ctx.setLineDash([2, 2]);
+                        ctx.moveTo(point1.x * 0.7 + midX * 0.3, point1.y * 0.7 + midY * 0.3);
+                        ctx.lineTo(point2.x * 0.7 + midX * 0.3, point2.y * 0.7 + midY * 0.3);
+                        ctx.strokeStyle = activeEffects.has('wireframe') 
+                            ? `${pairColor}40` 
+                            : `${pairColor}80`;
+                        ctx.lineWidth = 1;
+                        ctx.globalAlpha = Math.min(point1.opacity, point2.opacity) * 0.7;
+                            ctx.stroke();
+                        ctx.setLineDash([]);
+                    } else if (basePairStyle === 'lines') {
+                        // Draw as simple lines
+                            ctx.beginPath();
+                        ctx.moveTo(point1.x, point1.y);
+                        ctx.lineTo(point2.x, point2.y);
+                        ctx.strokeStyle = pairColor;
+                        ctx.lineWidth = activeEffects.has('wireframe') ? 1 : 2;
+                        ctx.globalAlpha = Math.min(point1.opacity, point2.opacity) * 0.7;
+                        ctx.stroke();
+                    } else if (basePairStyle === 'dots') {
+                        // Draw as dots at the midpoint
+                        const midX = (point1.x + point2.x) / 2;
+                        const midY = (point1.y + point2.y) / 2;
+                        const dotSize = activeEffects.has('wireframe') ? 2 : 4;
+                        
+                            ctx.beginPath();
+                        ctx.arc(midX, midY, dotSize * point1.projectionScale, 0, Math.PI * 2);
+                            ctx.fillStyle = pairColor;
+                        ctx.globalAlpha = Math.min(point1.opacity, point2.opacity);
+                        ctx.fill();
+                    } else if (basePairStyle === 'gradient') {
+                        // Draw as a gradient line
+                        const gradient = ctx.createLinearGradient(point1.x, point1.y, point2.x, point2.y);
+                        
+                        if (activeEffects.has('rainbow')) {
+                            const hue1 = (i / points1.length * 360 + time * 20) % 360;
+                            const hue2 = ((i + points1.length / 2) / points1.length * 360 + time * 20) % 360;
+                            gradient.addColorStop(0, `hsla(${hue1}, 70%, 60%, ${point1.opacity})`);
+                            gradient.addColorStop(1, `hsla(${hue2}, 70%, 60%, ${point2.opacity})`);
+                        } else {
+                            gradient.addColorStop(0, nucleotides[baseType].color);
+                            gradient.addColorStop(1, nucleotides[complementaryBase].color);
+                        }
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(point1.x, point1.y);
+                        ctx.lineTo(point2.x, point2.y);
+                        ctx.strokeStyle = gradient;
+                        ctx.lineWidth = activeEffects.has('wireframe') ? 1 : 3;
+                        ctx.globalAlpha = Math.min(point1.opacity, point2.opacity) * 0.8;
+                        ctx.stroke();
+                    }
+                    
+                    ctx.globalAlpha = 1; // Reset opacity
+                }
+            }
+            
+            // Main animation loop
+            function animate() {
+                // Update time
+                time += 0.01;
+                
+                // Smooth mouse tracking
+                mouseX += (targetMouseX - mouseX) * 0.05;
+                mouseY += (targetMouseY - mouseY) * 0.05;
+                
+                // Auto-rotate when mouse is not moving
+                const mouseIdle = Date.now() - lastMouseMoveTime > 1000;
+                if (mouseIdle) {
+                    rotationAngle += rotationSpeed * 0.01;
+                } else {
+                    // Rotate based on mouse position when active
+                    const targetAngle = ((mouseX / canvas.width) * 2 - 1) * Math.PI;
+                    rotationAngle += (targetAngle - rotationAngle) * 0.05;
+                }
+                
+                // Update each point
+                for (const point of helixPoints) {
+                    point.update(time);
+                }
+                
+                // Draw all elements
+                drawStrands();
+                
+                // Request next frame
+                requestAnimationFrame(animate);
+            }
+
+            // Start animation
+            animate();
+        });
+    </script>
+</body>
+</html> 
